@@ -48,18 +48,15 @@ const AdminAddStaff: React.FC = () => {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // remove error while typing
-    setErrors((prev: any) => ({
-      ...prev,
-      [name]: "",
-    }));
+    setErrors({
+      ...errors,
+      [e.target.name]: "",
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -67,229 +64,189 @@ const AdminAddStaff: React.FC = () => {
 
     if (!validate()) return;
 
-    console.log("Staff Data:", formData);
     alert("Staff added successfully!");
-
-    setFormData({
-      name: "",
-      username: "",
-      email: "",
-      phone: "",
-      address: "",
-      role: "Assistant",
-    });
-
     navigate("/admin/staff");
   };
 
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.sidebar}>
-        <AdminSidebar />
-      </div>
+    <>
+      {/* CSS IN SAME FILE */}
+      <style>{`
+        .wrapper {
+          display: flex;
+          width: 100%;
+        }
 
-      <div style={styles.main}>
-        <AdminNavbar />
+        .sidebar {
+          width: 260px;
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+          z-index: 1000;
+        }
 
-        <div style={styles.page}>
-          <div style={styles.card}>
-            <h2 style={styles.title}>Add New Staff</h2>
-            <p style={styles.subtitle}>
-              Fill in the details to create a staff account
-            </p>
+        .main {
+          flex: 1;
+          margin-left: 260px;
+          background: linear-gradient(135deg, #f5f7fa, #e4ecf5);
+          min-height: 100vh;
+        }
 
-            <form onSubmit={handleSubmit} style={styles.form}>
+        .page {
+          padding: 30px;
+          display: flex;
+          justify-content: center;
+        }
 
-              {/* NAME */}
-              <div style={styles.field}>
-                <label>Full Name</label>
-                <input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  style={styles.input}
-                  placeholder="Enter full name"
-                />
-                {errors.name && <span style={styles.error}>{errors.name}</span>}
-              </div>
+        .card {
+          width: 100%;
+          max-width: 700px;
+          background: #fff;
+          border-radius: 15px;
+          padding: 30px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
 
-              {/* USERNAME */}
-              <div style={styles.field}>
-                <label>Username</label>
-                <input
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  style={styles.input}
-                  placeholder="Enter username"
-                />
-                {errors.username && <span style={styles.error}>{errors.username}</span>}
-              </div>
+        .title {
+          font-size: 24px;
+          font-weight: 600;
+          margin-bottom: 5px;
+        }
 
-              {/* EMAIL */}
-              <div style={styles.field}>
-                <label>Email</label>
-                <input
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  style={styles.input}
-                  placeholder="Enter email"
-                />
-                {errors.email && <span style={styles.error}>{errors.email}</span>}
-              </div>
+        .subtitle {
+          font-size: 14px;
+          color: #666;
+          margin-bottom: 20px;
+        }
 
-              {/* PHONE */}
-              <div style={styles.field}>
-                <label>Phone</label>
-                <input
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  style={styles.input}
-                  placeholder="Enter phone"
-                />
-                {errors.phone && <span style={styles.error}>{errors.phone}</span>}
-              </div>
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
 
-              {/* ADDRESS */}
-              <div style={styles.field}>
-                <label>Address</label>
-                <input
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  style={styles.input}
-                  placeholder="Enter address"
-                />
-                {errors.address && <span style={styles.error}>{errors.address}</span>}
-              </div>
+        .field {
+          display: flex;
+          flex-direction: column;
+        }
 
-              {/* ROLE */}
-              <div style={styles.field}>
-                <label>Role</label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  style={styles.input}
-                >
-                  <option value="Assistant">Assistant</option>
-                  <option value="Warehouse Staff">Warehouse Staff</option>
-                </select>
-              </div>
+        input, select {
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          outline: none;
+        }
 
-              {/* BUTTONS */}
-              <div style={styles.buttonRow}>
-                <button
-                  type="button"
-                  style={styles.backBtn}
-                  onClick={() => navigate("/admin/staff")}
-                >
-                  ← Back
-                </button>
+        .error {
+          color: red;
+          font-size: 12px;
+          margin-top: 4px;
+        }
 
-                <button type="submit" style={styles.addBtn}>
-                  Add Staff
-                </button>
-              </div>
+        .buttonRow {
+          display: flex;
+          gap: 10px;
+          margin-top: 15px;
+        }
 
-            </form>
+        .backBtn {
+          flex: 1;
+          padding: 12px;
+          border: none;
+          border-radius: 10px;
+          background: #e5e7eb;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .addBtn {
+          flex: 1;
+          padding: 12px;
+          border: none;
+          border-radius: 10px;
+          background: #16a34a;
+          color: #fff;
+          font-weight: 600;
+          cursor: pointer;
+        }
+      `}</style>
+
+      <div className="wrapper">
+        <div className="sidebar">
+          <AdminSidebar />
+        </div>
+
+        <div className="main">
+          <AdminNavbar />
+
+          <div className="page">
+            <div className="card">
+
+              <h2 className="title">Add New Staff</h2>
+              <p className="subtitle">
+                Fill in the details to create a staff account
+              </p>
+
+              <form onSubmit={handleSubmit} className="form">
+
+                <div className="field">
+                  <label>Full Name</label>
+                  <input name="name" value={formData.name} onChange={handleChange} />
+                  {errors.name && <span className="error">{errors.name}</span>}
+                </div>
+
+                <div className="field">
+                  <label>Username</label>
+                  <input name="username" value={formData.username} onChange={handleChange} />
+                  {errors.username && <span className="error">{errors.username}</span>}
+                </div>
+
+                <div className="field">
+                  <label>Email</label>
+                  <input name="email" value={formData.email} onChange={handleChange} />
+                  {errors.email && <span className="error">{errors.email}</span>}
+                </div>
+
+                <div className="field">
+                  <label>Phone</label>
+                  <input name="phone" value={formData.phone} onChange={handleChange} />
+                  {errors.phone && <span className="error">{errors.phone}</span>}
+                </div>
+
+                <div className="field">
+                  <label>Address</label>
+                  <input name="address" value={formData.address} onChange={handleChange} />
+                  {errors.address && <span className="error">{errors.address}</span>}
+                </div>
+
+                <div className="field">
+                  <label>Role</label>
+                  <select name="role" value={formData.role} onChange={handleChange}>
+                    <option value="Assistant">Assistant</option>
+                    <option value="Warehouse Staff">Warehouse Staff</option>
+                  </select>
+                </div>
+
+                <div className="buttonRow">
+                  <button type="button" className="backBtn" onClick={() => navigate("/admin/staff")}>
+                    Back
+                  </button>
+
+                  <button type="submit" className="addBtn">
+                    Add Staff
+                  </button>
+                </div>
+
+              </form>
+
+            </div>
           </div>
+
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
 export default AdminAddStaff;
-
-/* ================= STYLES ================= */
-
-const styles: { [key: string]: React.CSSProperties } = {
-  wrapper: {
-    display: "flex",
-    width: "100%",
-  },
-  sidebar: {
-    width: "260px",
-    position: "fixed",
-    top: 0,
-    left: 0,
-    height: "100vh",
-    zIndex: 1000,
-  },
-  main: {
-    flex: 1,
-    marginLeft: "260px",
-    background: "linear-gradient(135deg, #f5f7fa, #e4ecf5)",
-    minHeight: "100vh",
-  },
-  page: {
-    padding: "30px",
-    display: "flex",
-    justifyContent: "center",
-  },
-  card: {
-    width: "100%",
-    maxWidth: "700px",
-    background: "#fff",
-    borderRadius: "15px",
-    padding: "30px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-  },
-  title: {
-    fontSize: "24px",
-    fontWeight: 600,
-    marginBottom: "5px",
-  },
-  subtitle: {
-    fontSize: "14px",
-    color: "#666",
-    marginBottom: "20px",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-  field: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  input: {
-    padding: "10px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    outline: "none",
-  },
-  error: {
-    color: "red",
-    fontSize: "12px",
-    marginTop: "4px",
-  },
-  buttonRow: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "15px",
-  },
-  backBtn: {
-    flex: 1,
-    padding: "12px",
-    border: "none",
-    borderRadius: "10px",
-    background: "#e5e7eb",
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-  addBtn: {
-    flex: 1,
-    padding: "12px",
-    border: "none",
-    borderRadius: "10px",
-    background: "#16a34a",
-    color: "#fff",
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-};

@@ -60,7 +60,6 @@ const AdminAddCategory: React.FC = () => {
 
     if (!validate()) return;
 
-    console.log("Category Data:", formData);
     alert("Category added successfully!");
 
     setFormData({
@@ -74,200 +73,190 @@ const AdminAddCategory: React.FC = () => {
   };
 
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.sidebar}>
-        <AdminSidebar />
-      </div>
+    <>
+      {/* STYLE BLOCK (NORMAL CSS IN SAME FILE) */}
+      <style>{`
+        .admin-layout {
+          display: flex;
+        }
 
-      <div style={styles.main}>
-        <AdminNavbar />
+        .sidebar {
+          width: 260px;
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+        }
 
-        <div style={styles.page}>
-          <div style={styles.card}>
-            <h2 style={styles.title}>Add Category</h2>
-            <p style={styles.subtitle}>
-              Create new product category and subcategory
-            </p>
+        .main {
+          flex: 1;
+          margin-left: 260px;
+          background: linear-gradient(135deg, #f5f7fa, #e4ecf5);
+          min-height: 100vh;
+        }
 
-            <form onSubmit={handleSubmit} style={styles.form}>
-              {/* Category Name */}
-              <div style={styles.field}>
-                <label>Category Name</label>
-                <input
-                  name="categoryName"
-                  value={formData.categoryName}
-                  onChange={handleChange}
-                  style={styles.input}
-                />
-                {errors.categoryName && (
-                  <span style={styles.error}>{errors.categoryName}</span>
-                )}
+        .page {
+          padding: 30px;
+          display: flex;
+          justify-content: center;
+        }
+
+        .card {
+          width: 100%;
+          max-width: 650px;
+          background: #fff;
+          padding: 25px;
+          border-radius: 12px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        .title {
+          font-size: 22px;
+          font-weight: 600;
+          margin-bottom: 5px;
+        }
+
+        .subtitle {
+          font-size: 13px;
+          color: #666;
+          margin-bottom: 15px;
+        }
+
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .field {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+
+        input, textarea {
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          outline: none;
+        }
+
+        textarea {
+          min-height: 80px;
+        }
+
+        .error {
+          color: red;
+          font-size: 12px;
+        }
+
+        .buttonRow {
+          display: flex;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .btn {
+          flex: 1;
+          padding: 12px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+        }
+
+        .backBtn {
+          background: #e5e7eb;
+        }
+
+        .addBtn {
+          background: #4f46e5;
+          color: white;
+        }
+      `}</style>
+
+      <div className="admin-layout">
+        <div className="sidebar">
+          <AdminSidebar />
+        </div>
+
+        <div className="main">
+          <AdminNavbar />
+
+          <div className="page">
+            <div className="card">
+              <div className="title">Add Category</div>
+              <div className="subtitle">
+                Create new product category and subcategory
               </div>
 
-              {/* Sub Category */}
-              <div style={styles.field}>
-                <label>Sub Category</label>
-                <input
-                  name="subCategory"
-                  value={formData.subCategory}
-                  onChange={handleChange}
-                  style={styles.input}
-                />
-                {errors.subCategory && (
-                  <span style={styles.error}>{errors.subCategory}</span>
-                )}
-              </div>
+              <form onSubmit={handleSubmit} className="form">
 
-              {/* Description */}
-              <div style={styles.field}>
-                <label>Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  style={styles.textarea}
-                />
-                {errors.description && (
-                  <span style={styles.error}>{errors.description}</span>
-                )}
-              </div>
+                <div className="field">
+                  <label>Category Name</label>
+                  <input
+                    name="categoryName"
+                    value={formData.categoryName}
+                    onChange={handleChange}
+                  />
+                  {errors.categoryName && (
+                    <span className="error">{errors.categoryName}</span>
+                  )}
+                </div>
 
-              {/* Image */}
-              <div style={styles.field}>
-                <label>Image</label>
-                <input type="file" onChange={handleFileChange} />
-                {errors.image && (
-                  <span style={styles.error}>{errors.image}</span>
-                )}
-              </div>
+                <div className="field">
+                  <label>Sub Category</label>
+                  <input
+                    name="subCategory"
+                    value={formData.subCategory}
+                    onChange={handleChange}
+                  />
+                  {errors.subCategory && (
+                    <span className="error">{errors.subCategory}</span>
+                  )}
+                </div>
 
-              {/* BUTTONS */}
-              <div style={styles.buttonRow}>
-                <button
-                  type="button"
-                  style={styles.backBtn}
-                  onClick={() => navigate("/admin/category")}
-                >
-                  Back
-                </button>
+                <div className="field">
+                  <label>Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                  />
+                  {errors.description && (
+                    <span className="error">{errors.description}</span>
+                  )}
+                </div>
 
-                <button type="submit" style={styles.addBtn}>
-                  Add Category
-                </button>
-              </div>
-            </form>
+                <div className="field">
+                  <label>Image</label>
+                  <input type="file" onChange={handleFileChange} />
+                  {errors.image && (
+                    <span className="error">{errors.image}</span>
+                  )}
+                </div>
+
+                <div className="buttonRow">
+                  <button
+                    type="button"
+                    className="btn backBtn"
+                    onClick={() => navigate("/admin/category")}
+                  >
+                    Back
+                  </button>
+
+                  <button type="submit" className="btn addBtn">
+                    Add Category
+                  </button>
+                </div>
+
+              </form>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
 export default AdminAddCategory;
-
-/* ================= STYLES ================= */
-
-const styles: { [key: string]: React.CSSProperties } = {
-  wrapper: {
-    display: "flex",
-    width: "100%",
-  },
-
-  sidebar: {
-    width: "260px",
-    position: "fixed",
-    top: 0,
-    left: 0,
-    height: "100vh",
-  },
-
-  main: {
-    flex: 1,
-    marginLeft: "260px",
-    background: "linear-gradient(135deg, #f5f7fa, #e4ecf5)",
-    minHeight: "100vh",
-  },
-
-  page: {
-    padding: "30px",
-    display: "flex",
-    justifyContent: "center",
-  },
-
-  card: {
-    width: "100%",
-    maxWidth: "650px",
-    background: "#fff",
-    padding: "25px",
-    borderRadius: "12px",
-    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-  },
-
-  title: {
-    fontSize: "22px",
-    fontWeight: 600,
-  },
-
-  subtitle: {
-    fontSize: "13px",
-    color: "#666",
-    marginBottom: "15px",
-  },
-
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-
-  field: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "5px",
-  },
-
-  input: {
-    padding: "10px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-  },
-
-  textarea: {
-    padding: "10px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    minHeight: "80px",
-  },
-
-  buttonRow: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "10px",
-  },
-
-  backBtn: {
-    flex: 1,
-    padding: "12px",
-    border: "none",
-    borderRadius: "8px",
-    background: "#e5e7eb",
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-
-  addBtn: {
-    flex: 1,
-    padding: "12px",
-    border: "none",
-    borderRadius: "8px",
-    background: "#4f46e5",
-    color: "white",
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-
-  error: {
-    color: "red",
-    fontSize: "12px",
-  },
-};
