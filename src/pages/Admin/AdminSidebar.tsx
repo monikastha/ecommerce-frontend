@@ -1,7 +1,19 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faGauge,
+  faUser,
+  faBox,
+  faCartShopping,
+  faBullhorn,
+  faLocationDot,
+} from "@fortawesome/free-solid-svg-icons";
+
 const AdminSidebar = () => {
+  const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState("dashboard");
 
   const [userMenu, setUserMenu] = useState(false);
@@ -14,7 +26,7 @@ const AdminSidebar = () => {
         .sidebar {
           width: 260px;
           min-height: 100vh;
-          background: #2f4156;
+          background: #445C6D;
           color: white;
           font-family: sans-serif;
         }
@@ -24,79 +36,74 @@ const AdminSidebar = () => {
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 10px 20px;
-          border-bottom: 1px solid #3f556b;
+          padding: 18px 20px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
         .logo-section img {
-          width: 170px;
-          height: auto;
+        margin-top:-30px;
+          width: 390px;   /* 👈 bigger logo */
+          height: 270px;
         }
 
-        /* MENU */
+
         .menu {
           list-style: none;
-          margin: 0;
-          padding: 0;
-        }
-
-        .menu li:first-child {
-          margin-top: 6px;
+          margin-top:-65px;
+          padding: 8px 0;
         }
 
         .menu li {
-          padding: 14px 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 18px;
           cursor: pointer;
-          transition: all 0.25s ease;
-          border-radius: 6px;
           margin: 4px 10px;
-          color: #d1d5db;
-        }
-
-        /* 🔥 HOVER = LIGHT RED */
-        .menu li:hover {
-          background: rgba(239, 68, 68, 0.15);
-          transform: translateX(4px);
+          border-radius: 8px;
           color: white;
+          transition: 0.25s;
+          font-size: 14px;
         }
 
-        /* 🔥 ACTIVE = SOLID RED */
+        .menu li:hover {
+          background: red;
+          transform: translateX(4px);
+        }
+
         .active {
-          background: #ef4444;
-          color: white !important;
+          font-weight: 500;
         }
 
         .dropdown-title {
           display: flex;
-          justify-content: space-between;
           align-items: center;
+          gap: 10px;
         }
 
         .submenu {
           list-style: none;
-          padding-left: 10px;
-          margin-top: 5px;
-          border: none;
+          padding-left: 20px;
+          margin-top: 4px;
         }
 
         .submenu li {
-          padding: 10px 15px;
-          font-size: 14px;
+          padding: 10px 14px;
+          font-size: 13px;
           margin: 2px 0;
-          border-radius: 5px;
-          color: #d1d5db;
-          transition: all 0.2s ease;
+          border-radius: 6px;
+          color:white;
+          transition: 0.2s;
         }
 
         .submenu li:hover {
-          background:#9B0F06;
-          padding-left:10px;
+           width:230px;
+          background: #9B0F06;
           color: white;
         }
       `}</style>
 
       <div className="sidebar">
-
         {/* Logo */}
         <div className="logo-section">
           <img src={logo} alt="logo" />
@@ -104,50 +111,54 @@ const AdminSidebar = () => {
 
         {/* Menu */}
         <ul className="menu">
-
           {/* Dashboard */}
           <li
             className={activeItem === "dashboard" ? "active" : ""}
-            onClick={() => setActiveItem("dashboard")}
+            onClick={() => {
+              setActiveItem("dashboard");
+              navigate("/admin/dashboard");
+            }}
           >
-            🏠 Dashboard
+            <FontAwesomeIcon icon={faGauge} />
+            Dashboard
           </li>
-
-          {/* User Management */}
+          {/* User */}
           <li onClick={() => setUserMenu(!userMenu)}>
             <div className="dropdown-title">
-              <span>👤 User Management</span>
+              <FontAwesomeIcon icon={faUser} />
+              <span>User Management</span>
             </div>
           </li>
 
           {userMenu && (
             <ul className="submenu">
-              <li>Assistant</li>
-              <li>Warehouse Staff</li>
-              <li>Seller</li>
-              <li>Buyer</li>
-              <li>Delivery Man</li>
+              <li onClick={() => navigate("/admin/staff")}>Staff</li>
+              <li onClick={() => navigate("/admin/seller")}>Seller</li>
+              <li onClick={() => navigate("/admin/buyer")}>Buyer</li>
+              <li onClick={() => navigate("/admin/delivery")}>Delivery Man</li>
             </ul>
           )}
 
-          {/* Product Management */}
+          {/* Product */}
           <li onClick={() => setProductMenu(!productMenu)}>
             <div className="dropdown-title">
-              <span>🛒 Product Management</span>
+              <FontAwesomeIcon icon={faBox} />
+              <span>Product Management</span>
             </div>
           </li>
 
           {productMenu && (
             <ul className="submenu">
-              <li>Category</li>
-              <li>Product</li>
+              <li onClick={() => navigate("/admin/category")}>Category</li>
+              <li onClick={() => navigate("/admin/product")}>Product</li>
             </ul>
           )}
 
-          {/* Order Management */}
+          {/* Order */}
           <li onClick={() => setOrderMenu(!orderMenu)}>
             <div className="dropdown-title">
-              <span>📦 Order Management</span>
+              <FontAwesomeIcon icon={faCartShopping} />
+              <span>Order Management</span>
             </div>
           </li>
 
@@ -159,10 +170,34 @@ const AdminSidebar = () => {
             </ul>
           )}
 
-          {/* Other items */}
-          <li>📢 Promotional Settings</li>
-          <li>📍 Location</li>
+          {/* Others */}
+          <li
+            onClick={() => {
+              setActiveItem("promotion");
+              navigate("/admin/promotion");
+            }}
+            className={activeItem === "promotion" ? "active" : ""}
+            style={{ cursor: "pointer" }}
+          >
+            <FontAwesomeIcon icon={faBullhorn} />
+            Promotional Settings
+          </li>
+          <li
+            onClick={() => {
+              setActiveItem("location");
+              navigate("/admin/location");
+            }}
+            className={activeItem === "location" ? "active" : ""}
+            style={{ cursor: "pointer" }}
+          >
+            <FontAwesomeIcon icon={faLocationDot} />
+            Location
+          </li>
 
+          {/* <li>
+            <FontAwesomeIcon icon={faLocationDot} />
+            Location
+          </li> */}
         </ul>
       </div>
     </>
