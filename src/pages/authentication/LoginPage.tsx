@@ -183,8 +183,8 @@ export default function LoginPage() {
         {/* RIGHT CARD */}
         <div className="card">
           <div>
-            <h2>Admin Login</h2>
-            <p className="subtitle">Login into the admin dashboard</p>
+            <h2> Hello!</h2>
+            <p className="subtitle">Login into your dashboard</p>
 
             <div className="form-content">
               <div className="input-group">
@@ -216,7 +216,7 @@ export default function LoginPage() {
           </div>
 
           <button className="btn" onClick={handleLogin} disabled={loading}>
-            {loading ? <span className="spinner"></span> : "Login now"}
+            {loading ? <span className="spinner"></span> : "Login "}
           </button>
         </div>
       </div>

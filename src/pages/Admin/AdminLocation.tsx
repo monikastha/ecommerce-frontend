@@ -78,7 +78,7 @@ const AdminLocation: React.FC = () => {
 
         .main {
           flex: 1;
-          margin-left: 250px;
+          margin-left: 0px;
           background: #f4f6f8;
           min-height: 100vh;
         }
