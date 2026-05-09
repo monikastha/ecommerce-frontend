@@ -1,153 +1,224 @@
 import React, { useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import { FaUsers } from "react-icons/fa";
 
 const AdminBuyer: React.FC = () => {
   const [search, setSearch] = useState("");
 
   return (
-    <div className="wrapper">
-      <AdminSidebar />
+    <>
+      <style>{`
 
-      <div className="main">
-        <AdminNavbar />
+        *{
+          margin:0;
+          padding:0;
+          box-sizing:border-box;
+          font-family:'Poppins',sans-serif;
+        }
 
-        <div className="container">
+        body{
+          background:#f1f5f9;
+        }
 
-          {/* HEADER */}
-          <div className="headerBox">
-            <div>
-              <h2 className="title">Buyer Management</h2>
-              <p className="subtitle">
-                Manage buyers, orders, and purchase history
-              </p>
+        .wrapper{
+          display:flex;
+          min-height:100vh;
+        }
+
+        .main{
+          flex:1;
+          display:flex;
+          flex-direction:column;
+        }
+
+        .container{
+          padding:28px;
+        }
+
+        /* HEADER */
+        .headerBox{
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          background:#ffffff;
+          padding:22px;
+          border-radius:16px;
+          box-shadow:0 10px 25px rgba(0,0,0,0.06);
+          margin-bottom:22px;
+          flex-wrap:wrap;
+          gap:15px;
+        }
+
+        .title-section{
+          display:flex;
+          align-items:center;
+          gap:14px;
+        }
+
+        .header-icon{
+          width:52px;
+          height:52px;
+          background:linear-gradient(135deg,#2563eb,#3b82f6);
+          color:#fff;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          border-radius:14px;
+          font-size:20px;
+        }
+
+        .title{
+          font-size:23px;
+          font-weight:700;
+          color:#0f172a;
+        }
+
+        .subtitle{
+          font-size:13px;
+          color:#64748b;
+          margin-top:3px;
+        }
+
+        /* CATEGORY STYLE SEARCH (FIXED) */
+        .search{
+          width:200px;
+          padding:10px 14px;
+          border-radius:10px;
+          border:1px solid #d1d5db;
+          outline:none;
+          font-size:13px;
+          transition:0.2s;
+        }
+
+        .search:focus{
+          border-color:#2563eb;
+          box-shadow:0 0 0 3px rgba(37,99,235,0.15);
+        }
+
+        /* TABLE */
+        .tableBox{
+          background:#fff;
+          border-radius:16px;
+          overflow:hidden;
+          box-shadow:0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+        }
+
+        th{
+          font-size:13px;
+          padding:15px;
+          text-align:left;
+          color:#475569;
+          background:#f8fafc;
+          font-weight:600;
+        }
+
+        td{
+          font-size:13px;
+          padding:15px;
+          border-top:1px solid #f1f5f9;
+          color:#334155;
+        }
+
+        tr:hover{
+          background:#f9fafb;
+        }
+
+        .empty{
+          text-align:center;
+          padding:40px;
+          color:#94a3b8;
+          font-size:13px;
+        }
+
+        @media(max-width:900px){
+          .search{
+            width:100%;
+          }
+        }
+
+      `}</style>
+
+      <div className="wrapper">
+
+        <AdminSidebar />
+
+        <div className="main">
+
+          <AdminNavbar />
+
+          <div className="container">
+
+            {/* HEADER */}
+            <div className="headerBox">
+
+              <div className="title-section">
+
+                <div className="header-icon">
+                  <FaUsers />
+                </div>
+
+                <div>
+                  <h2 className="title">Buyer Management</h2>
+                  <p className="subtitle">
+                    Manage buyers, orders, and purchase history
+                  </p>
+                </div>
+
+              </div>
+
+              {/* CATEGORY STYLE SEARCH */}
+              <input
+                type="text"
+                className="search"
+                placeholder="Search buyers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+
             </div>
 
-            <input
-              className="search"
-              placeholder="Search buyers..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+            {/* TABLE */}
+            <div className="tableBox">
 
-          {/* TABLE */}
-          <div className="tableBox">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Address</th>
-                  <th>Product Name</th>
-                  <th>Total Price</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+              <table>
 
-              <tbody>
-                <tr>
-                  <td colSpan={8} className="empty">
-                    No buyer data available
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Product Name</th>
+                    <th>Total Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td colSpan={8} className="empty">
+                      No buyer data available
+                    </td>
+                  </tr>
+                </tbody>
+
+              </table>
+
+            </div>
+
           </div>
 
         </div>
+
       </div>
-
-      {/* STYLES */}
-      <style>{`
-        .wrapper {
-          display: flex;
-        }
-
-        .main {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          background: #f4f6f8;
-          min-height: 100vh;
-        }
-
-        .container {
-          padding: 20px;
-        }
-
-        .headerBox {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #fff;
-          padding: 18px 22px;
-          border-radius: 12px;
-          margin-bottom: 16px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .title {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .subtitle {
-          margin: 0;
-          font-size: 13px;
-          color: #6b7280;
-        }
-
-        .search {
-          padding: 10px 14px;
-          border-radius: 8px;
-          border: 1px solid #d1d5db;
-          outline: none;
-          width: 250px;
-        }
-
-        .search:focus {
-          border-color: #4f46e5;
-        }
-
-        .tableBox {
-          background: #fff;
-          padding: 15px;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-          overflow-x: auto;
-        }
-
-        .table {
-          width: 100%;
-          border-collapse: collapse;
-          min-width: 900px;
-        }
-
-        .table th {
-          background: #f9fafb;
-          text-align: left;
-          padding: 12px;
-          font-size: 13px;
-        }
-
-        .table td {
-          padding: 12px;
-          border-top: 1px solid #eee;
-          font-size: 13px;
-        }
-
-        .empty {
-          text-align: center;
-          padding: 30px;
-          color: #9ca3af;
-        }
-      `}</style>
-
-    </div>
+    </>
   );
 };
 

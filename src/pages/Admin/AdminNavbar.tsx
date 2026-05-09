@@ -6,113 +6,135 @@ import {
   faBell,
   faUser,
   faRightFromBracket,
-  // faIdBadge,
+  faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AdminNavbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // close dropdown on outside click
+  // ✅ GREETING STATE
+  const [greeting, setGreeting] = useState("");
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setProfileOpen(false);
+    const updateGreeting = () => {
+      const now = new Date();
+
+      // Nepal time (Asia/Kathmandu)
+      const nepalTime = new Date(
+        now.toLocaleString("en-US", { timeZone: "Asia/Kathmandu" })
+      );
+
+      const hour = nepalTime.getHours();
+
+      if (hour < 12) {
+        setGreeting("Good Morning 🌅");
+      } else if (hour < 17) {
+        setGreeting("Good Afternoon ☀️");
+      } else if (hour < 21) {
+        setGreeting("Good Evening 🌇");
+      } else {
+        setGreeting("Good Night 🌙");
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    updateGreeting();
+    const interval = setInterval(updateGreeting, 60000); // update every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <>
       <style>{`
         .navbar{
-          height:70px;
-          background:white;
-          border-bottom:1px solid #ddd;
+          height:72px;
+          background:rgba(255,255,255,0.9);
+          backdrop-filter: blur(10px);
+          border-bottom:1px solid #e2e8f0;
           padding:0 25px;
           display:flex;
           align-items:center;
           justify-content:space-between;
+          position:sticky;
+          top:0;
+          z-index:100;
         }
 
         .navbar-left h2{
-          color:#444;
-          font-size:22px;
+          font-size:18px;
           margin:0;
+          color:#0f172a;
+          font-weight:600;
         }
 
         .navbar-left p{
           font-size:13px;
-          color:gray;
-          margin-top:5px;
+          color:#64748b;
+          margin-top:3px;
         }
 
         .navbar-right{
           display:flex;
           align-items:center;
-          gap:15px;
+          gap:16px;
+        }
+
+        .search-box{
+          display:flex;
+          align-items:center;
+          gap:8px;
+          background:#f1f5f9;
+          padding:10px 14px;
+          border-radius:12px;
+          width:280px;
         }
 
         .search-box input{
-          width:260px;
-          padding:10px;
           border:none;
           outline:none;
-          background:#f2f2f2;
-          border-radius:6px;
+          background:transparent;
+          width:100%;
+          font-size:13px;
         }
 
         .icon{
           font-size:18px;
+          color:#334155;
           cursor:pointer;
-          color:#444;
         }
 
         .profile{
-          width:40px;
-          height:40px;
+          width:42px;
+          height:42px;
           border-radius:50%;
           cursor:pointer;
-          border:2px solid #ddd;
+          border:2px solid #e2e8f0;
         }
 
-        /* DROPDOWN */
-        .dropdown {
-          position: absolute;
-          top: 60px;
-          right: 0;
-          width: 180px;
-          background: white;
-          border: 1px solid #eee;
-          border-radius: 8px;
-          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-          overflow: hidden;
-          z-index: 100;
+        .dropdown{
+          position:absolute;
+          top:55px;
+          right:0;
+          width:180px;
+          background:white;
+          border-radius:12px;
+          box-shadow:0 10px 25px rgba(0,0,0,0.1);
+          overflow:hidden;
         }
 
-        .dropdown div {
-          padding: 12px 15px;
-          font-size: 14px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          transition: 0.2s;
+        .dropdown div{
+          padding:12px 15px;
+          font-size:14px;
+          cursor:pointer;
+          display:flex;
+          align-items:center;
+          gap:10px;
         }
 
-        .dropdown div:hover {
-          background: #f5f5f5;
-        }
-
-        .logout {
-          color: red;
+        .logout{
+          color:#ef4444;
         }
       `}</style>
 
@@ -120,37 +142,29 @@ const AdminNavbar = () => {
 
         {/* LEFT */}
         <div className="navbar-left">
-          <h2>Good Morning, Admin</h2>
-
+          <h2>{greeting} Admin</h2>
+          {/* <p>Welcome back Admin 👋</p> */}
         </div>
 
         {/* RIGHT */}
         <div className="navbar-right">
 
-          {/* SEARCH */}
           <div className="search-box">
-            <input
-              type="text"
-              placeholder="Search Product, Order etc."
-            />
+            <FontAwesomeIcon icon={faSearch} />
+            <input placeholder="Search..." />
           </div>
 
-          {/* NOTIFICATION */}
           <FontAwesomeIcon icon={faBell} className="icon" />
 
-          {/* PROFILE */}
           <div ref={dropdownRef} style={{ position: "relative" }}>
-
             <img
               className="profile"
               src={logo}
-              alt="profile"
               onClick={() => setProfileOpen(!profileOpen)}
             />
 
             {profileOpen && (
               <div className="dropdown">
-
                 <div>
                   <FontAwesomeIcon icon={faUser} />
                   Profile
@@ -160,10 +174,8 @@ const AdminNavbar = () => {
                   <FontAwesomeIcon icon={faRightFromBracket} />
                   Logout
                 </div>
-
               </div>
             )}
-
           </div>
 
         </div>
