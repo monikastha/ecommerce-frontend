@@ -11,38 +11,29 @@ import {
 
 const AdminNavbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
-
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ GREETING STATE
-  const [greeting, setGreeting] = useState("");
+  // ✅ Time-based greeting (Nepal time works automatically from browser)
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    if (hour < 21) return "Good Evening";
+    return "Good Night";
+  };
 
   useEffect(() => {
-    const updateGreeting = () => {
-      const now = new Date();
-
-      // Nepal time (Asia/Kathmandu)
-      const nepalTime = new Date(
-        now.toLocaleString("en-US", { timeZone: "Asia/Kathmandu" })
-      );
-
-      const hour = nepalTime.getHours();
-
-      if (hour < 12) {
-        setGreeting("Good Morning 🌅");
-      } else if (hour < 17) {
-        setGreeting("Good Afternoon ☀️");
-      } else if (hour < 21) {
-        setGreeting("Good Evening 🌇");
-      } else {
-        setGreeting("Good Night 🌙");
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setProfileOpen(false);
       }
     };
 
-    updateGreeting();
-    const interval = setInterval(updateGreeting, 60000); // update every minute
-
-    return () => clearInterval(interval);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -62,6 +53,11 @@ const AdminNavbar = () => {
           z-index:100;
         }
 
+        .navbar-left{
+          display:flex;
+          flex-direction:column;
+        }
+
         .navbar-left h2{
           font-size:18px;
           margin:0;
@@ -70,17 +66,18 @@ const AdminNavbar = () => {
         }
 
         .navbar-left p{
-          font-size:13px;
+          font-size:12px;
           color:#64748b;
-          margin-top:3px;
+          margin-top:2px;
         }
 
         .navbar-right{
           display:flex;
           align-items:center;
-          gap:16px;
+          gap:15px;
         }
 
+        /* ✅ SEARCH FIXED */
         .search-box{
           display:flex;
           align-items:center;
@@ -88,7 +85,17 @@ const AdminNavbar = () => {
           background:#f1f5f9;
           padding:10px 14px;
           border-radius:12px;
-          width:280px;
+
+          width:260px;
+          flex-shrink:0;   /* 🔥 IMPORTANT FIX */
+          border:1px solid transparent;
+          transition:0.3s;
+        }
+
+        .search-box:focus-within{
+          background:#fff;
+          border-color:#2563eb;
+          box-shadow:0 0 0 3px rgba(37,99,235,0.12);
         }
 
         .search-box input{
@@ -99,12 +106,24 @@ const AdminNavbar = () => {
           font-size:13px;
         }
 
-        .icon{
-          font-size:18px;
-          color:#334155;
-          cursor:pointer;
+        .search-icon{
+          color:#94a3b8;
         }
 
+        /* ICON */
+        .icon{
+          font-size:18px;
+          cursor:pointer;
+          color:#475569;
+          transition:0.2s;
+        }
+
+        .icon:hover{
+          color:#2563eb;
+          transform:scale(1.1);
+        }
+
+        /* PROFILE */
         .profile{
           width:42px;
           height:42px;
@@ -113,6 +132,11 @@ const AdminNavbar = () => {
           border:2px solid #e2e8f0;
         }
 
+        .profile:hover{
+          border-color:#2563eb;
+        }
+
+        /* DROPDOWN */
         .dropdown{
           position:absolute;
           top:55px;
@@ -131,10 +155,23 @@ const AdminNavbar = () => {
           display:flex;
           align-items:center;
           gap:10px;
+          color:#334155;
+          transition:0.2s;
+        }
+
+        .dropdown div:hover{
+          background:#f1f5f9;
         }
 
         .logout{
-          color:#ef4444;
+          color:#ef4444 !important;
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:768px){
+          .search-box{
+            display:none;
+          }
         }
       `}</style>
 
@@ -142,24 +179,28 @@ const AdminNavbar = () => {
 
         {/* LEFT */}
         <div className="navbar-left">
-          <h2>{greeting} Admin</h2>
-          {/* <p>Welcome back Admin 👋</p> */}
+          <h2>{getGreeting()}, Admin 👋</h2>
+          <p>Welcome back to your dashboard</p>
         </div>
 
         {/* RIGHT */}
         <div className="navbar-right">
 
+          {/* SEARCH */}
           <div className="search-box">
-            <FontAwesomeIcon icon={faSearch} />
-            <input placeholder="Search..." />
+            <FontAwesomeIcon icon={faSearch} className="search-icon" />
+            <input placeholder="Search products, orders..." />
           </div>
 
+          {/* NOTIFICATION */}
           <FontAwesomeIcon icon={faBell} className="icon" />
 
+          {/* PROFILE */}
           <div ref={dropdownRef} style={{ position: "relative" }}>
             <img
               className="profile"
               src={logo}
+              alt="profile"
               onClick={() => setProfileOpen(!profileOpen)}
             />
 

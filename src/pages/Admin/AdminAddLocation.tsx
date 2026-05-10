@@ -41,10 +41,8 @@ const AdminAddLocation: React.FC = () => {
         {/* MAIN */}
         <div className="main">
 
-          {/* NAVBAR (NOW PROPERLY PLACED) */}
-          <div className="navbar-wrapper">
-            <AdminNavbar />
-          </div>
+          {/* NAVBAR */}
+          <AdminNavbar />
 
           {/* CONTENT */}
           <div className="container">
@@ -106,23 +104,18 @@ const AdminAddLocation: React.FC = () => {
           font-family:'Poppins',sans-serif;
         }
 
-        .wrapper{
-          display:flex;
-          min-height:100vh;
-          background:#f1f5f9;
-        }
+        // .wrapper{
+        //   display:flex;
+        //   min-height:100vh;
+        //   background:#f1f5f9;
+        // }
 
-        /* IMPORTANT FIX */
+        /* FIXED LAYOUT */
         .main{
           flex:1;
           margin-left:260px;
           display:flex;
           flex-direction:column;
-        }
-
-        /* NAVBAR FIX */
-        .navbar-wrapper{
-          width:100%;
         }
 
         .container{
