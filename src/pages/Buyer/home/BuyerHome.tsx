@@ -13,566 +13,740 @@ import studyMaterial from "../../../assets/study-material.jpg";
 import cartoon1 from "../../../assets/cartoon1.png";
 import cartoon2 from "../../../assets/cartoon2.png";
 import logoImg from "../../../assets/logo.png";
+import homeLogo from "../../../assets/homeremovebg.png";
+import login from "../../../assets/login.png";
+import signup from "../../../assets/signupRemove.png";
+import account from "../../../assets/accountbgremove.png";
+import logout from "../../../assets/logoutbgremoved.png";
+import cart from "../../../assets/cartbgremove.png";
 
 
 
 
-/* ── placeholder helper ─────────────────────────────────── */
-const ph = (w: number, h: number, label: string, bg: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/ffffff?text=${encodeURIComponent(label)}`;
 
-/* ── data ────────────────────────────────────────────────── */
+
+
+/* ─────────────────────────────────────────────────────────────
+   DESIGN TOKENS  — change these ONE place to retheme the whole site
+───────────────────────────────────────────────────────────── */
+const TOKEN = {
+  // brand
+  primary: "#7c3aed", // violet-600
+  primaryDark: "#5b21b6", // violet-800
+  primaryLight: "#ede9fe", // violet-100
+  accent: "#22c55e", // green-500
+  accentDark: "#15803d", // green-700
+  // hero gradient
+  heroFrom: "#4f0aab",
+  heroMid: "#7c3aed",
+  heroTo: "#c026d3",
+  // bg / surface
+  pageBg: "#f0eff4",
+  cardBg: "#ffffff",
+  footerBg: "#100025",
+  // text
+  textPrimary: "#111827",
+  textMuted: "#6b7280",
+  textLight: "#9ca3af",
+};
+
+/* ─────────────────────────────────────────────────────────────
+   DATA
+───────────────────────────────────────────────────────── */
 const topProducts = [
-  { id: 1, name: "Black Leather Shoes",   price: "Rs. 1,799",  old: "Rs. 2,120",  rating: 4, reviews: 128, img: shoesImg },
-  { id: 2, name: "Red Emerald Necklace",  price: "Rs. 2,199",  old: "Rs. 2,799",  rating: 4, reviews: 97,  img: Necklace},
-  { id: 3, name: "Apple iPhone 15 Pro",   price: "Rs. 91,999", old: "Rs. 99,999", rating: 5, reviews: 251, img: iphun },
-  { id: 4, name: "Wireless Headphones",   price: "Rs. 3,499",  old: "Rs. 4,200",  rating: 4, reviews: 183, img: Headphone},
+  {
+    id: 1,
+    name: "Black Leather Shoes",
+    price: "Rs. 1,799",
+    old: "Rs. 2,120",
+    rating: 4,
+    reviews: 128,
+    img: shoesImg,
+  },
+  {
+    id: 2,
+    name: "Red Emerald Necklace",
+    price: "Rs. 2,199",
+    old: "Rs. 2,799",
+    rating: 4,
+    reviews: 97,
+    img: Necklace,
+  },
+  {
+    id: 3,
+    name: "Apple iPhone 15 Pro",
+    price: "Rs. 91,999",
+    old: "Rs. 99,999",
+    rating: 5,
+    reviews: 251,
+    img: iphun,
+  },
+  {
+    id: 4,
+    name: "Wireless Headphones",
+    price: "Rs. 3,499",
+    old: "Rs. 4,200",
+    rating: 4,
+    reviews: 183,
+    img: Headphone,
+  },
 ];
 
 const categories = [
-  { id:1, title:"Fashion",        sub:"Trendy Outfits",    img: trendy },
-  { id:2, title:"Electronics",    sub:"Latest Gadgets",    img: laptop },
-  { id:3, title:"Home Goods",     sub:"Home Essentials",   img: homeGoods },
-  { id:4, title:"Cosmetics",      sub:"Beauty Products",   img: cosmetics },
-  { id:5, title:"Medicine",       sub:"Healthcare",        img: medicine },
-  { id:6, title:"Study Materials",sub:"Books & Guides",    img: studyMaterial},
+  { id: 1, title: "Fashion", sub: "Trendy Outfits", img: trendy },
+  { id: 2, title: "Electronics", sub: "Latest Gadgets", img: laptop },
+  { id: 3, title: "Home Goods", sub: "Home Essentials", img: homeGoods },
+  { id: 4, title: "Cosmetics", sub: "Beauty Products", img: cosmetics },
+  { id: 5, title: "Medicine", sub: "Healthcare", img: medicine },
+  {
+    id: 6,
+    title: "Study Materials",
+    sub: "Books & Guides",
+    img: studyMaterial,
+  },
 ];
 
 const reviews = [
-  { id:1, name:"Kabita Kumal", text:"Excellent! Fast delivery and very supportive. Will order again definitely.", rating:5, img: cartoon1},
-  { id:2, name:"Kabita Thapa", text:"Great products at best prices. Will definitely order again once in a lifetime deals.", rating:5, img: cartoon2 },
+  {
+    id: 1,
+    name: "Kabita Kumal",
+    text: "Excellent! Fast delivery and very supportive. Will order again definitely.",
+    rating: 5,
+    img: cartoon1,
+  },
+  {
+    id: 2,
+    name: "Kabita Thapa",
+    text: "Great products at best prices. Will definitely order again once in a lifetime deals.",
+    rating: 5,
+    img: cartoon2,
+  },
 ];
 
-/* ── star component ─────────────────────────────────────── */
+const NAV_ITEMS = [
+  { label: "Home", emoji: homeLogo },
+  { label: "Login", emoji:login },
+  { label: "SignUp", emoji: signup },
+  { label: "Account", emoji: account },
+  { label: "Logout", emoji: logout },
+  { label: "Cart", emoji: cart },
+];
+
+const CAT_TABS = [
+  "Fashion",
+  "Electronics",
+  "Home Goods",
+  "Cosmetics",
+  "Medicine",
+  "Study Materials",
+  "Shoes",
+  "Others",
+];
+
+const FEATURES = [
+  {
+    emoji: "🚚",
+    bg: "bg-emerald-50 text-emerald-600",
+    title: "Emergency Fast Delivery",
+    sub: "Fast delivery in your area",
+  },
+  {
+    emoji: "🤖",
+    bg: "bg-violet-50 text-violet-600",
+    title: "AI Smart Comparison",
+    sub: "Compare products instantly",
+  },
+  {
+    emoji: "🎧",
+    bg: "bg-amber-50 text-amber-600",
+    title: "24/7 Support",
+    sub: "We're here to help",
+  },
+];
+
+const TRUST = [
+  {
+    emoji: "✅",
+    ring: "ring-emerald-200 bg-emerald-50",
+    title: "Original Products",
+    sub: "100% Authentic Brands",
+    tc: "text-emerald-700",
+  },
+  {
+    emoji: "🏷️",
+    ring: "ring-yellow-200  bg-yellow-50",
+    title: "Best Prices",
+    sub: "Unbeatable Deals",
+    tc: "text-yellow-700",
+    sale: true,
+  },
+  {
+    emoji: "👥",
+    ring: "ring-blue-200    bg-blue-50",
+    title: "Trusted by 1000+ Customers",
+    sub: "Join the Sajilo family today",
+    tc: "text-blue-700",
+  },
+];
+
+/* ─────────────────────────────────────────────────────────────
+   TINY HELPERS
+───────────────────────────────────────────────────────── */
 const Stars = ({ n }: { n: number }) => (
-  <span>{[1,2,3,4,5].map(i => (
-    <span key={i} style={{ color: i<=n ? "#f59e0b" : "#d1d5db", fontSize: 11 }}>★</span>
-  ))}</span>
+  <span aria-label={`${n} stars`}>
+    {[1, 2, 3, 4, 5].map((i) => (
+      <span key={i} className={i <= n ? "text-amber-400" : "text-gray-200"}>
+        ★
+      </span>
+    ))}
+  </span>
 );
 
-/* ══════════════════════════════════════════════════════════
-   MAIN COMPONENT
-══════════════════════════════════════════════════════════ */
+/* ─────────────────────────────────────────────────────────────
+   COMPONENT
+───────────────────────────────────────────────────────── */
 export default function SajiloMart() {
-  const [heroImg, setHeroImg]     = useState(bbGirl);
+  const [heroImg, setHeroImg] = useState<string>(bbGirl);
   const [activeCat, setActiveCat] = useState("Fashion");
   const [activeNav, setActiveNav] = useState("Home");
-  const [liked, setLiked]         = useState<Record<number,boolean>>({});
-  const [cartQty, setCartQty]     = useState(0);
-  const [email, setEmail]         = useState("");
-  const [subbed, setSubbed]       = useState(false);
+  const [liked, setLiked] = useState<Record<number, boolean>>({});
+  const [cartQty, setCartQty] = useState(0);
+  const [email, setEmail] = useState("");
+  const [subbed, setSubbed] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (!f) return;
+    const f = e.target.files?.[0];
+    if (!f) return;
     const r = new FileReader();
-    r.onload = ev => setHeroImg(ev.target?.result as string);
+    r.onload = (ev) => setHeroImg(ev.target?.result as string);
     r.readAsDataURL(f);
   };
 
-  const navItems = [
-    { label:"Home",    icon:"🏠" },
-    { label:"Login",   icon:"🔑" },
-    { label:"SignUp",  icon:"👤" },
-    { label:"Account", icon:"👤" },
-    { label:"Logout",  icon:"🚪" },
-    { label:"Cart",    icon:"🛒", badge: cartQty },
-  ];
-
-  const catTabs = ["Fashion","Electronics","Home Goods","Cosmetics","Medicine","Study Materials","Shoes","Others"];
+  /* ── shared tw snippets ── */
+  const btnPrimary =
+    "bg-violet-600 hover:bg-violet-700 text-white font-semibold transition-colors duration-150 cursor-pointer border-none";
+  const sectionHead = "flex items-center justify-between mb-5";
+  const h2Class = "text-xl font-extrabold text-gray-900 tracking-tight";
+  const viewAll =
+    "text-sm font-semibold text-violet-600 hover:text-violet-800 hover:underline cursor-pointer bg-transparent border-none transition-colors";
 
   return (
-    <>
-      {/* ── global styles ───────────────────────────────── */}
-      <style>{`
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { font-size: 16px; }
-        body { background: #f3f4f6; font-family: 'Segoe UI', sans-serif; }
-
-        .sm-container {
-          width: 100%;
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px;
-        }
-
-        /* scrollbar hide */
-        .no-scroll::-webkit-scrollbar { display: none; }
-        .no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* nav icons */
-        .nav-btn {
-          display: flex; flex-direction: column; align-items: center;
-          gap: 2px; padding: 4px 10px; border-radius: 6px;
-          cursor: pointer; border: none; background: transparent;
-          font-size: 10px; color: #555; transition: all .15s;
-          white-space: nowrap;
-        }
-        .nav-btn:hover { background: #ede9fe; color: #5b21b6; }
-        .nav-btn.active { color: #5b21b6; font-weight: 700; }
-        .nav-btn .icon { font-size: 18px; line-height: 1; }
-
-        /* category tabs */
-        .cat-tab {
-          padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd;
-          background: #fff; cursor: pointer; font-size: 12px; white-space: nowrap;
-          transition: all .15s; color: #444;
-        }
-        .cat-tab:hover { background: #7c3aed; color: #fff; border-color: #7c3aed; }
-        .cat-tab.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
-
-        /* product card */
-        .p-card {
-          background: #fff; border-radius: 12px; border: 1px solid #e5e7eb;
-          overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.07);
-          transition: box-shadow .2s, transform .2s; position: relative;
-        }
-          .p-card img {
-           width: 50px;
-           height: 100px;
-           object-fit: contain;
-           padding: 12px;
-           background: #fff;
-           transition: transform 0.3s ease;
-          }
-
-           .p-card:hover img {
-            transform: scale(1.05);
-            }
-        .p-card:hover { box-shadow: 0 6px 20px rgba(91,33,182,.15); transform: translateY(-3px); }
-
-        .btn-buy {
-          flex: 1; background: #22c55e; color: #fff; font-size: 10px;
-          font-weight: 700; padding: 5px 0; border-radius: 5px; border: none;
-          cursor: pointer; transition: background .15s;
-        }
-        .btn-buy:hover { background: #16a34a; }
-        .btn-add {
-          flex: 1; background: #7c3aed; color: #fff; font-size: 10px;
-          font-weight: 700; padding: 5px 0; border-radius: 5px; border: none;
-          cursor: pointer; transition: background .15s;
-        }
-        .btn-add:hover { background: #6d28d9; }
-
-        .heart {
-          position: absolute; top: 6px; right: 6px;
-          background: rgba(255,255,255,.9); border: none;
-          border-radius: 50%; width: 24px; height: 24px;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; font-size: 13px; color: #ccc; transition: color .15s;
-        }
-        .heart.liked { color: #ef4444; }
-
-        /* category card */
-        .cat-card {
-          background: #fff; border-radius: 10px; border: 1px solid #e5e7eb;
-          display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-          cursor: pointer; transition: box-shadow .15s;
-        }
-        .cat-card:hover { box-shadow: 0 4px 14px rgba(91,33,182,.13); }
-
-        /* footer link hover */
-        .f-link { font-size: 12px; color: #9ca3af; cursor: pointer; transition: color .15s; display: block; margin-bottom: 5px; }
-        .f-link:hover { color: #c4b5fd; }
-
-        /* responsive */
-        @media (max-width: 768px) {
-          .hero-text h1 { font-size: 28px !important; }
-          .hero-text .script { font-size: 20px !important; }
-          .grid-4 { grid-template-columns: repeat(2,1fr) !important; }
-          .grid-2 { grid-template-columns: 1fr !important; }
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
-          .feat-strip { flex-direction: column; gap: 10px !important; }
-          .trust-strip { flex-direction: column; gap: 12px !important; }
-        }
-        @media (max-width: 480px) {
-          .grid-4 { grid-template-columns: repeat(2,1fr) !important; }
-          .hero-section { min-height: 200px !important; }
-          .nav-btn .icon { font-size: 14px; }
-        }
-      `}</style>
-
-      <div style={{ width:"100%", minHeight:"100vh", background:"#f3f4f6" }}>
-
-        {/* ══════════════ STICKY HEADER ══════════════ */}
-        <header style={{ background:"#fff", borderBottom:"1px solid #e5e7eb", position:"sticky", top:0, zIndex:200, boxShadow:"0 2px 8px rgba(0,0,0,.08)" }}>
-          <div className="sm-container">
-
-            {/* Row 1: Logo + Search + Nav icons */}
-            <div style={{ display:"flex", alignItems:"center", gap:16, padding:"10px 0 6px" }}>
-
-              {/* LOGO */}
-              <div style={{
-  display:"flex",
-  alignItems:"center",
-  gap:10,
-  flexShrink:0
-}}>
-  
-  <div style={{
-    width:44,
-    height:44,
-    borderRadius:"50%",
-    background:"linear-gradient(135deg,#22c55e,#15803d)",
-    display:"flex",
-    alignItems:"center",
-    justifyContent:"center",
-    boxShadow:"0 3px 8px rgba(34,197,94,.35)"
-  }}>
-    
-    <img 
-      src={logoImg}
-      alt="Logo"
+    <div
+      className="min-h-screen w-full"
       style={{
-        width:"200px",
-        height:"200px",
-        objectFit:"contain"
+        background: TOKEN.pageBg,
+        fontFamily: "'Segoe UI',system-ui,sans-serif",
       }}
-    />
-
-  </div>
-
-  <div>
-    <div style={{
-      fontSize:16,
-      fontWeight:900,
-      color:"blue",
-      fontFamily:"Georgia,serif",
-      lineHeight:1.1
-    }}>
-      Sajilo Mart
-    </div>
-
-    <div style={{
-      fontSize:9,
-      color:"#888",
-      fontStyle:"bold"
-    }}>
-      Shop Anytime, Anywhere
-    </div>
-  </div>
-</div>
-
-              {/* SEARCH */}
-              <div style={{ flex:1, display:"flex", alignItems:"center", border:"2px solid #e0d6ff", borderRadius:25, overflow:"hidden", height:38, background:"#fafafa", maxWidth:600 }}>
-                <input
-                  type="text"
-                  placeholder="Search for products, brands and more..."
-                  style={{ flex:1, height:"100%", padding:"0 14px", fontSize:12, outline:"none", background:"transparent", border:"none" }}
+    >
+      {/* ══════════════════════════════════════
+          HEADER
+      ══════════════════════════════════════ */}
+      <header className="bg-white/95 backdrop-blur border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          {/* Row 1 */}
+          <div className="flex items-center gap-3 py-2">
+            {/* Logo */}
+            <a
+              href="#"
+              className="flex items-center gap-2 shrink-0 no-underline"
+            >
+              <div className="w-10 h-10 rounded-full overflow-hidden shadow-md shadow-green-200 ring-2 ring-green-400/30 shrink-0 flex items-center justify-center bg-white">
+                <img
+                  src={logoImg}
+                  alt="Sajilo Mart"
+                  className="w-10 h-10 object-contain"
                 />
-                <button style={{ width:42, height:38, background:"#7c3aed", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                  <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
-                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                  </svg>
+              </div>
+              <div className="leading-none">
+                <p
+                  className="text-[15px] font-black text-blue-700"
+                  style={{ fontFamily: "Georgia,serif" }}
+                >
+                  Sajilo Mart
+                </p>
+                <p className="text-[9px] text-gray-400 italic mt-0.5">
+                  Shop Anytime, Anywhere
+                </p>
+              </div>
+            </a>
+
+            {/* Search */}
+            <div className="flex flex-1 items-center rounded-full border-2 border-violet-200 overflow-hidden h-9 bg-gray-50 max-w-xl mx-auto">
+              <input
+                type="text"
+                placeholder="Search for products, brands and more..."
+                className="flex-1 h-full px-4 text-sm outline-none bg-transparent border-none text-gray-700 placeholder:text-gray-400"
+              />
+              <button
+                className={`${btnPrimary} w-10 h-9 flex items-center justify-center shrink-0 rounded-none`}
+              >
+                <svg viewBox="0 0 24 24" fill="white" width="15" height="15">
+                  <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Nav icons */}
+            <nav className="flex items-center gap-0.5 shrink-0">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    setActiveNav(item.label);
+                  }}
+                  className={`relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all border-none cursor-pointer
+                    ${
+                      activeNav === item.label
+                        ? "text-violet-700 bg-violet-50 font-bold"
+                        : "text-gray-500 bg-transparent hover:text-violet-600 hover:bg-violet-50"
+                    }`}
+                >
+                  <img
+                    src={item.emoji}
+                    alt="emoji"
+                    className="w-[17px] h-auto object-contain leading-tight"
+                  />
+                  <span>{item.label}</span>
+                  {item.badge && cartQty > 0 && (
+                    <span className="absolute -top-0.5 right-0.5 min-w-[14px] h-3.5 px-0.5 bg-red-500 text-white rounded-full text-[8px] flex items-center justify-center font-bold leading-none">
+                      {cartQty}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Row 2 — category pills */}
+          <div className="flex gap-2 overflow-x-auto pb-2 pt-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {CAT_TABS.map((c) => (
+              <button
+                key={c}
+                onClick={() => setActiveCat(c)}
+                className={`shrink-0 px-4 py-1 rounded-full border text-xs font-medium transition-all cursor-pointer
+                  ${
+                    activeCat === c
+                      ? "bg-violet-600 text-white border-violet-600 shadow-sm shadow-violet-300"
+                      : "bg-white text-gray-600 border-gray-300 hover:border-violet-400 hover:text-violet-600"
+                  }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* ══════════════════════════════════════
+          HERO
+      ══════════════════════════════════════ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10">
+      <section
+        className="relative flex items-center rounded-2xl"
+        style={{
+          background: `linear-gradient(120deg, ${TOKEN.heroFrom} 0%, ${TOKEN.heroMid} 55%, ${TOKEN.heroTo} 100%)`,
+          minHeight: 320,
+          /* Note: overflow-hidden removed to allow image to sit 'on top' */
+        }}
+      >
+        {/* Decorative Background Circles */}
+        <div className="absolute right-64 top-[-60px] w-72 h-72 rounded-full opacity-10 bg-white pointer-events-none" />
+        <div className="absolute left-[40%] bottom-[-40px] w-48 h-48 rounded-full opacity-10 bg-white pointer-events-none" />
+
+        {/* Text Content */}
+        <div className="flex-1 px-10 py-10 z-10">
+          <span className="inline-block bg-white/20 text-white/90 text-[10px] font-bold tracking-[.15em] uppercase px-3 py-1 rounded-full mb-4">
+            New Arrivals
+          </span>
+          <h1
+            className="text-white font-black leading-none mb-2"
+            style={{
+              fontSize: "clamp(2rem, 4vw, 3.2rem)",
+              fontFamily: "Georgia, serif",
+              textShadow: "0 2px 16px rgba(0,0,0,.25)",
+            }}
+          >
+            Sajilo Mart
+          </h1>
+          <p
+            className="text-yellow-300 font-medium mb-4"
+            style={{
+              fontSize: "clamp(1.1rem, 2.5vw, 1.8rem)",
+              fontFamily: "cursive",
+            }}
+          >
+            Shop Anytime, Anywhere
+          </p>
+          <p className="text-white/80 text-sm leading-relaxed max-w-sm mb-6">
+            Discover thousands of products across fashion, electronics, home
+            essentials, and more — all at your fingertips.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button className="bg-yellow-300 hover:bg-yellow-400 text-violet-900 font-extrabold text-sm px-6 py-2.5 rounded-full border-none cursor-pointer transition-all shadow-lg active:scale-95">
+              Browse Products →
+            </button>
+            <button className="bg-transparent hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full border-2 border-white/60 cursor-pointer transition-colors">
+              View Offers
+            </button>
+          </div>
+        </div>
+
+        {/* Hero Image Container */}
+        <div
+          className="relative h-full shrink-0 self-end flex items-end justify-end"
+          style={{ width: "clamp(200px, 32%, 400px)" }}
+        >
+          <img
+            src={bbGirl}
+            alt="Hero Visual"
+            className="relative z-20 h-[115%] w-auto object-contain drop-shadow-2xl"
+            style={{ marginBottom: "-1px" }} // Ensures it sits flush on the bottom edge
+          />
+
+         
+
+          <input
+            ref={fileRef}
+            type="file"
+            hidden
+            onChange={onFile}
+            accept="image/*"
+          />
+        </div>
+      </section>
+    </div>
+
+      {/* ══════════════════════════════════════
+          FEATURE STRIP
+      ══════════════════════════════════════ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="bg-white rounded-b-2xl shadow-sm border border-t-0 border-gray-100 px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="flex items-center gap-3">
+              <div
+                className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 ${f.bg}`}
+              >
+                {f.emoji}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-800 leading-tight">
+                  {f.title}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">{f.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
+          TOP SELLS
+      ══════════════════════════════════════ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+        <div className={sectionHead}>
+          <h2 className={h2Class}>Top sells</h2>
+          <button className={viewAll}>View All Products →</button>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {topProducts.map((p) => (
+            <div
+              key={p.id}
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:shadow-violet-100 hover:-translate-y-1 transition-all duration-200 group"
+            >
+              {/* image area */}
+              <div
+                className="relative overflow-hidden bg-gray-50"
+                style={{ height: 200 }}
+              >
+                <img
+                  src={p.img}
+                  alt={p.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                {/* wishlist */}
+                <button
+                  onClick={() => setLiked((l) => ({ ...l, [p.id]: !l[p.id] }))}
+                  className={`absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white shadow flex items-center justify-center border-none cursor-pointer text-sm transition-colors
+                    ${liked[p.id] ? "text-red-500" : "text-gray-300 hover:text-red-400"}`}
+                >
+                  {liked[p.id] ? "♥" : "♡"}
                 </button>
               </div>
 
-              {/* NAV ICONS */}
-              <div style={{ display:"flex", alignItems:"center", gap:2, flexShrink:0 }}>
-                {navItems.map(item => (
+              {/* info */}
+              <div className="p-3">
+                <p className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem]">
+                  {p.name}
+                </p>
+                <div className="flex items-center gap-1 mt-1.5">
+                  <Stars n={p.rating} />
+                  <span className="text-xs text-gray-400">({p.reviews})</span>
+                </div>
+                <div className="mt-1.5">
+                  <span className="text-base font-extrabold text-gray-900">
+                    {p.price}
+                  </span>
+                  <span className="text-xs text-gray-300 line-through ml-2">
+                    {p.old}
+                  </span>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded-lg border-none cursor-pointer transition-colors">
+                    Buy Now
+                  </button>
                   <button
-                    key={item.label}
-                    className={`nav-btn ${activeNav===item.label?"active":""}`}
-                    onClick={() => setActiveNav(item.label)}
-                    style={{ position:"relative" }}
+                    onClick={() => setCartQty((c) => c + 1)}
+                    className="flex-1 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold py-2 rounded-lg border-none cursor-pointer transition-colors"
                   >
-                    <span className="icon">{item.icon}</span>
-                    <span>{item.label}</span>
-                    {(item as any).badge > 0 && (
-                      <span style={{ position:"absolute", top:0, right:4, background:"#ef4444", color:"#fff", borderRadius:"50%", width:15, height:15, fontSize:9, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700 }}>
-                        {(item as any).badge}
-                      </span>
-                    )}
+                    Add to cart
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
+          SHOP BY CATEGORY
+      ══════════════════════════════════════ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+        <div className={sectionHead}>
+          <h2 className={h2Class}>Shop by Category</h2>
+          <button className={viewAll}>View All Categories →</button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {categories.map((c) => (
+            <div
+              key={c.id}
+              className="bg-white rounded-xl border border-gray-100 flex items-center gap-4 p-3 cursor-pointer hover:shadow-md hover:shadow-violet-100 hover:border-violet-200 transition-all duration-200 group"
+            >
+              <div className="w-16 h-14 rounded-lg overflow-hidden shrink-0 bg-gray-100">
+                <img
+                  src={c.img}
+                  alt={c.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-800">{c.title}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{c.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
+          TRUST STRIP
+      ══════════════════════════════════════ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-6 py-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {TRUST.map((t) => (
+            <div
+              key={t.title}
+              className="flex items-center gap-3 justify-center"
+            >
+              <div
+                className={`w-12 h-12 rounded-full ${t.ring} ring-2 flex items-center justify-center text-2xl shrink-0 relative`}
+              >
+                {t.emoji}
+                {t.sale && (
+                  <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[7px] font-black px-1 py-0.5 rounded uppercase tracking-wide">
+                    SALE
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className={`text-sm font-bold ${t.tc}`}>{t.title}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
+          REVIEWS
+      ══════════════════════════════════════ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+        <div className={sectionHead}>
+          <h2 className={h2Class}>What Our Customers Say</h2>
+          <button className={viewAll}>View All Reviews →</button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {reviews.map((r) => (
+            <div
+              key={r.id}
+              className="bg-white rounded-2xl border border-gray-100 p-5 flex gap-4 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <img
+                src={r.img}
+                alt={r.name}
+                className="w-14 h-14 rounded-full object-cover shrink-0 ring-2 ring-violet-100"
+              />
+              <div>
+                <p className="text-sm font-bold text-gray-900">{r.name}</p>
+                <Stars n={r.rating} />
+                <p className="text-xs text-gray-500 leading-relaxed mt-1.5">
+                  {r.text}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
+          FOOTER
+      ══════════════════════════════════════ */}
+      <footer
+        className="mt-12 pt-10 pb-4"
+        style={{ background: TOKEN.footerBg, color: "#fff" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          {/* 4-col grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-8">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+                  <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
+                    <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3z" />
+                  </svg>
+                </div>
+                <div>
+                  <p
+                    className="text-base font-black"
+                    style={{ fontFamily: "Georgia,serif" }}
+                  >
+                    Sajilo Mart
+                  </p>
+                  <p className="text-[9px] text-violet-300 italic">
+                    Shop Anytime, Anywhere
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Your trusted online shopping partner for fashion, electronics,
+                home goods and more.
+              </p>
+              {/* social */}
+              <div className="flex gap-2 mt-4">
+                {[
+                  {
+                    cls: "from-orange-400 via-rose-500 to-purple-600 bg-gradient-to-br",
+                    lbl: "📷",
+                  },
+                  { cls: "bg-blue-600", lbl: "f" },
+                  { cls: "bg-sky-400", lbl: "𝕏" },
+                ].map((s) => (
+                  <button
+                    key={s.lbl}
+                    className={`w-8 h-8 rounded-full ${s.cls} text-white text-sm font-bold flex items-center justify-center border-none cursor-pointer hover:opacity-80 transition-opacity`}
+                  >
+                    {s.lbl}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Row 2: Category Tabs */}
-            <div className="no-scroll" style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:8 }}>
-              {catTabs.map(c => (
-                <button key={c} className={`cat-tab ${activeCat===c?"active":""}`} onClick={() => setActiveCat(c)}>
-                  {c}
-                </button>
+            {/* Quick Links */}
+            <div>
+              <p className="text-sm font-bold mb-3 text-white">Quick Links</p>
+              {["Home", "About Us", "Products", "Offers", "Contact"].map(
+                (l) => (
+                  <a
+                    key={l}
+                    className="block text-xs text-gray-400 mb-2 cursor-pointer hover:text-violet-300 transition-colors no-underline"
+                  >
+                    {l}
+                  </a>
+                ),
+              )}
+            </div>
+
+            {/* Customer Service */}
+            <div>
+              <p className="text-sm font-bold mb-3 text-white">
+                Customer Service
+              </p>
+              {[
+                "My Account",
+                "Track Order",
+                "Wishlist",
+                "Emergency Fast Delivery",
+                "AI Smart Comparison",
+                "Help Center",
+              ].map((l) => (
+                <a
+                  key={l}
+                  className="block text-xs text-gray-400 mb-2 cursor-pointer hover:text-violet-300 transition-colors no-underline"
+                >
+                  {l}
+                </a>
+              ))}
+            </div>
+
+            {/* Newsletter */}
+            <div>
+              <p className="text-sm font-bold mb-2 text-white">Newsletter</p>
+              <p className="text-xs text-gray-400 leading-relaxed mb-3">
+                Subscribe to get special offers, free giveaways and
+                once-in-a-lifetime deals.
+              </p>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email..."
+                className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#1e0050] text-white text-xs outline-none placeholder:text-gray-500 focus:border-violet-500 transition-colors"
+              />
+              <button
+                onClick={() => {
+                  if (email) setSubbed(true);
+                }}
+                className="w-full mt-2 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold border-none cursor-pointer transition-colors"
+              >
+                {subbed ? "✓ Subscribed!" : "Subscribe"}
+              </button>
+              {/* payment logos */}
+              <div className="flex gap-1.5 mt-3 flex-wrap">
+                {["VISA", "MC", "PayPal", "UPI"].map((p) => (
+                  <span
+                    key={p}
+                    className="bg-white text-gray-800 text-[9px] font-extrabold px-2 py-0.5 rounded tracking-wide"
+                  >
+                    {p}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* bottom bar */}
+          <div className="border-t border-white/10 pt-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span className="text-xs text-gray-500">
+              © 2026 Sajilo Mart. All rights reserved
+            </span>
+            <div className="flex gap-5">
+              {[
+                "Privacy Policy",
+                "Terms of Service",
+                "Accessibility Statement",
+              ].map((l) => (
+                <span
+                  key={l}
+                  className="text-xs text-gray-500 cursor-pointer hover:text-violet-300 transition-colors"
+                >
+                  {l}
+                </span>
               ))}
             </div>
           </div>
-        </header>
-
-        {/* ══════════════ HERO ══════════════ */}
-        <div className="sm-container" style={{ paddingTop:20 }}>
-          <section
-            className="hero-section"
-            style={{
-              background:"linear-gradient(110deg,#5b21b6 0%,#7c3aed 45%,#a855f7 75%,#c026d3 100%)",
-              borderRadius:18, overflow:"hidden", position:"relative",
-              minHeight:"100px",display:"flex", alignItems:"stretch"
-            }}
-          >
-            {/* Left text */}
-            <div className="hero-text" style={{ flex:1, padding:"32px 40px", display:"flex", flexDirection:"column", justifyContent:"center", zIndex:2 }}>
-              <div style={{ display:"inline-block", background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, padding:"4px 14px", borderRadius:20, marginBottom:12, fontWeight:600, letterSpacing:1, width:"fit-content" }}>
-                NEW ARRIVALS
-              </div>
-              <h1 style={{ color:"#fff", fontSize:48, fontWeight:900, lineHeight:1.1, fontFamily:"Georgia,serif", textShadow:"0 2px 12px rgba(0,0,0,.2)" }}>
-                Sajilo Mart
-              </h1>
-              <p className="script" style={{ color:"#fde68a", fontSize:28, fontFamily:"cursive", lineHeight:1.3, marginTop:4 }}>
-                Shop Anytime, Anywhere
-              </p>
-              <p style={{ color:"rgba(255,255,255,.88)", fontSize:13, marginTop:10, lineHeight:1.6, maxWidth:420 }}>
-                Discover thousands of products across fashion, electronics, home essentials, and more — all at your fingertips.
-              </p>
-              <div style={{ display:"flex", gap:12, marginTop:20 }}>
-                <button style={{ background:"#fde68a", color:"#4c1d95", fontSize:13, fontWeight:800, padding:"10px 22px", borderRadius:25, border:"none", cursor:"pointer", boxShadow:"0 4px 12px rgba(90, 70, 07, 0.95)" }}>
-                  Browse Products →
-                </button>
-                <button style={{ background:"transparent", color:"#fff", fontSize:13, fontWeight:600, padding:"10px 22px", borderRadius:25, border:"2px solid rgba(255,255,255,.7)", cursor:"pointer" }}>
-                  View Offers
-                </button>
-              </div>
-            </div>
-
-            {/* Right image */}
-            <div style={{ position:"relative", flexShrink:0, width:300, overflow:"hidden" }}>
-              <img src={heroImg} alt="Hero" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
-              <button
-                onClick={() => fileRef.current?.click()}
-                style={{ position:"absolute", top:10, right:10, background:"rgba(255,255,255,.9)", fontSize:10, padding:"4px 10px", borderRadius:20, border:"none", cursor:"pointer", fontWeight:700, color:"#7c3aed" }}
-              >
-                📷 Change Image
-              </button>
-              <input ref={fileRef} type="file" hidden onChange={onFile} accept="image/*" />
-            </div>
-          </section>
         </div>
-
-        {/* ══════════════ FEATURES STRIP ══════════════ */}
-        <div className="sm-container" style={{ marginTop:0 }}>
-          <div
-            className="feat-strip"
-            style={{ background:"#fff", borderRadius:"0 0 16px 16px", padding:"14px 30px", display:"flex", justifyContent:"space-around", boxShadow:"0 3px 10px rgba(0,0,0,.07)", borderTop:"1px solid #f0f0f0" }}
-          >
-            {[
-              { emoji:"🚚", bg:"#dcfce7", title:"Emergency Fast Delivery", sub:"Fast delivery in your area" },
-              { emoji:"🤖", bg:"#ede9fe", title:"AI Smart Comparison",     sub:"Compare products instantly" },
-              { emoji:"🎧", bg:"#fff7ed", title:"24/7 Support",             sub:"We're here to help" },
-            ].map(f => (
-              <div key={f.title} style={{ display:"flex", alignItems:"center", gap:12 }}>
-                <div style={{ width:42, height:42, borderRadius:"50%", background:f.bg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}>
-                  {f.emoji}
-                </div>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#1f2937", lineHeight:1.3 }}>{f.title}</div>
-                  <div style={{ fontSize:11, color:"#9ca3af" }}>{f.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ══════════════ TOP SELLS ══════════════ */}
-        <div className="sm-container" style={{ marginTop:28 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-            <h2 style={{ fontSize:20, fontWeight:800, color:"#111" }}>Top sells</h2>
-            <button style={{ fontSize:13, color:"#7c3aed", background:"none", border:"none", cursor:"pointer", fontWeight:600 }}>
-              View All Products →
-            </button>
-          </div>
-          <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
-            {topProducts.map(p => (
-              <div key={p.id} className="p-card">
-                <div style={{ position:"relative" }}>
-                  <img src={p.img} alt={p.name} style={{ width:"100%", height:160, objectFit:"cover" }} />
-                  <button className={`heart ${liked[p.id]?"liked":""}`} onClick={() => setLiked(l => ({...l,[p.id]:!l[p.id]}))}>
-                    {liked[p.id] ? "♥" : "♡"}
-                  </button>
-                </div>
-                <div style={{ padding:"10px 10px 12px" }}>
-                  <div style={{ fontSize:12, fontWeight:600, color:"#1f2937", lineHeight:1.4, minHeight:32 }}>{p.name}</div>
-                  <div style={{ marginTop:3 }}>
-                    <Stars n={p.rating} />
-                    <span style={{ fontSize:10, color:"#9ca3af", marginLeft:3 }}>({p.reviews})</span>
-                  </div>
-                  <div style={{ fontSize:14, fontWeight:800, color:"#111", marginTop:5 }}>{p.price}</div>
-                  <div style={{ fontSize:10, color:"#d1d5db", textDecoration:"line-through" }}>{p.old}</div>
-                  <div style={{ display:"flex", gap:6, marginTop:8 }}>
-                    <button className="btn-buy">Buy Now</button>
-                    <button className="btn-add" onClick={() => setCartQty(c => c+1)}>Add to cart</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ══════════════ SHOP BY CATEGORY ══════════════ */}
-        <div className="sm-container" style={{ marginTop:28 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-            <h2 style={{ fontSize:20, fontWeight:800, color:"#111" }}>Shop by Category</h2>
-            <button style={{ fontSize:13, color:"#7c3aed", background:"none", border:"none", cursor:"pointer", fontWeight:600 }}>
-              View All Categories →
-            </button>
-          </div>
-          <div className="grid-2" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
-            {categories.map(c => (
-              <div key={c.id} className="cat-card">
-                <img src={c.img} alt={c.title} style={{ width:70, height:52, objectFit:"cover", borderRadius:8, flexShrink:0 }} />
-                <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#1f2937" }}>{c.title}</div>
-                  <div style={{ fontSize:11, color:"#9ca3af", marginTop:2 }}>{c.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ══════════════ TRUST STRIP ══════════════ */}
-        <div className="sm-container" style={{ marginTop:28 }}>
-          <div
-            className="trust-strip"
-            style={{ background:"#f0fdf4", borderRadius:14, padding:"18px 30px", display:"flex", justifyContent:"space-between", alignItems:"center", border:"1px solid #d1fae5" }}
-          >
-            {[
-              { emoji:"✅", bg:"#d1fae5", title:"Original Products",          sub:"100% Authentic Brands",      textColor:"#166534" },
-              { emoji:"🏷️", bg:"#fef9c3", title:"Best Prices",                sub:"Unbeatable Deals",            textColor:"#92400e", sale:true },
-              { emoji:"👥", bg:"#dbeafe", title:"Trusted by 1000+ Customers", sub:"Join the Sajilo family today", textColor:"#1e40af" },
-            ].map(t => (
-              <div key={t.title} style={{ display:"flex", alignItems:"center", gap:12, flex:1, justifyContent:"center" }}>
-                <div style={{ width:44, height:44, borderRadius:"50%", background:t.bg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0, position:"relative" }}>
-                  {t.emoji}
-                  {t.sale && (
-                    <span style={{ position:"absolute", top:-5, right:-5, background:"#ef4444", color:"#fff", fontSize:8, padding:"2px 5px", borderRadius:6, fontWeight:700 }}>SALE</span>
-                  )}
-                </div>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:t.textColor }}>{t.title}</div>
-                  <div style={{ fontSize:11, color:"#555" }}>{t.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ══════════════ REVIEWS ══════════════ */}
-        <div className="sm-container" style={{ marginTop:28 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-            <h2 style={{ fontSize:20, fontWeight:800, color:"#111" }}>What Our Customers Say</h2>
-            <button style={{ fontSize:13, color:"#7c3aed", background:"none", border:"none", cursor:"pointer", fontWeight:600 }}>
-              View All Reviews →
-            </button>
-          </div>
-          <div className="grid-2" style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:14 }}>
-            {reviews.map(r => (
-              <div key={r.id} style={{ background:"#fff", borderRadius:14, border:"1px solid #e5e7eb", padding:"16px 16px", display:"flex", gap:14, boxShadow:"0 1px 4px rgba(0,0,0,.06)" }}>
-                <img src={r.img} alt={r.name} style={{ width:60, height:60, borderRadius:"50%", objectFit:"cover", flexShrink:0 }} />
-                <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#111" }}>{r.name}</div>
-                  <Stars n={r.rating} />
-                  <p style={{ fontSize:11, color:"#6b7280", lineHeight:1.5, marginTop:5 }}>{r.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ══════════════ FOOTER ══════════════ */}
-        <footer style={{ background:"#0f0028", color:"#fff", marginTop:36, paddingTop:36, paddingBottom:16 }}>
-          <div className="sm-container">
-            <div className="footer-grid" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1.5fr 1.5fr", gap:32 }}>
-
-              {/* Brand */}
-              <div>
-                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-                  <div style={{ width:36, height:36, borderRadius:"50%", background:"#22c55e", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
-                      <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize:18, fontWeight:900, fontFamily:"Georgia,serif" }}>Sajilo Mart</div>
-                    <div style={{ fontSize:9, color:"blue", fontStyle:"italic" }}>Shop Anytime, Anywhere</div>
-                  </div>
-                </div>
-                <p style={{ fontSize:12, color:"#9ca3af", lineHeight:1.7 }}>
-                  Your trusted online shopping partner for fashion, electronics, home goods and more.
-                </p>
-                <div style={{ display:"flex", gap:8, marginTop:14 }}>
-                  {[
-                    { bg:"linear-gradient(45deg,#f09433,#dc2743,#bc1888)", label:"📷" },
-                    { bg:"#1877f2", label:"f" },
-                    { bg:"#1da1f2", label:"𝕏" },
-                  ].map(s => (
-                    <button key={s.label} style={{ width:32, height:32, borderRadius:"50%", background:s.bg, color:"#fff", border:"none", cursor:"pointer", fontSize:14, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", transition:"opacity .15s" }}
-                      onMouseEnter={e => (e.currentTarget.style.opacity = ".75")}
-                      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quick Links */}
-              <div>
-                <div style={{ fontSize:13, fontWeight:700, marginBottom:12 }}>Quick Links</div>
-                {["Home","About Us","Products","Offers","Contact"].map(l => (
-                  <a key={l} className="f-link">{l}</a>
-                ))}
-              </div>
-
-              {/* Customer Service */}
-              <div>
-                <div style={{ fontSize:13, fontWeight:700, marginBottom:12 }}>Customer Service</div>
-                {["My Account","Track Order","Wishlist","Emergency Fast Delivery","AI Smart Comparison","Help Center"].map(l => (
-                  <a key={l} className="f-link">{l}</a>
-                ))}
-              </div>
-
-              {/* Newsletter */}
-              <div>
-                <div style={{ fontSize:13, fontWeight:700, marginBottom:10 }}>Newsletter</div>
-                <p style={{ fontSize:11, color:"#9ca3af", lineHeight:1.6, marginBottom:10 }}>
-                  Subscribe to get special offers, free giveaways and once-in-a-lifetime deals.
-                </p>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="Enter your email..."
-                  style={{ width:"100%", padding:"8px 12px", borderRadius:8, border:"1px solid #374151", background:"#1a0050", color:"#fff", fontSize:12, outline:"none" }}
-                />
-                <button
-                  onClick={() => { if (email) setSubbed(true); }}
-                  style={{ width:"100%", marginTop:8, padding:"8px 0", borderRadius:8, background:"#7c3aed", color:"#fff", fontSize:12, fontWeight:700, border:"none", cursor:"pointer", transition:"background .15s" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "#6d28d9")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "#7c3aed")}
-                >
-                  {subbed ? "✓ Subscribed!" : "Subscribe"}
-                </button>
-                <div style={{ display:"flex", gap:6, marginTop:10, flexWrap:"wrap" }}>
-                  {["VISA","MC","PayPal","UPI"].map(p => (
-                    <div key={p} style={{ background:"#fff", borderRadius:5, padding:"3px 8px", fontSize:9, color:"#333", fontWeight:800 }}>{p}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom bar */}
-            <div style={{ borderTop:"1px solid #1f1040", marginTop:28, paddingTop:12, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
-              <span style={{ fontSize:11, color:"#6b7280" }}>© 2026 Sajilo Mart. All rights reserved</span>
-              <div style={{ display:"flex", gap:16 }}>
-                {["Privacy Policy","Terms of Service","Accessibility Statement"].map(l => (
-                  <span key={l} style={{ fontSize:11, color:"#6b7280", cursor:"pointer", transition:"color .15s" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "#c4b5fd")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
-                  >{l}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </>
+      </footer>
+    </div>
   );
 }
