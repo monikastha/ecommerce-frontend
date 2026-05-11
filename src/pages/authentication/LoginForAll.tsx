@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logoImg from "../../assets/logo.png";
 
 type Role = {
   value: string;
@@ -16,453 +17,289 @@ const ROLES: Role[] = [
 ];
 
 export default function LoginPage() {
-  const [selectedRole, setSelectedRole] = useState<string>("");
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const selectedRoleObj = ROLES.find((r) => r.value === selectedRole);
+  const selectedRoleObj = ROLES.find(r => r.value === selectedRole);
 
-  const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleLogin = async (e: any) => {
     e.preventDefault();
     setError("");
 
-    if (!selectedRole) {
-      setError("Please select a role.");
-      return;
-    }
-    if (!username.trim()) {
-      setError("Username is required.");
-      return;
-    }
-    if (!password) {
-      setError("Password is required.");
-      return;
-    }
+    if (!selectedRole) return setError("Select role");
+    if (!username) return setError("Username required");
+    if (!password) return setError("Password required");
 
     setLoading(true);
+
     try {
-      const response = await fetch("/api/auth/login/", {
+      const res = await fetch("/api/auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, role: selectedRole }),
+        body: JSON.stringify({ username, password, role: selectedRole })
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
-        setError(data.error || "Invalid credentials. Please try again.");
+      if (!res.ok) {
+        setError(data.error || "Login failed");
       } else {
-        // Store token and redirect based on role
-        localStorage.setItem("access_token", data.access);
-        localStorage.setItem("refresh_token", data.refresh);
-        localStorage.setItem("role", data.role);
-        // Redirect to role-specific dashboard
+        localStorage.setItem("token", data.access);
         window.location.href = `/${data.role}/dashboard`;
       }
     } catch {
-      setError("Network error. Please check your connection.");
+      setError("Network error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.root}>
-      {/* Top nav bar */}
-      <div style={styles.navbar}>
-        <div style={styles.navLogoArea}>
-          {/* LOGO PLACEHOLDER — Replace the <div> below with your <img> tag */}
-          <div style={styles.logoPlaceholder}>
-            <span style={styles.logoPlaceholderText}>YOUR LOGO</span>
-          </div>
-        </div>
-      </div>
+    <>
+      <div className="login-page">
 
-      {/* Main body */}
-      <div style={styles.body}>
-        {/* Left branding panel */}
-        <div style={styles.leftPanel}>
-          <div style={styles.brandLogoWrapper}>
-            {/* BRAND LOGO PLACEHOLDER — Replace with your brand image */}
-            <div style={styles.brandCircle}>
-              <span style={styles.brandCircleText}>🛒</span>
-            </div>
-          </div>
-          <h1 style={styles.brandName}>SAJILO MART</h1>
-          <p style={styles.brandTagline}>SHOP ANYTIME ANYWHERE</p>
+        {/* LEFT LOGO */}
+        <div className="login-left">
+          <img src={logoImg} className="login-logo" />
         </div>
 
-        {/* Right login card */}
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Login to your account</h2>
+        {/* LOGIN CARD */}
+        <div className="login-card">
 
-          {/* Role selector */}
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Select Role</label>
-            <div style={styles.dropdownWrapper}>
-              <button
-                type="button"
-                style={styles.dropdownButton}
+          <h2>Welcome Back</h2>
+          <p className="subtitle">Login to continue</p>
+
+          {/* ROLE */}
+          <div className="field">
+            <label>Role</label>
+
+            <div className="dropdown">
+              <div
+                className="dropdown-btn"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
-                <span style={styles.dropdownValue}>
-                  {selectedRoleObj
-                    ? `${selectedRoleObj.icon}  ${selectedRoleObj.label}`
-                    : "Select your role"}
-                </span>
-                <span
-                  style={{
-                    ...styles.dropdownChevron,
-                    transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  }}
-                >
-                  ▾
-                </span>
-              </button>
+                {selectedRoleObj
+                  ? `${selectedRoleObj.icon} ${selectedRoleObj.label}`
+                  : "Select Role"}
+                <span>▼</span>
+              </div>
 
               {dropdownOpen && (
-                <ul style={styles.dropdownMenu}>
-                  {ROLES.map((role) => (
-                    <li
+                <div className="dropdown-menu">
+                  {ROLES.map(role => (
+                    <div
                       key={role.value}
-                      style={{
-                        ...styles.dropdownItem,
-                        backgroundColor:
-                          selectedRole === role.value ? "#e8f0fe" : "white",
-                      }}
+                      className="dropdown-item"
                       onClick={() => {
                         setSelectedRole(role.value);
                         setDropdownOpen(false);
                       }}
                     >
-                      <span style={styles.roleIcon}>{role.icon}</span>
-                      {role.label}
-                    </li>
+                      {role.icon} {role.label}
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Username */}
-          <div style={styles.fieldGroup}>
-            <div style={styles.inputWrapper}>
-              <span style={styles.inputIcon}>👤</span>
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                style={styles.input}
-                autoComplete="username"
-              />
-            </div>
+          {/* USERNAME */}
+          <div className="field">
+            <label>Username</label>
+            <input
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Enter username"
+            />
           </div>
 
-          {/* Password */}
-          <div style={styles.fieldGroup}>
-            <div style={styles.inputWrapper}>
-              <span style={styles.inputIcon}>🔒</span>
+          {/* PASSWORD */}
+          <div className="field">
+            <label>Password</label>
+
+            <div className="password-box">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={styles.input}
-                autoComplete="current-password"
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Enter password"
               />
+
               <button
                 type="button"
-                style={styles.eyeButton}
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label="Toggle password visibility"
               >
                 {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
           </div>
 
-          {/* Error message */}
-          {error && <p style={styles.errorText}>{error}</p>}
+          {/* ERROR */}
+          {error && <p className="error">{error}</p>}
 
-          {/* Login button */}
-          <button
-            type="button"
-            style={{
-              ...styles.loginButton,
-              opacity: loading ? 0.75 : 1,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-            onClick={handleLogin}
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login now"}
+          {/* LOGIN BUTTON */}
+          <button onClick={handleLogin} className="login-btn">
+            {loading ? "Logging in..." : "Login"}
           </button>
 
-          {/* Sign up link */}
-          <p style={styles.signupText}>
-            Don't Have An Account?{" "}
-            <a href="/register" style={styles.signupLink}>
-              Sign Up
-            </a>
+          {/* SIGNUP */}
+          <p className="signup-text">
+            Don’t have an account?{" "}
+            <a href="/register">Sign up</a>
           </p>
+
         </div>
       </div>
-    </div>
+
+      {/* CSS */}
+      <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: Arial, sans-serif;
+        }
+
+        .login-page {
+          min-height: 100vh;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 60px;
+          background: linear-gradient(135deg,#dbeafe,#93c5fd);
+        }
+
+        .login-left {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+        }
+
+        .login-logo {
+          width: 520px;
+          max-width: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 10px 25px rgba(0,0,0,0.2));
+        }
+
+        /* ✅ FIXED CARD */
+        .login-card {
+          width: 400px;
+          background: white;
+          padding: 40px;
+          border-radius: 20px;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+          text-align: center;
+          color: #111;
+          font-size: 28px;
+        }
+
+        .subtitle {
+          text-align: center;
+          color: #666;
+          margin-bottom: 20px;
+        }
+
+        .field {
+          margin-bottom: 15px;
+        }
+
+        label {
+          display: block;
+          margin-bottom: 6px;
+          font-weight: 600;
+        }
+
+        input {
+          width: 100%;
+          padding: 12px;
+          border-radius: 10px;
+          border: 1px solid #ccc;
+          outline: none;
+        }
+
+        .dropdown {
+          position: relative;
+        }
+
+        .dropdown-btn {
+          padding: 12px;
+          border: 1px solid #ccc;
+          border-radius: 10px;
+          display: flex;
+          justify-content: space-between;
+          cursor: pointer;
+          background: #f9fafb;
+        }
+
+        .dropdown-menu {
+          position: absolute;
+          top: 45px;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          z-index: 10;
+        }
+
+        .dropdown-item {
+          padding: 10px;
+          cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+          background: #eff6ff;
+        }
+
+        .password-box {
+          display: flex;
+          align-items: center;
+          border: 1px solid #ccc;
+          border-radius: 10px;
+          padding-right: 10px;
+        }
+
+        .error {
+          color: red;
+          font-size: 13px;
+          text-align: center;
+          margin-top: 10px;
+        }
+
+        .login-btn {
+          width: 100%;
+          padding: 12px;
+          border: none;
+          border-radius: 10px;
+          background: #2563eb;
+          color: white;
+          font-size: 16px;
+          font-weight: 700;
+          cursor: pointer;
+          margin-top: 10px;
+        }
+
+        .signup-text {
+          text-align: center;
+          margin-top: 15px;
+          font-size: 14px;
+        }
+
+        .signup-text a {
+          color: #2563eb;
+          font-weight: bold;
+          text-decoration: none;
+        }
+      `}</style>
+    </>
   );
 }
-
-/* ─── Styles ─────────────────────────────────────────────── */
-const styles: Record<string, React.CSSProperties> = {
-  root: {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    backgroundColor: "#1a1a2e",
-  },
-
-  /* Navbar */
-  navbar: {
-    backgroundColor: "#f0f4ff",
-    padding: "10px 24px",
-    display: "flex",
-    alignItems: "center",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
-  },
-  navLogoArea: {
-    display: "flex",
-    alignItems: "center",
-  },
-  logoPlaceholder: {
-    width: 60,
-    height: 40,
-    backgroundColor: "#dce8ff",
-    border: "2px dashed #4a80f0",
-    borderRadius: 6,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoPlaceholderText: {
-    fontSize: 9,
-    color: "#4a80f0",
-    fontWeight: 700,
-    letterSpacing: 0.5,
-    textAlign: "center",
-  },
-
-  /* Body */
-  body: {
-    flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#6b9fe8",
-    gap: 60,
-    padding: "40px 24px",
-  },
-
-  /* Left panel */
-  leftPanel: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 12,
-  },
-  brandLogoWrapper: {
-    marginBottom: 8,
-  },
-  brandCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: "50%",
-    backgroundColor: "#c8e6b0",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
-    border: "4px solid #2d6a1e",
-  },
-  brandCircleText: {
-    fontSize: 72,
-  },
-  brandName: {
-    fontSize: 36,
-    fontWeight: 900,
-    color: "#1a3a6b",
-    letterSpacing: 3,
-    margin: 0,
-    textShadow: "1px 1px 0 #fff",
-  },
-  brandTagline: {
-    fontSize: 13,
-    fontWeight: 600,
-    color: "#1a3a6b",
-    letterSpacing: 4,
-    margin: 0,
-  },
-
-  /* Card */
-  card: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: "36px 40px",
-    width: 360,
-    boxShadow: "0 12px 48px rgba(0,0,0,0.18)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 16,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 700,
-    color: "#1a1a2e",
-    textAlign: "center",
-    margin: 0,
-  },
-
-  /* Fields */
-  label: {
-    fontSize: 14,
-    fontWeight: 600,
-    color: "#333",
-    marginBottom: 6,
-    display: "block",
-    textAlign: "center",
-  },
-  fieldGroup: {
-    display: "flex",
-    flexDirection: "column",
-  },
-
-  /* Dropdown */
-  dropdownWrapper: {
-    position: "relative",
-  },
-  dropdownButton: {
-    width: "100%",
-    padding: "10px 14px",
-    backgroundColor: "#f5f7ff",
-    border: "1.5px solid #d0d8f0",
-    borderRadius: 8,
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    cursor: "pointer",
-    fontSize: 14,
-    color: "#333",
-    outline: "none",
-  },
-  dropdownValue: {
-    color: "#444",
-  },
-  dropdownChevron: {
-    fontSize: 18,
-    color: "#666",
-    transition: "transform 0.2s ease",
-    display: "inline-block",
-  },
-  dropdownMenu: {
-    position: "absolute",
-    top: "110%",
-    left: 0,
-    right: 0,
-    backgroundColor: "white",
-    border: "1.5px solid #d0d8f0",
-    borderRadius: 8,
-    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-    listStyle: "none",
-    margin: 0,
-    padding: "4px 0",
-    zIndex: 999,
-    maxHeight: 260,
-    overflowY: "auto",
-  },
-  dropdownItem: {
-    padding: "10px 16px",
-    cursor: "pointer",
-    fontSize: 14,
-    color: "#333",
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    transition: "background 0.15s",
-  },
-  roleIcon: {
-    fontSize: 18,
-  },
-
-  /* Input */
-  inputWrapper: {
-    display: "flex",
-    alignItems: "center",
-    border: "1.5px solid #d0d8f0",
-    borderRadius: 8,
-    padding: "0 12px",
-    backgroundColor: "#f5f7ff",
-  },
-  inputIcon: {
-    fontSize: 16,
-    marginRight: 8,
-    opacity: 0.6,
-  },
-  input: {
-    flex: 1,
-    border: "none",
-    backgroundColor: "transparent",
-    padding: "10px 0",
-    fontSize: 14,
-    color: "#333",
-    outline: "none",
-  },
-  eyeButton: {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    fontSize: 16,
-    padding: 0,
-    opacity: 0.7,
-  },
-
-  /* Error */
-  errorText: {
-    color: "#e53935",
-    fontSize: 13,
-    margin: 0,
-    textAlign: "center",
-  },
-
-  /* Login button */
-  loginButton: {
-    width: "100%",
-    padding: "12px",
-    backgroundColor: "#2962ff",
-    color: "white",
-    border: "none",
-    borderRadius: 8,
-    fontSize: 15,
-    fontWeight: 700,
-    cursor: "pointer",
-    transition: "background 0.2s ease",
-    letterSpacing: 0.5,
-    marginTop: 4,
-  },
-
-  /* Sign up */
-  signupText: {
-    textAlign: "center",
-    fontSize: 13,
-    color: "#888",
-    margin: 0,
-  },
-  signupLink: {
-    color: "#2962ff",
-    fontWeight: 700,
-    textDecoration: "none",
-  },
-};
