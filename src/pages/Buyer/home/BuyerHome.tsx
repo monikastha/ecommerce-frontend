@@ -1,4 +1,21 @@
 import { useState, useRef } from "react";
+import shoesImg from "../../../assets/shoes4.jpg";
+import Necklace from "../../../assets/accessories2.jpg";
+import iphun from "../../../assets/iphun.jpg";
+import Headphone from "../../../assets/headphone.jpg";
+import bbGirl from "../../../assets/bbimg-removebg-preview.png";
+import trendy from "../../../assets/trendy.png";
+import laptop from "../../../assets/laptop hp.jpg";
+import homeGoods from "../../../assets/home goods.jpg";
+import cosmetics from "../../../assets/cosmetics.jpeg";
+import medicine from "../../../assets/medicine.jpg";
+import studyMaterial from "../../../assets/study-material.jpg";
+import cartoon1 from "../../../assets/cartoon1.png";
+import cartoon2 from "../../../assets/cartoon2.png";
+import logoImg from "../../../assets/logo.png";
+
+
+
 
 /* ── placeholder helper ─────────────────────────────────── */
 const ph = (w: number, h: number, label: string, bg: string) =>
@@ -6,24 +23,24 @@ const ph = (w: number, h: number, label: string, bg: string) =>
 
 /* ── data ────────────────────────────────────────────────── */
 const topProducts = [
-  { id: 1, name: "Black Leather Shoes",   price: "Rs. 1,799",  old: "Rs. 2,120",  rating: 4, reviews: 128, img: ph(220,180,"Shoes","5c3317") },
-  { id: 2, name: "Red Emerald Necklace",  price: "Rs. 2,199",  old: "Rs. 2,799",  rating: 4, reviews: 97,  img: ph(220,180,"Necklace","8B0000") },
-  { id: 3, name: "Apple iPhone 15 Pro",   price: "Rs. 91,999", old: "Rs. 99,999", rating: 5, reviews: 251, img: ph(220,180,"iPhone+15+Pro","1c1c1e") },
-  { id: 4, name: "Wireless Headphones",   price: "Rs. 3,499",  old: "Rs. 4,200",  rating: 4, reviews: 183, img: ph(220,180,"Headphones","2d2d2d") },
+  { id: 1, name: "Black Leather Shoes",   price: "Rs. 1,799",  old: "Rs. 2,120",  rating: 4, reviews: 128, img: shoesImg },
+  { id: 2, name: "Red Emerald Necklace",  price: "Rs. 2,199",  old: "Rs. 2,799",  rating: 4, reviews: 97,  img: Necklace},
+  { id: 3, name: "Apple iPhone 15 Pro",   price: "Rs. 91,999", old: "Rs. 99,999", rating: 5, reviews: 251, img: iphun },
+  { id: 4, name: "Wireless Headphones",   price: "Rs. 3,499",  old: "Rs. 4,200",  rating: 4, reviews: 183, img: Headphone},
 ];
 
 const categories = [
-  { id:1, title:"Fashion",        sub:"Trendy Outfits",    img: ph(90,65,"Fashion","7c3aed") },
-  { id:2, title:"Electronics",    sub:"Latest Gadgets",    img: ph(90,65,"Electronics","1d4ed8") },
-  { id:3, title:"Home Goods",     sub:"Home Essentials",   img: ph(90,65,"HomeGoods","b45309") },
-  { id:4, title:"Cosmetics",      sub:"Beauty Products",   img: ph(90,65,"Cosmetics","be185d") },
-  { id:5, title:"Medicine",       sub:"Healthcare",        img: ph(90,65,"Medicine","15803d") },
-  { id:6, title:"Study Materials",sub:"Books & Guides",    img: ph(90,65,"StudyMat","0e7490") },
+  { id:1, title:"Fashion",        sub:"Trendy Outfits",    img: trendy },
+  { id:2, title:"Electronics",    sub:"Latest Gadgets",    img: laptop },
+  { id:3, title:"Home Goods",     sub:"Home Essentials",   img: homeGoods },
+  { id:4, title:"Cosmetics",      sub:"Beauty Products",   img: cosmetics },
+  { id:5, title:"Medicine",       sub:"Healthcare",        img: medicine },
+  { id:6, title:"Study Materials",sub:"Books & Guides",    img: studyMaterial},
 ];
 
 const reviews = [
-  { id:1, name:"Kabita Kumal", text:"Excellent! Fast delivery and very supportive. Will order again definitely.", rating:5, img: ph(70,70,"KK","e879a0") },
-  { id:2, name:"Kabita Thapa", text:"Great products at best prices. Will definitely order again once in a lifetime deals.", rating:5, img: ph(70,70,"KT","34d399") },
+  { id:1, name:"Kabita Kumal", text:"Excellent! Fast delivery and very supportive. Will order again definitely.", rating:5, img: cartoon1},
+  { id:2, name:"Kabita Thapa", text:"Great products at best prices. Will definitely order again once in a lifetime deals.", rating:5, img: cartoon2 },
 ];
 
 /* ── star component ─────────────────────────────────────── */
@@ -37,7 +54,7 @@ const Stars = ({ n }: { n: number }) => (
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════ */
 export default function SajiloMart() {
-  const [heroImg, setHeroImg]     = useState(ph(380,420,"Shopping+Girl","9333ea"));
+  const [heroImg, setHeroImg]     = useState(bbGirl);
   const [activeCat, setActiveCat] = useState("Fashion");
   const [activeNav, setActiveNav] = useState("Home");
   const [liked, setLiked]         = useState<Record<number,boolean>>({});
@@ -110,6 +127,18 @@ export default function SajiloMart() {
           overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.07);
           transition: box-shadow .2s, transform .2s; position: relative;
         }
+          .p-card img {
+           width: 50px;
+           height: 100px;
+           object-fit: contain;
+           padding: 12px;
+           background: #fff;
+           transition: transform 0.3s ease;
+          }
+
+           .p-card:hover img {
+            transform: scale(1.05);
+            }
         .p-card:hover { box-shadow: 0 6px 20px rgba(91,33,182,.15); transform: translateY(-3px); }
 
         .btn-buy {
@@ -173,17 +202,56 @@ export default function SajiloMart() {
             <div style={{ display:"flex", alignItems:"center", gap:16, padding:"10px 0 6px" }}>
 
               {/* LOGO */}
-              <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-                <div style={{ width:44, height:44, borderRadius:"50%", background:"linear-gradient(135deg,#22c55e,#15803d)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 3px 8px rgba(34,197,94,.35)" }}>
-                  <svg viewBox="0 0 24 24" fill="white" width="22" height="22">
-                    <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div style={{ fontSize:16, fontWeight:900, color:"#0c5f35", fontFamily:"Georgia,serif", lineHeight:1.1 }}>Sajilo Mart</div>
-                  <div style={{ fontSize:9, color:"#888", fontStyle:"italic" }}>Shop Anytime, Anywhere</div>
-                </div>
-              </div>
+              <div style={{
+  display:"flex",
+  alignItems:"center",
+  gap:10,
+  flexShrink:0
+}}>
+  
+  <div style={{
+    width:44,
+    height:44,
+    borderRadius:"50%",
+    background:"linear-gradient(135deg,#22c55e,#15803d)",
+    display:"flex",
+    alignItems:"center",
+    justifyContent:"center",
+    boxShadow:"0 3px 8px rgba(34,197,94,.35)"
+  }}>
+    
+    <img 
+      src={logoImg}
+      alt="Logo"
+      style={{
+        width:"200px",
+        height:"200px",
+        objectFit:"contain"
+      }}
+    />
+
+  </div>
+
+  <div>
+    <div style={{
+      fontSize:16,
+      fontWeight:900,
+      color:"blue",
+      fontFamily:"Georgia,serif",
+      lineHeight:1.1
+    }}>
+      Sajilo Mart
+    </div>
+
+    <div style={{
+      fontSize:9,
+      color:"#888",
+      fontStyle:"bold"
+    }}>
+      Shop Anytime, Anywhere
+    </div>
+  </div>
+</div>
 
               {/* SEARCH */}
               <div style={{ flex:1, display:"flex", alignItems:"center", border:"2px solid #e0d6ff", borderRadius:25, overflow:"hidden", height:38, background:"#fafafa", maxWidth:600 }}>
@@ -238,7 +306,7 @@ export default function SajiloMart() {
             style={{
               background:"linear-gradient(110deg,#5b21b6 0%,#7c3aed 45%,#a855f7 75%,#c026d3 100%)",
               borderRadius:18, overflow:"hidden", position:"relative",
-              minHeight:260, display:"flex", alignItems:"stretch"
+              minHeight:"100px",display:"flex", alignItems:"stretch"
             }}
           >
             {/* Left text */}
@@ -256,7 +324,7 @@ export default function SajiloMart() {
                 Discover thousands of products across fashion, electronics, home essentials, and more — all at your fingertips.
               </p>
               <div style={{ display:"flex", gap:12, marginTop:20 }}>
-                <button style={{ background:"#fde68a", color:"#4c1d95", fontSize:13, fontWeight:800, padding:"10px 22px", borderRadius:25, border:"none", cursor:"pointer", boxShadow:"0 4px 12px rgba(0,0,0,.15)" }}>
+                <button style={{ background:"#fde68a", color:"#4c1d95", fontSize:13, fontWeight:800, padding:"10px 22px", borderRadius:25, border:"none", cursor:"pointer", boxShadow:"0 4px 12px rgba(90, 70, 07, 0.95)" }}>
                   Browse Products →
                 </button>
                 <button style={{ background:"transparent", color:"#fff", fontSize:13, fontWeight:600, padding:"10px 22px", borderRadius:25, border:"2px solid rgba(255,255,255,.7)", cursor:"pointer" }}>
@@ -423,7 +491,7 @@ export default function SajiloMart() {
                   </div>
                   <div>
                     <div style={{ fontSize:18, fontWeight:900, fontFamily:"Georgia,serif" }}>Sajilo Mart</div>
-                    <div style={{ fontSize:9, color:"#9ca3af", fontStyle:"italic" }}>Shop Anytime, Anywhere</div>
+                    <div style={{ fontSize:9, color:"blue", fontStyle:"italic" }}>Shop Anytime, Anywhere</div>
                   </div>
                 </div>
                 <p style={{ fontSize:12, color:"#9ca3af", lineHeight:1.7 }}>

@@ -27,11 +27,14 @@ import AdminLocation from "./pages/Admin/AdminLocation";
 import AdminAddLocation from "./pages/Admin/AdminAddLocation";
 
 import BuyerHome from "./pages/Buyer/home/BuyerHome";
+import LoginForALl from "./pages/authentication/LoginForAll"
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+
+        {/*Login For ALl Page Routes*/}
 
         <Route path="/admin/register" element={<AdminRegister />} />
         <Route path="/admin/login" element={<LoginPage />} />
