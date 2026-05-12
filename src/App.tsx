@@ -27,11 +27,15 @@ import AdminLocation from "./pages/Admin/AdminLocation";
 import AdminAddLocation from "./pages/Admin/AdminAddLocation";
 
 import BuyerHome from "./pages/Buyer/home/BuyerHome";
+import LoginForALl from "./pages/authentication/LoginForAll"
+import BuyerSignUp  from "./pages/authentication/BuyerSignUp";
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+
+        {/*Login For ALl Page Routes*/}
 
         <Route path="/admin/register" element={<AdminRegister />} />
         <Route path="/login" element={<LoginPage />} />
@@ -59,6 +63,8 @@ const App = () => {
         <Route path="/admin/location" element={<AdminLocation />} />
         <Route path="/admin/location/add" element={<AdminAddLocation />} />
         <Route path="/home/BuyerHome" element={<BuyerHome />} />
+        <Route path="/buyer/signup" element={<BuyerSignUp />} />
+         <Route path="/login" element={<LoginForALl />} />
       </Routes>
     </BrowserRouter>
   );
