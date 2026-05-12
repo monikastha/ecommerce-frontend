@@ -2,11 +2,12 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Home from "./pages/common/Home";
 import AdminRegister from "./pages/authentication/AdminRegister";
-import LoginPage from "./pages/authentication/LoginPage";
+// import LoginPage from "./pages/authentication/LoginPage";
 
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminStaff from "./pages/Admin/AdminStaff";
 import AdminAddStaff from "./pages/Admin/AdminAddStaff";
+import AdminUpdateStaff from "./pages/Admin/AdminUpdateStaff";
 
 import AdminSeller from "./pages/Admin/AdminSeller";
 import AdminBuyer from "./pages/Admin/AdminBuyer";
@@ -38,13 +39,13 @@ const App = () => {
         {/*Login For ALl Page Routes*/}
 
         <Route path="/admin/register" element={<AdminRegister />} />
-        <Route path="/login" element={<LoginPage />} />
+        {/* <Route path="/login" element={<LoginPage />} /> */}
 
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
         <Route path="/admin/staff" element={<AdminStaff />} />
         <Route path="/admin/staff/add" element={<AdminAddStaff />} />
-
+        <Route path="/admin/staff/update/:id" element={<AdminUpdateStaff />} /> 
         <Route path="/admin/seller" element={<AdminSeller />} />
         <Route path="/admin/buyer" element={<AdminBuyer />} />
 
