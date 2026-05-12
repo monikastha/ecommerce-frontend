@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import Home from "./pages/common/Home";
-import AdminRegister from "./pages/authentication/AdminRegister";
+//import Home from "./pages/common/Home";
+//import AdminRegister from "./pages/authentication/AdminRegister";
 import LoginPage from "./pages/authentication/LoginPage";
 import SellerRegister from "./pages/authentication/SellerRegister";
 
@@ -30,15 +30,18 @@ import AdminAddLocation from "./pages/Admin/AdminAddLocation";
 import BuyerHome from "./pages/Buyer/home/BuyerHome";
 import LoginForALl from "./pages/authentication/LoginForAll"
 import BuyerSignUp  from "./pages/authentication/BuyerSignUp";
+
+import Dashboard from "./pages/DeliveryMan/Dashboard";
+import OrdersTracking from "./pages/DeliveryMan/OrdersTracking";
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* <Route path="/" element={<Home />} /> */}
 
         {/*Login For ALl Page Routes*/}
 
-        <Route path="/admin/register" element={<AdminRegister />} />
+        {/* <Route path="/admin/register" element={<AdminRegister />} /> */}
         <Route path="/admin/login" element={<LoginPage />} />
 
         {/* Seller Register Route */}
@@ -72,6 +75,8 @@ const App = () => {
         <Route path="/home/BuyerHome" element={<BuyerHome />} />
         <Route path="/buyer/signup" element={<BuyerSignUp />} />
          <Route path="/login" element={<LoginForALl />} />
+         <Route path="/deliveryman/dashboard" element={<Dashboard />} />
+         <Route path="/deliveryman/orders" element={<OrdersTracking />} />
       </Routes>
     </BrowserRouter>
   );
