@@ -2,178 +2,260 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import { FaSearch, FaTruck } from "react-icons/fa";
 
 const AdminDelivery: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   return (
-    <div className="wrapper">
-      <AdminSidebar />
-
-      <div className="main">
-        <AdminNavbar />
-
-        <div className="container">
-
-          {/* HEADER */}
-          <div className="headerBox">
-            <div>
-              <h2 className="title">Delivery Management</h2>
-              <p className="subtitle">
-                Manage delivery staff and assignments
-              </p>
-            </div>
-
-            <div className="actions">
-              <input
-                className="search"
-                placeholder="Search delivery staff..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-
-              {/* ✅ FIXED BUTTON */}
-              <button
-                className="addBtn"
-                onClick={() => navigate("/admin/delivery/add")}
-              >
-                + Add Delivery
-              </button>
-            </div>
-          </div>
-
-          {/* TABLE */}
-          <div className="tableBox">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone No</th>
-                  <th>Address</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr>
-                  <td colSpan={6} className="empty">
-                    No delivery data available
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-        </div>
-      </div>
-
-      {/* STYLES */}
+    <>
       <style>{`
-        .wrapper {
-          display: flex;
+        *{
+          margin:0;
+          padding:0;
+          box-sizing:border-box;
+          font-family:'Poppins',sans-serif;
         }
 
-        .main {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          background: #f4f6f8;
-          min-height: 100vh;
+        body{
+          background:#f1f5f9;
         }
 
-        .container {
-          padding: 20px;
+        .wrapper{
+          display:flex;
+          min-height:100vh;
         }
 
-        .headerBox {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #fff;
-          padding: 18px 22px;
-          border-radius: 12px;
-          margin-bottom: 16px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        .main{
+          flex:1;
+          display:flex;
+          flex-direction:column;
         }
 
-        .title {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 600;
+        .container{
+          padding:28px;
         }
 
-        .subtitle {
-          margin: 0;
-          font-size: 13px;
-          color: #6b7280;
+        /* HEADER */
+        .headerBox{
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          background:#ffffff;
+          padding:22px;
+          border-radius:16px;
+          box-shadow:0 10px 25px rgba(0,0,0,0.06);
+          margin-bottom:22px;
+          flex-wrap:wrap;
+          gap:15px;
         }
 
-        .actions {
-          display: flex;
-          gap: 10px;
-          align-items: center;
+        .title-section{
+          display:flex;
+          align-items:center;
+          gap:14px;
         }
 
-        .search {
-          padding: 10px 14px;
-          border-radius: 8px;
-          border: 1px solid #d1d5db;
-          outline: none;
-          width: 220px;
+        .header-icon{
+          width:52px;
+          height:52px;
+          background:linear-gradient(135deg,#2563eb,#3b82f6);
+          color:#fff;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          border-radius:14px;
+          font-size:20px;
+          box-shadow:0 6px 15px rgba(37,99,235,0.25);
         }
 
-        .search:focus {
-          border-color: #4f46e5;
+        .title{
+          font-size:23px;
+          font-weight:700;
+          color:#0f172a;
         }
 
-        .addBtn {
-          background: blue;
-          color: #fff;
-          border: none;
-          padding: 10px 14px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 500;
+        .subtitle{
+          font-size:13px;
+          color:#64748b;
+          margin-top:3px;
         }
 
-        .tableBox {
-          background: #fff;
-          padding: 15px;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-          overflow-x: auto;
+        /* CATEGORY-STYLE SEARCH (FIXED DESIGN) */
+        .search-box{
+          display:flex;
+          align-items:center;
+          gap:10px;
+          background:#f8fafc;
+          padding:10px 14px;
+          border-radius:12px;
+          border:1px solid #e2e8f0;
+          width:280px;
+          transition:0.3s;
         }
 
-        .table {
-          width: 100%;
-          border-collapse: collapse;
-          min-width: 800px;
+        .search-box:focus-within{
+          border-color:#2563eb;
+          box-shadow:0 0 0 4px rgba(37,99,235,0.1);
+          background:#fff;
         }
 
-        .table th {
-          background: #f9fafb;
-          text-align: left;
-          padding: 12px;
-          font-size: 13px;
+        .search-box svg{
+          color:#94a3b8;
+          font-size:14px;
         }
 
-        .table td {
-          padding: 12px;
-          border-top: 1px solid #eee;
-          font-size: 13px;
+        .search{
+          border:none;
+          outline:none;
+          background:transparent;
+          width:100%;
+          font-size:13px;
         }
 
-        .empty {
-          text-align: center;
-          padding: 30px;
-          color: #9ca3af;
+        /* BUTTON */
+        .addBtn{
+          background:linear-gradient(135deg,#2563eb,#1d4ed8);
+          color:white;
+          border:none;
+          padding:10px 14px;
+          border-radius:12px;
+          cursor:pointer;
+          font-weight:600;
+          font-size:13px;
+          transition:0.2s;
+        }
+
+        .addBtn:hover{
+          transform:translateY(-2px);
+          box-shadow:0 10px 20px rgba(37,99,235,0.25);
+        }
+
+        /* TABLE */
+        .tableBox{
+          background:#fff;
+          border-radius:16px;
+          overflow:hidden;
+          box-shadow:0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+        }
+
+        th{
+          font-size:13px;
+          padding:15px;
+          text-align:left;
+          color:#475569;
+          background:#f8fafc;
+          font-weight:600;
+        }
+
+        td{
+          font-size:13px;
+          padding:15px;
+          border-top:1px solid #f1f5f9;
+          color:#334155;
+        }
+
+        tr:hover{
+          background:#f9fafb;
+        }
+
+        .empty{
+          text-align:center;
+          padding:40px;
+          color:#94a3b8;
+          font-size:13px;
+        }
+
+        @media(max-width:900px){
+          .search-box{
+            width:100%;
+          }
         }
       `}</style>
 
-    </div>
+      <div className="wrapper">
+        <AdminSidebar />
+
+        <div className="main">
+          <AdminNavbar />
+
+          <div className="container">
+
+            {/* HEADER */}
+            <div className="headerBox">
+
+              <div className="title-section">
+                <div className="header-icon">
+                  <FaTruck />
+                </div>
+
+                <div>
+                  <h2 className="title">Delivery Management</h2>
+                  <p className="subtitle">
+                    Manage delivery staff and assignments
+                  </p>
+                </div>
+              </div>
+
+              {/* SEARCH + BUTTON */}
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap:"wrap" }}>
+
+                <div className="search-box">
+                  <FaSearch />
+                  <input
+                    className="search"
+                    placeholder="Search delivery staff..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  className="addBtn"
+                  onClick={() => navigate("/admin/delivery/add")}
+                >
+                  + Add Delivery
+                </button>
+
+              </div>
+
+            </div>
+
+            {/* TABLE */}
+            <div className="tableBox">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone No</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td colSpan={6} className="empty">
+                      No delivery data available
+                    </td>
+                  </tr>
+                </tbody>
+
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

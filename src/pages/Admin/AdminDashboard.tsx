@@ -1,118 +1,116 @@
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import { FaUsers, FaBoxOpen, FaTags, FaMoneyBillWave } from "react-icons/fa";
 
 const AdminDashboard = () => {
   return (
     <>
       <style>{`
 
-        *{
-          margin:0;
-          padding:0;
-          box-sizing:border-box;
-          font-family:Arial, sans-serif;
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Poppins', sans-serif;
         }
 
-        .dashboard-container{
-          display:flex;
-          background:#f5f6fa;
-          min-height:100vh;
+        html, body {
+          height: 100%;
+          overflow-x: hidden;   /* ✅ FIX SCROLL ISSUE */
+          background: #f1f5f9;
         }
 
-        .main-content{
-          flex:1;
+        /* MAIN WRAPPER */
+        .dashboard-container {
+          display: flex;
+          width: 100%;
+          min-height: 100vh;
         }
 
-        .content{
-          padding:25px;
+        /* MAIN AREA */
+        .main-content {
+          flex: 1;
+          width: calc(100% - 260px); /* ✅ prevents overflow */
         }
 
-        .cards{
-          display:grid;
-          grid-template-columns:repeat(4,1fr);
-          gap:20px;
+        .content {
+          padding: 25px;
         }
 
-        .card{
-          padding:20px;
-          border-radius:12px;
+        /* HEADER */
+        .dashboard-header h1 {
+          font-size: 28px;
+          color: #0f172a;
         }
 
-        .card h3{
-          margin-bottom:10px;
+        .dashboard-header p {
+          color: #64748b;
+          margin-top: 5px;
         }
 
-        .card h1{
-          font-size:28px;
+        /* CARDS */
+        .cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 20px;
+          margin-top: 20px;
         }
 
-        .purple{
-          background:#8b5cf6;
-          color:white;
+        .card {
+          padding: 22px;
+          border-radius: 18px;
+          color: white;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+          transition: 0.3s;
         }
 
-        .blue{
-          background:#dbeafe;
+        .card:hover {
+          transform: translateY(-6px);
         }
 
-        .pink{
-          background:#ffe4e6;
+        .card-icon {
+          font-size: 30px;
+          margin-bottom: 10px;
         }
 
-        .green{
-          background:#d1fae5;
+        .purple { background: linear-gradient(135deg,#7c3aed,#a855f7); }
+        .blue { background: linear-gradient(135deg,#2563eb,#3b82f6); }
+        .pink { background: linear-gradient(135deg,#ec4899,#f472b6); }
+        .green { background: linear-gradient(135deg,#059669,#10b981); }
+
+        /* OVERVIEW */
+        .overview {
+          margin-top: 30px;
         }
 
-        .overview{
-          margin-top:40px;
+        .overview h2 {
+          margin-bottom: 15px;
         }
 
-        .overview h2{
-          margin-bottom:20px;
-          color:#333;
+        .chart-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
         }
 
-        .chart-container{
-          display:grid;
-          grid-template-columns:repeat(2,1fr);
-          gap:20px;
+        .chart-box {
+          background: white;
+          padding: 20px;
+          border-radius: 16px;
+          box-shadow: 0 6px 15px rgba(0,0,0,0.05);
         }
 
-        .chart-box{
-          background:white;
-          padding:20px;
-          border-radius:12px;
-        }
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
 
-        .chart-box h3{
-          margin-bottom:20px;
-        }
+          .main-content {
+            width: 100%;
+          }
 
-        .bars{
-          height:220px;
-          display:flex;
-          align-items:flex-end;
-          gap:20px;
-        }
+          .content {
+            padding: 15px;
+          }
 
-        .bar{
-          width:60px;
-          border-radius:8px 8px 0 0;
-        }
-
-        .bar1{
-          height:120px;
-          background:#3b82f6;
-        }
-
-        .bar2{
-          height:80px;
-          background:#06b6d4;
-        }
-
-        .bar3{
-          height:170px;
-          background:#2563eb;
         }
 
       `}</style>
@@ -127,56 +125,53 @@ const AdminDashboard = () => {
 
           <div className="content">
 
-            {/* Cards */}
+            <div className="dashboard-header">
+              <h1>Admin Dashboard</h1>
+              <p>Welcome back 👋 Here's your store overview.</p>
+            </div>
+
             <div className="cards">
 
               <div className="card purple">
+                <FaUsers className="card-icon" />
                 <h3>Total Users</h3>
-                <h1>1124</h1>
+                <h2>1124</h2>
               </div>
 
               <div className="card blue">
+                <FaBoxOpen className="card-icon" />
                 <h3>Total Products</h3>
-                <h1>23</h1>
+                <h2>23</h2>
               </div>
 
               <div className="card pink">
-                <h3>Total Category</h3>
-                <h1>3</h1>
+                <FaTags className="card-icon" />
+                <h3>Total Categories</h3>
+                <h2>3</h2>
               </div>
 
               <div className="card green">
+                <FaMoneyBillWave className="card-icon" />
                 <h3>Total Earnings</h3>
-                <h1>Rs.24555</h1>
+                <h2>Rs. 24,555</h2>
               </div>
 
             </div>
 
-            {/* Overview */}
             <div className="overview">
 
-              <h2>Overview</h2>
+              <h2>Analytics Overview</h2>
 
               <div className="chart-container">
 
                 <div className="chart-box">
-                  <h3>Top 3 Products sold this month</h3>
-
-                  <div className="bars">
-                    <div className="bar bar1"></div>
-                    <div className="bar bar2"></div>
-                    <div className="bar bar3"></div>
-                  </div>
+                  <h3>Top Products</h3>
+                  {/* <p>Graph area</p> */}
                 </div>
 
                 <div className="chart-box">
-                  <h3>Top 3 Income this month</h3>
-
-                  <div className="bars">
-                    <div className="bar bar1"></div>
-                    <div className="bar bar2"></div>
-                    <div className="bar bar3"></div>
-                  </div>
+                  <h3>Monthly Income</h3>
+                  {/* <p>Graph area</p> */}
                 </div>
 
               </div>
