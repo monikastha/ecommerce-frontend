@@ -27,29 +27,17 @@ import AdminAddPromotion from "./pages/Admin/AdminAddPromotion";
 import AdminLocation from "./pages/Admin/AdminLocation";
 import AdminAddLocation from "./pages/Admin/AdminAddLocation";
 
-import SellerDashboard from "./pages/Seller/SellerDashboard";
-import SellerProduct from "./pages/Seller/SellerProduct";
-import SellerAddProduct from "./pages/Seller/SellerAddProduct";
-import SellerOrders from "./pages/Seller/SellerOrders";
-import SellerOrdersManagement from "./pages/Seller/SellerOrdersManagement";
-import SellerCustomer from "./pages/Seller/SellerCustomer";
-import SellerLogout from "./pages/Seller/SellerLogout.tsx";
-import SellerProfile from "./pages/Seller/SellerProfile.tsx";
-
-
-
-
 import BuyerHome from "./pages/Buyer/home/BuyerHome";
-import LoginForALl from "./pages/authentication/LoginForAll";
-import BuyerSignUp from "./pages/authentication/BuyerSignUp";
-
+import LoginForALl from "./pages/authentication/LoginForAll"
+import BuyerSignUp  from "./pages/authentication/BuyerSignUp";
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
 
-        {/*Login For ALL Page Routes*/}
+        {/*Login For ALl Page Routes*/}
+
         <Route path="/admin/register" element={<AdminRegister />} />
         <Route path="/admin/login" element={<LoginPage />} />
 
@@ -69,11 +57,7 @@ const App = () => {
 
         <Route path="/admin/category" element={<AdminCategory />} />
         <Route path="/admin/category/add" element={<AdminAddCategory />} />
-
-        <Route
-          path="/admin/subcategory/add"
-          element={<AdminAddSubCategory />}
-        />
+        <Route path="/admin/subcategory/add" element={<AdminAddSubCategory />} />
 
         <Route path="/admin/product" element={<AdminProduct />} />
 
@@ -85,27 +69,9 @@ const App = () => {
 
         <Route path="/admin/location" element={<AdminLocation />} />
         <Route path="/admin/location/add" element={<AdminAddLocation />} />
-
-        {/* Buyer Routes */}
         <Route path="/home/BuyerHome" element={<BuyerHome />} />
         <Route path="/buyer/signup" element={<BuyerSignUp />} />
-        <Route path="/login" element={<LoginForALl />} />
-
-        {/* Seller Routes */}
-        <Route path="/seller/dashboard" element={<SellerDashboard />} />
-        <Route path="/seller/product" element={<SellerProduct />} />
-        <Route path="/seller/addproduct" element={<SellerAddProduct />} />
-        <Route path="/seller/orders" element={<SellerOrders />} />
-        <Route path="/seller/ordersmanagement" element={<SellerOrdersManagement />} />
-        <Route path="/seller/customer" element={<SellerCustomer />} />
-        <Route path="/seller/logout" element={<SellerLogout />} />
-        <Route path="/seller/profile" element={<SellerProfile />} />
-
-
-
-
-
-
+         <Route path="/login" element={<LoginForALl />} />
       </Routes>
     </BrowserRouter>
   );

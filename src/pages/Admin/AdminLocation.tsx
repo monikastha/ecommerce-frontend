@@ -28,7 +28,11 @@ const AdminLocation: React.FC = () => {
 =======
         body{
           background:#ffffff;
+<<<<<<< HEAD
 >>>>>>> d1a0ae8
+=======
+>>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48
+>>>>>>> 5e33d4e0c9b580505c7c1a2350bc443822f6b411
         }
 
         .wrapper{
