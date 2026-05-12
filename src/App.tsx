@@ -37,12 +37,19 @@ import AssistantOrder from "./pages/Assistant/AssistantOrder";
 import AssistantSeller from "./pages/Assistant/AssistantSeller";
 
 import BuyerHome from "./pages/Buyer/home/BuyerHome";
+<<<<<<< HEAD
 
+=======
+import LoginForALl from "./pages/authentication/LoginForAll"
+import BuyerSignUp  from "./pages/authentication/BuyerSignUp";
+>>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+
+        {/*Login For ALl Page Routes*/}
 
         <Route path="/admin/register" element={<AdminRegister />} />
         <Route path="/admin/login" element={<LoginPage />} />
@@ -69,6 +76,7 @@ const App = () => {
 
         <Route path="/admin/location" element={<AdminLocation />} />
         <Route path="/admin/location/add" element={<AdminAddLocation />} />
+<<<<<<< HEAD
         <Route path="/assistant/dashboard" element={<AssistantDashboard />} />
         <Route path="/assistant/category" element={<AssistantCategory />} />
         <Route path="/assistant/category/add" element={<AssistantAddCategory />} />
@@ -79,6 +87,11 @@ const App = () => {
         <Route path="/assistant/seller" element={<AssistantSeller />} />
 
         <Route path="/buyer/home" element={<BuyerHome />} />
+=======
+        <Route path="/home/BuyerHome" element={<BuyerHome />} />
+        <Route path="/buyer/signup" element={<BuyerSignUp />} />
+         <Route path="/login" element={<LoginForALl />} />
+>>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48
       </Routes>
     </BrowserRouter>
   );

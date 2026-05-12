@@ -47,10 +47,41 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Field */}
           <div>
+<<<<<<< HEAD
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                 ✉️
+=======
+            <h2> Hello!</h2>
+            <p className="subtitle">Login into your dashboard</p>
+
+            <div className="form-content">
+              <div className="input-group">
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="input"
+                />
+              </div>
+
+              <div className="input-group">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input"
+                />
+                <button
+                  className="toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  👁
+                </button>
+>>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48
               </div>
               <input
                 type="email"
@@ -63,6 +94,7 @@ const LoginPage = () => {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* Password Field */}
           <div>
             <div className="flex justify-between items-center mb-1.5">
@@ -112,6 +144,10 @@ const LoginPage = () => {
           </button>
           <button className="flex items-center justify-center gap-2 border border-gray-200 hover:border-gray-300 py-3 rounded-2xl transition-colors">
             <span className="text-xl"></span>
+=======
+          <button className="btn" onClick={handleLogin} disabled={loading}>
+            {loading ? <span className="spinner"></span> : "Login "}
+>>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48
           </button>
         </div>
       </div>
@@ -120,6 +156,10 @@ const LoginPage = () => {
       <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-white/30 to-transparent pointer-events-none" />
     </div>
   );
+<<<<<<< HEAD
 };
 
 export default LoginPage;
+=======
+}
+>>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48

@@ -2,100 +2,41 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import { FaGift } from "react-icons/fa";
 
 const AdminPromotion: React.FC = () => {
   const navigate = useNavigate();
-
   const [search, setSearch] = useState("");
 
   return (
-    <div className="wrapper">
-      {/* SIDEBAR */}
-      <AdminSidebar />
-
-      {/* MAIN */}
-      <div className="main">
-        <AdminNavbar />
-
-        <div className="container">
-
-          {/* HEADER */}
-          <div className="headerBox">
-            <div>
-              <h2 className="title">Promotion Management</h2>
-
-              <p className="subtitle">
-                Manage discounts, promotional offers and campaigns
-              </p>
-            </div>
-
-            <div className="actions">
-
-              <input
-                type="text"
-                placeholder="Search promotion..."
-                className="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-
-              <button
-                className="addBtn"
-                onClick={() => navigate("/admin/promotion/add")}
-              >
-                + Add Promotion
-              </button>
-
-            </div>
-          </div>
-
-          {/* TABLE */}
-          <div className="tableBox">
-
-            <table className="table">
-
-              <thead>
-                <tr>
-                  <th>Promotion Name</th>
-                  <th>Type</th>
-                  <th>Discount</th>
-                  <th>Applies To</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr>
-                  <td colSpan={7} className="empty">
-                    No promotion data available
-                  </td>
-                </tr>
-              </tbody>
-
-            </table>
-
-          </div>
-
-        </div>
-      </div>
-
-      {/* STYLES */}
+    <>
       <style>{`
+
+        *{
+          margin:0;
+          padding:0;
+          box-sizing:border-box;
+          font-family:'Poppins',sans-serif;
+        }
+
+        body{
+          background:#ffffff;
+        }
+
         .wrapper{
           display:flex;
+          min-height:100vh;
         }
 
         .main{
           flex:1;
-          margin-left:0px;
-          background:#f4f6f8;
-          min-height:100vh;
+          display:flex;
+          flex-direction:column;
+          background:#ffffff;
         }
 
         .container{
-          padding:20px;
+          padding:28px;
         }
 
         /* HEADER */
@@ -104,90 +45,224 @@ const AdminPromotion: React.FC = () => {
           justify-content:space-between;
           align-items:center;
           background:#fff;
-          padding:18px 22px;
-          border-radius:12px;
-          margin-bottom:16px;
-          box-shadow:0 2px 10px rgba(0,0,0,0.05);
+          padding:22px;
+          border-radius:16px;
+          box-shadow:0 8px 20px rgba(0,0,0,0.06);
+          margin-bottom:22px;
+          flex-wrap:wrap;
+          gap:15px;
+          border:1px solid #f1f5f9;
+        }
+
+        .title-section{
+          display:flex;
+          align-items:center;
+          gap:14px;
+        }
+
+        .header-icon{
+          width:52px;
+          height:52px;
+          background:linear-gradient(135deg,#2563eb,#3b82f6);
+          color:#fff;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          border-radius:14px;
+          font-size:20px;
         }
 
         .title{
-          margin:0;
-          font-size:22px;
-          font-weight:600;
+          font-size:23px;
+          font-weight:700;
+          color:#0f172a;
         }
 
         .subtitle{
-          margin-top:4px;
           font-size:13px;
-          color:#6b7280;
+          color:#64748b;
+          margin-top:3px;
         }
 
+        /* ACTIONS */
         .actions{
           display:flex;
           gap:10px;
           align-items:center;
         }
 
+        /* ✅ CATEGORY STYLE SEARCH BAR */
         .search{
-          width:260px;
+          width:200px;
           padding:10px 14px;
+          border-radius:10px;
           border:1px solid #d1d5db;
-          border-radius:8px;
           outline:none;
+          font-size:13px;
+          transition:0.2s;
         }
 
         .search:focus{
-          border-color:#4f46e5;
+          border-color:#2563eb;
+          box-shadow:0 0 0 3px rgba(37,99,235,0.15);
         }
 
+        /* BUTTON */
         .addBtn{
-          background:#4f46e5;
-          color:white;
+          background:linear-gradient(135deg,#2563eb,#1d4ed8);
+          color:#fff;
           border:none;
-          padding:10px 16px;
-          border-radius:8px;
+          padding:10px 14px;
+          border-radius:10px;
           cursor:pointer;
           font-weight:600;
+          font-size:13px;
         }
 
         .addBtn:hover{
-          background:#4338ca;
+          transform:translateY(-2px);
         }
 
         /* TABLE */
         .tableBox{
           background:#fff;
-          padding:15px;
-          border-radius:12px;
-          box-shadow:0 2px 10px rgba(0,0,0,0.05);
-          overflow-x:auto;
+          border-radius:16px;
+          overflow:hidden;
+          box-shadow:0 8px 20px rgba(0,0,0,0.05);
+          border:1px solid #f1f5f9;
         }
 
-        .table{
+        table{
           width:100%;
           border-collapse:collapse;
         }
 
-        .table th{
-          background:#f9fafb;
-          text-align:left;
-          padding:14px;
+        th{
           font-size:13px;
+          padding:15px;
+          text-align:left;
+          color:#475569;
+          background:#f8fafc;
+          font-weight:600;
         }
 
-        .table td{
-          padding:14px;
-          border-top:1px solid #eee;
+        td{
           font-size:13px;
+          padding:15px;
+          border-top:1px solid #f1f5f9;
+          color:#334155;
+        }
+
+        tr:hover{
+          background:#f9fafb;
         }
 
         .empty{
           text-align:center;
-          padding:35px;
-          color:#9ca3af;
+          padding:40px;
+          color:#94a3b8;
+          font-size:13px;
         }
+
+        /* RESPONSIVE */
+        @media(max-width:900px){
+          .actions{
+            width:100%;
+          }
+
+          .search{
+            width:100%;
+          }
+        }
+
       `}</style>
-    </div>
+
+      <div className="wrapper">
+
+        <AdminSidebar />
+
+        <div className="main">
+
+          <AdminNavbar />
+
+          <div className="container">
+
+            {/* HEADER */}
+            <div className="headerBox">
+
+              <div className="title-section">
+
+                <div className="header-icon">
+                  <FaGift />
+                </div>
+
+                <div>
+                  <h2 className="title">Promotion Management</h2>
+                  <p className="subtitle">
+                    Manage discounts, offers and campaigns
+                  </p>
+                </div>
+
+              </div>
+
+              {/* ACTIONS */}
+              <div className="actions">
+
+                {/* ✅ CATEGORY STYLE SEARCH */}
+                <input
+                  type="text"
+                  placeholder="Search promotion..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="search"
+                />
+
+                <button
+                  className="addBtn"
+                  onClick={() => navigate("/admin/promotion/add")}
+                >
+                  + Add Promotion
+                </button>
+
+              </div>
+
+            </div>
+
+            {/* TABLE */}
+            <div className="tableBox">
+
+              <table>
+
+                <thead>
+                  <tr>
+                    <th>Promotion Name</th>
+                    <th>Type</th>
+                    <th>Discount</th>
+                    <th>Applies To</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td colSpan={7} className="empty">
+                      No promotion data available
+                    </td>
+                  </tr>
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </>
   );
 };
 
