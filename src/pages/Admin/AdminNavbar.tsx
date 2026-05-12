@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import logo from "../../assets/logo.png";
+import { useNavigate } from "react-router-dom";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -11,17 +12,23 @@ import {
 
 const AdminNavbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ Time-based greeting (Nepal time works automatically from browser)
+  const navigate = useNavigate();
+
+  // Greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
+
     if (hour < 12) return "Good Morning";
     if (hour < 17) return "Good Afternoon";
     if (hour < 21) return "Good Evening";
+
     return "Good Night";
   };
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -33,7 +40,9 @@ const AdminNavbar = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -77,7 +86,6 @@ const AdminNavbar = () => {
           gap:15px;
         }
 
-        /* ✅ SEARCH FIXED */
         .search-box{
           display:flex;
           align-items:center;
@@ -85,9 +93,7 @@ const AdminNavbar = () => {
           background:#f1f5f9;
           padding:10px 14px;
           border-radius:12px;
-
           width:260px;
-          flex-shrink:0;   /* 🔥 IMPORTANT FIX */
           border:1px solid transparent;
           transition:0.3s;
         }
@@ -110,7 +116,6 @@ const AdminNavbar = () => {
           color:#94a3b8;
         }
 
-        /* ICON */
         .icon{
           font-size:18px;
           cursor:pointer;
@@ -123,20 +128,19 @@ const AdminNavbar = () => {
           transform:scale(1.1);
         }
 
-        /* PROFILE */
         .profile{
           width:42px;
           height:42px;
           border-radius:50%;
           cursor:pointer;
           border:2px solid #e2e8f0;
+          object-fit:cover;
         }
 
         .profile:hover{
           border-color:#2563eb;
         }
 
-        /* DROPDOWN */
         .dropdown{
           position:absolute;
           top:55px;
@@ -146,6 +150,7 @@ const AdminNavbar = () => {
           border-radius:12px;
           box-shadow:0 10px 25px rgba(0,0,0,0.1);
           overflow:hidden;
+          z-index:999;
         }
 
         .dropdown div{
@@ -167,7 +172,6 @@ const AdminNavbar = () => {
           color:#ef4444 !important;
         }
 
-        /* RESPONSIVE */
         @media(max-width:768px){
           .search-box{
             display:none;
@@ -188,15 +192,25 @@ const AdminNavbar = () => {
 
           {/* SEARCH */}
           <div className="search-box">
-            <FontAwesomeIcon icon={faSearch} className="search-icon" />
+            <FontAwesomeIcon
+              icon={faSearch}
+              className="search-icon"
+            />
+
             <input placeholder="Search products, orders..." />
           </div>
 
           {/* NOTIFICATION */}
-          <FontAwesomeIcon icon={faBell} className="icon" />
+          <FontAwesomeIcon
+            icon={faBell}
+            className="icon"
+          />
 
           {/* PROFILE */}
-          <div ref={dropdownRef} style={{ position: "relative" }}>
+          <div
+            ref={dropdownRef}
+            style={{ position: "relative" }}
+          >
             <img
               className="profile"
               src={logo}
@@ -204,17 +218,23 @@ const AdminNavbar = () => {
               onClick={() => setProfileOpen(!profileOpen)}
             />
 
+            {/* DROPDOWN */}
             {profileOpen && (
               <div className="dropdown">
+
                 <div>
                   <FontAwesomeIcon icon={faUser} />
                   Profile
                 </div>
 
-                <div className="logout">
+                <div
+                  className="logout"
+                  onClick={() => navigate("/login")}
+                >
                   <FontAwesomeIcon icon={faRightFromBracket} />
                   Logout
                 </div>
+
               </div>
             )}
           </div>

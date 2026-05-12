@@ -25,22 +25,44 @@ const AdminAddStaff: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      setLoading(true);
+  // 🔴 VALIDATION
+  if (!formData.name.trim()) return alert("Name is required");
+  if (!formData.username.trim()) return alert("Username is required");
+  if (!formData.password.trim()) return alert("Password is required");
+  if (!formData.address.trim())  return alert("Address is required");
+  if (!formData.phone.trim())  return alert("Phone is required");
+  if (!formData.email.trim())  return alert("Email is required");
+  // Email validation (if provided)
+  if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    return alert("Invalid email format");
+  }
 
-      await axios.post("http://127.0.0.1:8000/api/staff/", formData);
+  // Phone validation (if provided)
+  if (formData.phone && !/^[0-9]{7,15}$/.test(formData.phone)) {
+    return alert("Invalid phone number (7-15 digits only)");
+  }
 
-      alert("Staff Added Successfully!");
-      navigate("/admin/staff");
-    } catch (error: any) {
-      console.log(error.response?.data);
-      alert("Failed to add staff!");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Password strength
+  if (formData.password.length < 6) {
+    return alert("Password must be at least 6 characters");
+  }
+
+  try {
+    setLoading(true);
+
+    await axios.post("http://127.0.0.1:8000/api/staff/", formData);
+
+    alert("Staff Added Successfully!");
+    navigate("/admin/staff");
+  } catch (error: any) {
+    console.log(error.response?.data);
+    alert("Failed to add staff!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>

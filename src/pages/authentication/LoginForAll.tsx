@@ -131,7 +131,7 @@ export default function LoginPage() {
       <form className="login-card" onSubmit={handleLogin}>
 
         <h2>
-          <b>SajiloMar</b>t
+          <b>Sajilo</b>Mart
         </h2>
 
         <p className="subtitle">
@@ -239,7 +239,7 @@ export default function LoginPage() {
 
         <p className="signup">
           Don’t have an account?
-          <a href="/register"> Sign up</a>
+          <a href="/signupway"> Sign up</a>
         </p>
 
       </form>
@@ -275,6 +275,8 @@ export default function LoginPage() {
         h2{
           text-align:center;
           margin-bottom:5px;
+          color:blue;
+          font-size:20px;
         }
 
         .subtitle{

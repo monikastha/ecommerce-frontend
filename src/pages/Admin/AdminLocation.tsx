@@ -19,8 +19,16 @@ const AdminLocation: React.FC = () => {
           font-family:'Poppins',sans-serif;
         }
 
+<<<<<<< HEAD
+        .main {
+          flex: 1;
+          margin-left: 0px;
+          background: #f4f6f8;
+          min-height: 100vh;
+=======
         body{
           background:#ffffff;
+>>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48
         }
 
         .wrapper{
