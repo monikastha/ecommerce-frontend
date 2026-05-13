@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import logo from "../../assets/logo.png";
-import { useNavigate } from "react-router-dom";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -12,23 +11,17 @@ import {
 
 const DeliverymanNavbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
-
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const navigate = useNavigate();
-
-  // Greeting
+  // ✅ Time-based greeting (Nepal time works automatically from browser)
   const getGreeting = () => {
     const hour = new Date().getHours();
-
     if (hour < 12) return "Good Morning";
     if (hour < 17) return "Good Afternoon";
     if (hour < 21) return "Good Evening";
-
     return "Good Night";
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -40,9 +33,7 @@ const DeliverymanNavbar = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -86,6 +77,7 @@ const DeliverymanNavbar = () => {
           gap:15px;
         }
 
+        /* ✅ SEARCH FIXED */
         .search-box{
           display:flex;
           align-items:center;
@@ -93,7 +85,9 @@ const DeliverymanNavbar = () => {
           background:#f1f5f9;
           padding:10px 14px;
           border-radius:12px;
+
           width:260px;
+          flex-shrink:0;   /* 🔥 IMPORTANT FIX */
           border:1px solid transparent;
           transition:0.3s;
         }
@@ -116,6 +110,7 @@ const DeliverymanNavbar = () => {
           color:#94a3b8;
         }
 
+        /* ICON */
         .icon{
           font-size:18px;
           cursor:pointer;
@@ -128,19 +123,20 @@ const DeliverymanNavbar = () => {
           transform:scale(1.1);
         }
 
+        /* PROFILE */
         .profile{
           width:42px;
           height:42px;
           border-radius:50%;
           cursor:pointer;
           border:2px solid #e2e8f0;
-          object-fit:cover;
         }
 
         .profile:hover{
           border-color:#2563eb;
         }
 
+        /* DROPDOWN */
         .dropdown{
           position:absolute;
           top:55px;
@@ -150,7 +146,6 @@ const DeliverymanNavbar = () => {
           border-radius:12px;
           box-shadow:0 10px 25px rgba(0,0,0,0.1);
           overflow:hidden;
-          z-index:999;
         }
 
         .dropdown div{
@@ -172,6 +167,7 @@ const DeliverymanNavbar = () => {
           color:#ef4444 !important;
         }
 
+        /* RESPONSIVE */
         @media(max-width:768px){
           .search-box{
             display:none;
@@ -183,8 +179,8 @@ const DeliverymanNavbar = () => {
 
         {/* LEFT */}
         <div className="navbar-left">
-          <h2>{getGreeting()}, Delivery Man 👋</h2>
-          <p>Manage your deliveries and earnings</p>
+          <h2>{getGreeting()}, Deliveryman 👋</h2>
+          <p>Welcome back to your dashboard</p>
         </div>
 
         {/* RIGHT */}
@@ -192,25 +188,15 @@ const DeliverymanNavbar = () => {
 
           {/* SEARCH */}
           <div className="search-box">
-            <FontAwesomeIcon
-              icon={faSearch}
-              className="search-icon"
-            />
-
-            <input placeholder="Search orders..." />
+            <FontAwesomeIcon icon={faSearch} className="search-icon" />
+            <input placeholder="Search products, orders..." />
           </div>
 
           {/* NOTIFICATION */}
-          <FontAwesomeIcon
-            icon={faBell}
-            className="icon"
-          />
+          <FontAwesomeIcon icon={faBell} className="icon" />
 
           {/* PROFILE */}
-          <div
-            ref={dropdownRef}
-            style={{ position: "relative" }}
-          >
+          <div ref={dropdownRef} style={{ position: "relative" }}>
             <img
               className="profile"
               src={logo}
@@ -218,26 +204,17 @@ const DeliverymanNavbar = () => {
               onClick={() => setProfileOpen(!profileOpen)}
             />
 
-            {/* DROPDOWN */}
             {profileOpen && (
               <div className="dropdown">
-
                 <div>
                   <FontAwesomeIcon icon={faUser} />
                   Profile
                 </div>
 
-                <div
-                  className="logout"
-                  onClick={() => {
-                    localStorage.clear();
-                    navigate("/login");
-                  }}
-                >
+                <div className="logout">
                   <FontAwesomeIcon icon={faRightFromBracket} />
                   Logout
                 </div>
-
               </div>
             )}
           </div>

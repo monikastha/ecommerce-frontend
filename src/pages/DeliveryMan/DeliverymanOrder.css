@@ -1,0 +1,136 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  padding: 25px;
+}
+
+.breadcrumb {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.breadcrumb .active {
+  font-weight: 600;
+  color: #334155;
+}
+
+.topGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.orderCard {
+  display: flex;
+  gap: 15px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.orderId {
+  background: #dbeafe;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.orderInfo {
+  flex: 1;
+}
+
+.statsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.statBoxBlue {
+  background: #eff6ff;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.statBoxOrange {
+  background: #fff7ed;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.urgent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #ea580c;
+}
+
+.tableBox {
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+}
+
+table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.badgeGreen {
+  background: #bbf7d0;
+  color: #15803d;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.badgeOrange {
+  background: #fed7aa;
+  color: #ea580c;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}

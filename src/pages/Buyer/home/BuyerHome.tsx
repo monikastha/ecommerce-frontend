@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import shoesImg from "../../../assets/shoes4.jpg";
 import Necklace from "../../../assets/accessories2.jpg";
 import iphun from "../../../assets/iphun.jpg";
@@ -19,11 +20,6 @@ import signup from "../../../assets/signupRemove.png";
 import account from "../../../assets/accountbgremove.png";
 import logout from "../../../assets/logoutbgremoved.png";
 import cart from "../../../assets/cartbgremove.png";
-
-
-
-
-
 
 
 /* ─────────────────────────────────────────────────────────────
@@ -125,7 +121,7 @@ const reviews = [
 
 const NAV_ITEMS = [
   { label: "Home", emoji: homeLogo },
-  { label: "Login", emoji:login },
+  { label: "Login", emoji: login },
   { label: "SignUp", emoji: signup },
   { label: "Account", emoji: account },
   { label: "Logout", emoji: logout },
@@ -206,7 +202,7 @@ const Stars = ({ n }: { n: number }) => (
    COMPONENT
 ───────────────────────────────────────────────────────── */
 export default function SajiloMart() {
-  const [heroImg, setHeroImg] = useState<string>(bbGirl);
+  // const [ setHeroImg] = useState<string>(bbGirl);
   const [activeCat, setActiveCat] = useState("Fashion");
   const [activeNav, setActiveNav] = useState("Home");
   const [liked, setLiked] = useState<Record<number, boolean>>({});
@@ -214,12 +210,13 @@ export default function SajiloMart() {
   const [email, setEmail] = useState("");
   const [subbed, setSubbed] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     const r = new FileReader();
-    r.onload = (ev) => setHeroImg(ev.target?.result as string);
+    r.onload = (ev) => (ev.target?.result as string);
     r.readAsDataURL(f);
   };
 
@@ -294,6 +291,9 @@ export default function SajiloMart() {
                   key={item.label}
                   onClick={() => {
                     setActiveNav(item.label);
+                    if (item.label === "Login") {
+                      navigate("/login");
+                    }
                   }}
                   className={`relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all border-none cursor-pointer
                     ${
@@ -305,11 +305,11 @@ export default function SajiloMart() {
                   <img
                     src={item.emoji}
                     alt="emoji"
-                    className="w-[17px] h-auto object-contain leading-tight"
+                    className="w-4.25 h-auto object-contain leading-tight"
                   />
                   <span>{item.label}</span>
-                  {item.badge && cartQty > 0 && (
-                    <span className="absolute -top-0.5 right-0.5 min-w-[14px] h-3.5 px-0.5 bg-red-500 text-white rounded-full text-[8px] flex items-center justify-center font-bold leading-none">
+                  { cartQty > 0 && (
+                    <span className="absolute -top-0.5 right-0.5 min-w-3.5 h-3.5 px-0.5 bg-red-500 text-white rounded-full text-[8px] flex items-center justify-center font-bold leading-none">
                       {cartQty}
                     </span>
                   )}
@@ -319,7 +319,7 @@ export default function SajiloMart() {
           </div>
 
           {/* Row 2 — category pills */}
-          <div className="flex gap-2 overflow-x-auto pb-2 pt-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex gap-2 overflow-x-auto pb-2 pt-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-none]">
             {CAT_TABS.map((c) => (
               <button
                 key={c}
@@ -342,80 +342,78 @@ export default function SajiloMart() {
           HERO
       ══════════════════════════════════════ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10">
-      <section
-        className="relative flex items-center rounded-2xl"
-        style={{
-          background: `linear-gradient(120deg, ${TOKEN.heroFrom} 0%, ${TOKEN.heroMid} 55%, ${TOKEN.heroTo} 100%)`,
-          minHeight: 320,
-          /* Note: overflow-hidden removed to allow image to sit 'on top' */
-        }}
-      >
-        {/* Decorative Background Circles */}
-        <div className="absolute right-64 top-[-60px] w-72 h-72 rounded-full opacity-10 bg-white pointer-events-none" />
-        <div className="absolute left-[40%] bottom-[-40px] w-48 h-48 rounded-full opacity-10 bg-white pointer-events-none" />
-
-        {/* Text Content */}
-        <div className="flex-1 px-10 py-10 z-10">
-          <span className="inline-block bg-white/20 text-white/90 text-[10px] font-bold tracking-[.15em] uppercase px-3 py-1 rounded-full mb-4">
-            New Arrivals
-          </span>
-          <h1
-            className="text-white font-black leading-none mb-2"
-            style={{
-              fontSize: "clamp(2rem, 4vw, 3.2rem)",
-              fontFamily: "Georgia, serif",
-              textShadow: "0 2px 16px rgba(0,0,0,.25)",
-            }}
-          >
-            Sajilo Mart
-          </h1>
-          <p
-            className="text-yellow-300 font-medium mb-4"
-            style={{
-              fontSize: "clamp(1.1rem, 2.5vw, 1.8rem)",
-              fontFamily: "cursive",
-            }}
-          >
-            Shop Anytime, Anywhere
-          </p>
-          <p className="text-white/80 text-sm leading-relaxed max-w-sm mb-6">
-            Discover thousands of products across fashion, electronics, home
-            essentials, and more — all at your fingertips.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button className="bg-yellow-300 hover:bg-yellow-400 text-violet-900 font-extrabold text-sm px-6 py-2.5 rounded-full border-none cursor-pointer transition-all shadow-lg active:scale-95">
-              Browse Products →
-            </button>
-            <button className="bg-transparent hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full border-2 border-white/60 cursor-pointer transition-colors">
-              View Offers
-            </button>
-          </div>
-        </div>
-
-        {/* Hero Image Container */}
-        <div
-          className="relative h-full shrink-0 self-end flex items-end justify-end"
-          style={{ width: "clamp(200px, 32%, 400px)" }}
+        <section
+          className="relative flex items-center rounded-2xl"
+          style={{
+            background: `linear-gradient(120deg, ${TOKEN.heroFrom} 0%, ${TOKEN.heroMid} 55%, ${TOKEN.heroTo} 100%)`,
+            minHeight: 320,
+            /* Note: overflow-hidden removed to allow image to sit 'on top' */
+          }}
         >
-          <img
-            src={bbGirl}
-            alt="Hero Visual"
-            className="relative z-20 h-[115%] w-auto object-contain drop-shadow-2xl"
-            style={{ marginBottom: "-1px" }} // Ensures it sits flush on the bottom edge
-          />
+          {/* Decorative Background Circles */}
+          <div className="absolute right-64 top-15 w-72 h-72 rounded-full opacity-10 bg-white pointer-events-none" />
+          <div className="absolute left-[40%] bottom-10 w-48 h-48 rounded-full opacity-10 bg-white pointer-events-none" />
 
-         
+          {/* Text Content */}
+          <div className="flex-1 px-10 py-10 z-10">
+            <span className="inline-block bg-white/20 text-white/90 text-[10px] font-bold tracking-[.15em] uppercase px-3 py-1 rounded-full mb-4">
+              New Arrivals
+            </span>
+            <h1
+              className="text-white font-black leading-none mb-2"
+              style={{
+                fontSize: "clamp(2rem, 4vw, 3.2rem)",
+                fontFamily: "Georgia, serif",
+                textShadow: "0 2px 16px rgba(0,0,0,.25)",
+              }}
+            >
+              Sajilo Mart
+            </h1>
+            <p
+              className="text-yellow-300 font-medium mb-4"
+              style={{
+                fontSize: "clamp(1.1rem, 2.5vw, 1.8rem)",
+                fontFamily: "cursive",
+              }}
+            >
+              Shop Anytime, Anywhere
+            </p>
+            <p className="text-white/80 text-sm leading-relaxed max-w-sm mb-6">
+              Discover thousands of products across fashion, electronics, home
+              essentials, and more — all at your fingertips.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <button className="bg-yellow-300 hover:bg-yellow-400 text-violet-900 font-extrabold text-sm px-6 py-2.5 rounded-full border-none cursor-pointer transition-all shadow-lg active:scale-95">
+                Browse Products →
+              </button>
+              <button className="bg-transparent hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full border-2 border-white/60 cursor-pointer transition-colors">
+                View Offers
+              </button>
+            </div>
+          </div>
 
-          <input
-            ref={fileRef}
-            type="file"
-            hidden
-            onChange={onFile}
-            accept="image/*"
-          />
-        </div>
-      </section>
-    </div>
+          {/* Hero Image Container */}
+          <div
+            className="relative h-full shrink-0 self-end flex items-end justify-end"
+            style={{ width: "clamp(200px, 32%, 400px)" }}
+          >
+            <img
+              src={bbGirl}
+              alt="Hero Visual"
+              className="relative z-20 h-[115%] w-auto object-contain drop-shadow-2xl"
+              style={{ marginBottom: "-1px" }} // Ensures it sits flush on the bottom edge
+            />
+
+            <input
+              ref={fileRef}
+              type="file"
+              hidden
+              onChange={onFile}
+              accept="image/*"
+            />
+          </div>
+        </section>
+      </div>
 
       {/* ══════════════════════════════════════
           FEATURE STRIP
@@ -476,7 +474,7 @@ export default function SajiloMart() {
 
               {/* info */}
               <div className="p-3">
-                <p className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem]">
+                <p className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 min-h-10">
                   {p.name}
                 </p>
                 <div className="flex items-center gap-1 mt-1.5">

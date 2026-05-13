@@ -1,174 +1,113 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 
 const AdminAddStaff: React.FC = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     username: "",
     email: "",
+    password: "",
     phone: "",
     address: "",
-    role: "Assistant",
+    role: "assistant",
   });
 
-  const [errors, setErrors] = useState<any>({});
-
-  const validate = () => {
-    let tempErrors: any = {};
-
-    if (!formData.name.trim()) tempErrors.name = "Name is required";
-
-    if (!formData.username.trim())
-      tempErrors.username = "Username is required";
-    else if (formData.username.length < 3)
-      tempErrors.username = "Username must be at least 3 characters";
-
-    if (!formData.email.trim())
-      tempErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      tempErrors.email = "Invalid email format";
-
-    if (!formData.phone.trim())
-      tempErrors.phone = "Phone is required";
-    else if (!/^\d{7,15}$/.test(formData.phone))
-      tempErrors.phone = "Phone must be 7-15 digits";
-
-    if (!formData.address.trim())
-      tempErrors.address = "Address is required";
-
-    setErrors(tempErrors);
-
-    return Object.keys(tempErrors).length === 0;
-  };
-
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-
-    setErrors({
-      ...errors,
-      [e.target.name]: "",
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (!validate()) return;
+  // 🔴 VALIDATION
+  if (!formData.name.trim()) return alert("Name is required");
+  if (!formData.username.trim()) return alert("Username is required");
+  if (!formData.password.trim()) return alert("Password is required");
+  if (!formData.address.trim())  return alert("Address is required");
+  if (!formData.phone.trim())  return alert("Phone is required");
+  if (!formData.email.trim())  return alert("Email is required");
+  // Email validation (if provided)
+  if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    return alert("Invalid email format");
+  }
 
-    alert("Staff added successfully!");
+  // Phone validation (if provided)
+  if (formData.phone && !/^[0-9]{7,15}$/.test(formData.phone)) {
+    return alert("Invalid phone number (7-15 digits only)");
+  }
+
+  // Password strength
+  if (formData.password.length < 6) {
+    return alert("Password must be at least 6 characters");
+  }
+
+  try {
+    setLoading(true);
+
+    await axios.post("http://127.0.0.1:8000/api/staff/", formData);
+
+    alert("Staff Added Successfully!");
     navigate("/admin/staff");
-  };
+  } catch (error: any) {
+    console.log(error.response?.data);
+    alert("Failed to add staff!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
-      {/* CSS IN SAME FILE */}
       <style>{`
-        .wrapper {
-          display: flex;
-          width: 100%;
-        }
-
-        .sidebar {
-          width: 260px;
-          position: fixed;
-          top: 0;
-          left: 0;
-          height: 100vh;
-          z-index: 1000;
-        }
-
-        .main {
-          flex: 1;
-          margin-left: 260px;
-          background: linear-gradient(135deg, #f5f7fa, #e4ecf5);
-          min-height: 100vh;
-        }
-
-        .page {
-          padding: 30px;
-          display: flex;
-          justify-content: center;
-        }
+        .wrapper { display:flex; }
+        .sidebar { width:260px; position:fixed; height:100vh; background:#1e293b; }
+        .main { margin-left:260px; width:100%; background:#f5f7fa; min-height:100vh; }
 
         .card {
-          width: 100%;
-          max-width: 700px;
-          background: #fff;
-          border-radius: 15px;
-          padding: 30px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+          max-width:600px;
+          margin:40px auto;
+          background:white;
+          padding:25px;
+          border-radius:10px;
+          box-shadow:0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .title {
-          font-size: 24px;
-          font-weight: 600;
-          margin-bottom: 5px;
-        }
+        h2 { margin-bottom:15px; }
 
-        .subtitle {
-          font-size: 14px;
-          color: #666;
-          margin-bottom: 20px;
-        }
-
-        .form {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .field {
-          display: flex;
-          flex-direction: column;
-        }
+        .field { margin-bottom:12px; display:flex; flex-direction:column; }
 
         input, select {
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          outline: none;
+          padding:10px;
+          border:1px solid #ccc;
+          border-radius:6px;
+          outline:none;
         }
 
-        .error {
-          color: red;
-          font-size: 12px;
-          margin-top: 4px;
+        input:focus, select:focus {
+          border-color:#16a34a;
         }
 
-        .buttonRow {
-          display: flex;
-          gap: 10px;
-          margin-top: 15px;
+        .btn {
+          background:#16a34a;
+          color:white;
+          border:none;
+          padding:12px;
+          width:100%;
+          border-radius:6px;
+          cursor:pointer;
+          font-weight:bold;
         }
 
-        .backBtn {
-          flex: 1;
-          padding: 12px;
-          border: none;
-          border-radius: 10px;
-          background: #e5e7eb;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .addBtn {
-          flex: 1;
-          padding: 12px;
-          border: none;
-          border-radius: 10px;
-          background: #16a34a;
-          color: #fff;
-          font-weight: 600;
-          cursor: pointer;
+        .btn:disabled {
+          background:#94a3b8;
         }
       `}</style>
 
@@ -180,69 +119,58 @@ const AdminAddStaff: React.FC = () => {
         <div className="main">
           <AdminNavbar />
 
-          <div className="page">
-            <div className="card">
+          <div className="card">
+            <h2>Add Staff</h2>
 
-              <h2 className="title">Add New Staff</h2>
-              <p className="subtitle">
-                Fill in the details to create a staff account
-              </p>
+            <form onSubmit={handleSubmit}>
+              <div className="field">
+                <label>Name</label>
+                <input name="name" onChange={handleChange} required />
+              </div>
 
-              <form onSubmit={handleSubmit} className="form">
+              <div className="field">
+                <label>Username</label>
+                <input name="username" onChange={handleChange} required />
+              </div>
 
-                <div className="field">
-                  <label>Full Name</label>
-                  <input name="name" value={formData.name} onChange={handleChange} />
-                  {errors.name && <span className="error">{errors.name}</span>}
-                </div>
+              <div className="field">
+                <label>Email</label>
+                <input name="email" onChange={handleChange} />
+              </div>
 
-                <div className="field">
-                  <label>Username</label>
-                  <input name="username" value={formData.username} onChange={handleChange} />
-                  {errors.username && <span className="error">{errors.username}</span>}
-                </div>
+              <div className="field">
+                <label>Password</label>
+                <input
+                  name="password"
+                  type="password"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-                <div className="field">
-                  <label>Email</label>
-                  <input name="email" value={formData.email} onChange={handleChange} />
-                  {errors.email && <span className="error">{errors.email}</span>}
-                </div>
+              <div className="field">
+                <label>Phone</label>
+                <input name="phone" onChange={handleChange} />
+              </div>
 
-                <div className="field">
-                  <label>Phone</label>
-                  <input name="phone" value={formData.phone} onChange={handleChange} />
-                  {errors.phone && <span className="error">{errors.phone}</span>}
-                </div>
+              <div className="field">
+                <label>Address</label>
+                <input name="address" onChange={handleChange} />
+              </div>
 
-                <div className="field">
-                  <label>Address</label>
-                  <input name="address" value={formData.address} onChange={handleChange} />
-                  {errors.address && <span className="error">{errors.address}</span>}
-                </div>
+              <div className="field">
+                <label>Role</label>
+                <select name="role" onChange={handleChange}>
+                  <option value="assistant">Assistant</option>
+                  <option value="warehousestaff">Warehouse Staff</option>
+                </select>
+              </div>
 
-                <div className="field">
-                  <label>Role</label>
-                  <select name="role" value={formData.role} onChange={handleChange}>
-                    <option value="Assistant">Assistant</option>
-                    <option value="Warehouse Staff">Warehouse Staff</option>
-                  </select>
-                </div>
-
-                <div className="buttonRow">
-                  <button type="button" className="backBtn" onClick={() => navigate("/admin/staff")}>
-                    Back
-                  </button>
-
-                  <button type="submit" className="addBtn">
-                    Add Staff
-                  </button>
-                </div>
-
-              </form>
-
-            </div>
+              <button className="btn" disabled={loading}>
+                {loading ? "Adding..." : "Add Staff"}
+              </button>
+            </form>
           </div>
-
         </div>
       </div>
     </>

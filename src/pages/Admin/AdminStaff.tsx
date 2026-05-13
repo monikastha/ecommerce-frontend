@@ -1,310 +1,296 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-
-import {
-  FaPlus,
-  FaSearch,
-  FaUserShield,
-  // FaEdit,
-  // FaTrash,
-} from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
 const AdminStaff: React.FC = () => {
   const navigate = useNavigate();
+  const [staff, setStaff] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+
+  // FETCH STAFF
+  const fetchStaff = async () => {
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/staff/");
+      setStaff(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  // DELETE
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this staff?")) return;
+
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/staff/${id}/`);
+      fetchStaff();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // FILTER STAFF (SEARCH)
+  const filteredStaff = staff.filter((s) =>
+    s.name?.toLowerCase().includes(search.toLowerCase()) ||
+    s.username?.toLowerCase().includes(search.toLowerCase()) ||
+    s.email?.toLowerCase().includes(search.toLowerCase()) ||
+    s.role?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // STATS
+  const totalStaff = staff.length;
+  const totalAssistant = staff.filter((s) => s.role === "assistant").length;
+  const totalWarehouse = staff.filter(
+    (s) => s.role === "warehouse_staff"
+  ).length;
 
   return (
     <>
       <style>{`
+        .wrapper { display:flex; }
+        .sidebar { width:260px; position:fixed; height:100vh; background:#1e293b; }
+        .main { margin-left:260px; width:100%; background:#f5f7fa; min-height:100vh; }
 
-        *{
-          margin:0;
-          padding:0;
-          box-sizing:border-box;
-          font-family:'Poppins',sans-serif;
-        }
-
-        body{
-          background:#f1f5f9;
-        }
-
-        .wrapper{
-          display:flex;
-          min-height:100vh;
-        }
-
-        .main{
-          flex:1;
-          display:flex;
-          flex-direction:column;
-        }
-
-        .container{
-          padding:28px;
-        }
+        .container { padding:30px; }
 
         /* HEADER */
-        .headerBox{
+        .header {
           display:flex;
           justify-content:space-between;
           align-items:center;
-          background:#ffffff;
-          padding:22px;
-          border-radius:16px;
-          box-shadow:0 10px 25px rgba(0,0,0,0.06);
-          margin-bottom:22px;
+          margin-bottom:25px;
+          padding:15px 20px;
+          background:white;
+          border-radius:12px;
+          box-shadow:0 2px 8px rgba(0,0,0,0.06);
         }
 
-        .title-section{
-          display:flex;
-          align-items:center;
-          gap:14px;
-        }
-
-        .header-icon{
-          width:52px;
-          height:52px;
-          background:linear-gradient(135deg,#2563eb,#3b82f6);
-          color:#fff;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          border-radius:14px;
-          font-size:20px;
-          box-shadow:0 6px 15px rgba(37,99,235,0.25);
-        }
-
-        .title{
-          font-size:23px;
+        .titleBox h1 {
+          font-size:24px;
           font-weight:700;
+          margin:0;
           color:#0f172a;
         }
 
-        .subtitle{
+        .titleBox h3 {
           font-size:13px;
+          font-weight:400;
+          margin:4px 0 0 0;
           color:#64748b;
-          margin-top:3px;
         }
 
-        /* ACTIONS */
-        .actions{
+        .headerRight {
           display:flex;
-          gap:12px;
           align-items:center;
+          gap:10px;
         }
 
-        .search-box{
-          position:relative;
-        }
-
-        .search-icon{
-          position:absolute;
-          left:12px;
-          top:50%;
-          transform:translateY(-50%);
-          color:#94a3b8;
-          font-size:13px;
-        }
-
-        .search{
-          left:10px;
-          width:260px;
-          padding:11px 12px 11px 36px;
-          border-radius:12px;
-          border:1px solid #e2e8f0;
-          font-size:13px;
+        .searchInput {
+          padding:10px 12px;
+          border:1px solid #d1d5db;
+          border-radius:10px;
           outline:none;
-          background:#f8fafc;
-          transition:0.3s;
+          width:220px;
         }
 
-        .search:focus{
-          background:#fff;
-          border-color:#2563eb;
-          box-shadow:0 0 0 4px rgba(37,99,235,0.1);
+        .searchInput:focus {
+          border-color:#16a34a;
+          box-shadow:0 0 5px rgba(22,163,74,0.3);
         }
 
-        .addBtn{
-          background:linear-gradient(135deg,#2563eb,#1d4ed8);
+        .addBtn {
+          background:linear-gradient(135deg, #16a34a, #22c55e);
           color:white;
           border:none;
-          padding:11px 15px;
-          border-radius:12px;
-          font-size:14px;
-          display:flex;
-          align-items:center;
-          gap:7px;
+          padding:10px 16px;
+          border-radius:10px;
           cursor:pointer;
           font-weight:600;
-          transition:0.2s;
+          display:flex;
+          align-items:center;
+          gap:6px;
         }
 
-        .addBtn:hover{
+        .addBtn:hover {
           transform:translateY(-2px);
-          box-shadow:0 10px 20px rgba(37,99,235,0.25);
+        }
+
+        /* STATS */
+        .stats {
+          display:flex;
+          gap:15px;
+          margin-bottom:20px;
+        }
+
+        .card {
+          flex:1;
+          background:white;
+          padding:15px;
+          border-radius:10px;
+          box-shadow:0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+          font-size:14px;
+          color:#64748b;
+        }
+
+        .card p {
+          font-size:22px;
+          font-weight:bold;
+          margin-top:5px;
         }
 
         /* TABLE */
-        .tableBox{
-          background:#fff;
-          border-radius:16px;
-          overflow:hidden;
-          box-shadow:0 10px 25px rgba(0,0,0,0.05);
-        }
-
-        .table{
+        table {
           width:100%;
           border-collapse:collapse;
-        }
-
-        .table th{
-          font-size:13px;
-          padding:15px;
-          text-align:left;
-          color:#475569;
-          background:#f8fafc;
-          font-weight:600;
-        }
-
-        .table td{
-          font-size:13px;
-          padding:15px;
-          border-top:1px solid #f1f5f9;
-          color:#334155;
-        }
-
-        .table tr:hover{
-          background:#f9fafb;
-        }
-
-        /* ROLE */
-        .role{
-          font-size:12px;
-          padding:5px 10px;
-          border-radius:20px;
-          font-weight:600;
-          display:inline-block;
-        }
-
-        .admin{
-          background:#ede9fe;
-          color:#7c3aed;
-        }
-
-        .staff{
-          background:#dcfce7;
-          color:#16a34a;
-        }
-
-        /* ACTION BUTTONS */
-        .btns{
-          display:flex;
-          gap:8px;
-        }
-
-        .edit, .delete{
-          width:34px;
-          height:34px;
-          border:none;
+          background:white;
           border-radius:10px;
+          overflow:hidden;
+        }
+
+        th, td {
+          padding:12px;
+          border-bottom:1px solid #e5e7eb;
+          text-align:left;
+          font-size:14px;
+        }
+
+        th {
+          background:#f1f5f9;
+        }
+
+        .actions button {
+          margin-right:8px;
+          border:none;
+          padding:6px 10px;
+          border-radius:6px;
           cursor:pointer;
-          transition:0.2s;
         }
 
-        .edit{
-          background:#dbeafe;
-          color:#2563eb;
-        }
-
-        .delete{
-          background:#fee2e2;
-          color:#dc2626;
-        }
-
-        .edit:hover, .delete:hover{
-          transform:scale(1.1);
-        }
-
-        .empty{
-          text-align:center;
-          padding:40px;
-          color:#94a3b8;
-          font-size:13px;
-        }
-
+        .editBtn { background:#2563eb; color:white; }
+        .deleteBtn { background:#dc2626; color:white; }
       `}</style>
 
       <div className="wrapper">
-        <AdminSidebar />
+        <div className="sidebar">
+          <AdminSidebar />
+        </div>
 
         <div className="main">
           <AdminNavbar />
 
           <div className="container">
-            {/* HEADER */}
-            <div className="headerBox">
-              <div className="title-section">
-                <div className="header-icon">
-                  <FaUserShield />
-                </div>
 
-                <div>
-                  <h2 className="title">Staff Management</h2>
-                  <p className="subtitle">
-                    Manage staff roles, permissions and access control
-                  </p>
-                </div>
+            {/* HEADER */}
+            <div className="header">
+
+              <div className="titleBox">
+                <h1>Staff Management</h1>
+                <h3>Manage all staff, assistants & warehouse team</h3>
               </div>
 
-              <div className="actions">
-                <div className="search-box">
-                  {/* <FaSearch className="search-icon" /> */}
-                  <input
-                    type="text"
-                    className="search"
-                    placeholder="Search staff..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </div>
+              <div className="headerRight">
+
+                <input
+                  type="text"
+                  placeholder="Search staff..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="searchInput"
+                />
 
                 <button
                   className="addBtn"
                   onClick={() => navigate("/admin/staff/add")}
                 >
-                  <FaPlus />
-                  Add Staff
+                  <FaPlus /> Add Staff
                 </button>
+
               </div>
+
+            </div>
+
+            {/* STATS */}
+            <div className="stats">
+
+              <div className="card">
+                <h3>Total Staff</h3>
+                <p>{totalStaff}</p>
+              </div>
+
+              <div className="card">
+                <h3>Assistants</h3>
+                <p>{totalAssistant}</p>
+              </div>
+
+              <div className="card">
+                <h3>Warehouse Staff</h3>
+                <p>{totalWarehouse}</p>
+              </div>
+
             </div>
 
             {/* TABLE */}
-            <div className="tableBox">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Address</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Username</th>
+                  <th>Password</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Address</th>
+                  <th>Role</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
 
-                <tbody>
-                  <tr>
-                    <td colSpan={8} className="empty">
-                      No staff data available
+              <tbody>
+                {filteredStaff.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.id}</td>
+                    <td>{s.name}</td>
+                    <td>{s.username}</td>
+
+                    {/* ⚠️ visible password (not recommended in real apps) */}
+                    <td>{s.password || "N/A"}</td>
+
+                    <td>{s.email}</td>
+                    <td>{s.phone}</td>
+                    <td>{s.address}</td>
+                    <td>{s.role}</td>
+
+                    <td className="actions">
+                      <button
+                        className="editBtn"
+                        onClick={() => navigate(`/admin/staff/update/${s.id}`)}
+                      >
+                        <FaEdit />
+                      </button>
+
+                      <button
+                        className="deleteBtn"
+                        onClick={() => handleDelete(s.id)}
+                      >
+                        <FaTrash />
+                      </button>
                     </td>
                   </tr>
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+
+            </table>
+
           </div>
         </div>
       </div>
