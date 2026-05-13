@@ -2,16 +2,37 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-import { FaMapMarkerAlt } from "react-icons/fa";
+import { FaMapMarkerAlt, FaEdit, FaTrash } from "react-icons/fa";
+
+interface Location {
+  id: number;
+  name: string;
+  province: string;
+  city: string;
+  status: string;
+}
 
 const AdminLocation: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
+  const [locations] = useState<Location[]>([
+    { id: 1, name: "Bagmati Service Area", province: "Bagmati", city: "Kathmandu", status: "Active" },
+    { id: 2, name: "Lumbini Hub", province: "Lumbini", city: "Butwal", status: "Active" },
+    { id: 3, name: "Gandaki Zone", province: "Gandaki", city: "Pokhara", status: "Inactive" },
+    { id: 4, name: "Koshi Region", province: "Koshi", city: "Biratnagar", status: "Active" },
+  ]);
+
+  const filteredData = locations.filter(
+    (l) =>
+      l.name.toLowerCase().includes(search.toLowerCase()) ||
+      l.province.toLowerCase().includes(search.toLowerCase()) ||
+      l.city.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <>
       <style>{`
-
         *{
           margin:0;
           padding:0;
@@ -19,16 +40,8 @@ const AdminLocation: React.FC = () => {
           font-family:'Poppins',sans-serif;
         }
 
-<<<<<<< HEAD
-        .main {
-          flex: 1;
-          margin-left: 0px;
-          background: #f4f6f8;
-          min-height: 100vh;
-=======
         body{
-          background:#ffffff;
->>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48
+          background:#f4f6f8;
         }
 
         .wrapper{
@@ -40,14 +53,13 @@ const AdminLocation: React.FC = () => {
           flex:1;
           display:flex;
           flex-direction:column;
-          background:#ffffff;
+          background:#f4f6f8;
         }
 
         .container{
           padding:28px;
         }
 
-        /* HEADER */
         .headerBox{
           display:flex;
           justify-content:space-between;
@@ -59,7 +71,6 @@ const AdminLocation: React.FC = () => {
           margin-bottom:22px;
           flex-wrap:wrap;
           gap:15px;
-          border:1px solid #f1f5f9;
         }
 
         .title-section{
@@ -89,35 +100,26 @@ const AdminLocation: React.FC = () => {
         .subtitle{
           font-size:13px;
           color:#64748b;
-          margin-top:3px;
         }
 
-        /* ACTIONS */
         .actions{
           display:flex;
           gap:10px;
           align-items:center;
+          flex-wrap:wrap;
         }
 
-        /* SEARCH (CATEGORY STYLE) */
         .search{
-          width:200px;
+          width:220px;
           padding:10px 14px;
           border-radius:10px;
           border:1px solid #d1d5db;
           outline:none;
           font-size:13px;
-          transition:0.2s;
         }
 
-        .search:focus{
-          border-color:#2563eb;
-          box-shadow:0 0 0 3px rgba(37,99,235,0.15);
-        }
-
-        /* BUTTON */
         .addBtn{
-          background:linear-gradient(135deg,#2563eb,#1d4ed8);
+          background:linear-gradient(135deg,#16a34a,#22c55e);
           color:#fff;
           border:none;
           padding:10px 14px;
@@ -127,17 +129,11 @@ const AdminLocation: React.FC = () => {
           font-size:13px;
         }
 
-        .addBtn:hover{
-          transform:translateY(-2px);
-        }
-
-        /* TABLE */
         .tableBox{
           background:#fff;
           border-radius:16px;
           overflow:hidden;
           box-shadow:0 8px 20px rgba(0,0,0,0.05);
-          border:1px solid #f1f5f9;
         }
 
         table{
@@ -165,19 +161,28 @@ const AdminLocation: React.FC = () => {
           background:#f9fafb;
         }
 
-        .empty{
-          text-align:center;
-          padding:40px;
-          color:#94a3b8;
-          font-size:13px;
+        /* ACTION BUTTONS */
+        .actionBtn{
+          border:none;
+          padding:6px 10px;
+          border-radius:6px;
+          cursor:pointer;
+          margin-right:8px;
+          color:white;
+          transition:0.2s;
         }
 
-        @media(max-width:900px){
-          .search{
-            width:100%;
-          }
+        .editBtn{
+          background:#2563eb;
         }
 
+        .deleteBtn{
+          background:#dc2626;
+        }
+
+        .actionBtn:hover{
+          transform:translateY(-2px);
+        }
       `}</style>
 
       <div className="wrapper">
@@ -201,22 +206,18 @@ const AdminLocation: React.FC = () => {
 
                 <div>
                   <h2 className="title">Location Management</h2>
-                  <p className="subtitle">
-                    Manage provinces, cities and service areas
-                  </p>
+                  <p className="subtitle">Manage provinces, cities and service areas</p>
                 </div>
 
               </div>
 
-              {/* ACTIONS */}
               <div className="actions">
 
                 <input
-                  type="text"
+                  className="search"
                   placeholder="Search location..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="search"
                 />
 
                 <button
@@ -247,11 +248,35 @@ const AdminLocation: React.FC = () => {
                 </thead>
 
                 <tbody>
-                  <tr>
-                    <td colSpan={6} className="empty">
-                      No location data available
-                    </td>
-                  </tr>
+                  {filteredData.map((l) => (
+                    <tr key={l.id}>
+                      <td>{l.id}</td>
+                      <td>{l.name}</td>
+                      <td>{l.province}</td>
+                      <td>{l.city}</td>
+                      <td>{l.status}</td>
+
+                      {/* ✅ ACTIONS ADDED */}
+                      <td>
+                        <button
+                          className="actionBtn editBtn"
+                          onClick={() =>
+                            navigate(`/admin/location/update/${l.id}`)
+                          }
+                        >
+                          <FaEdit />
+                        </button>
+
+                        <button
+                          className="actionBtn deleteBtn"
+                          onClick={() => alert(`Delete ${l.id}`)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </td>
+
+                    </tr>
+                  ))}
                 </tbody>
 
               </table>

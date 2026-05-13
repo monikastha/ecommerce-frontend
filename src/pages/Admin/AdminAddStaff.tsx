@@ -18,51 +18,75 @@ const AdminAddStaff: React.FC = () => {
     role: "assistant",
   });
 
+  const [errors, setErrors] = useState<any>({});
+
+  const validate = () => {
+    const newErrors: any = {};
+
+    // Name
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    // Username
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (formData.username.length < 3) {
+      newErrors.username = "Username must be at least 3 characters";
+    }
+
+    // Email
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    // Password
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    // Phone (Nepal style basic validation)
+    if (formData.phone && !/^\d{7,15}$/.test(formData.phone)) {
+      newErrors.phone = "Phone must be 7–15 digits";
+    }
+
+    // Address
+    if (!formData.address.trim()) {
+      newErrors.address = "Address is required";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // 🔴 VALIDATION
-  if (!formData.name.trim()) return alert("Name is required");
-  if (!formData.username.trim()) return alert("Username is required");
-  if (!formData.password.trim()) return alert("Password is required");
-  if (!formData.address.trim())  return alert("Address is required");
-  if (!formData.phone.trim())  return alert("Phone is required");
-  if (!formData.email.trim())  return alert("Email is required");
-  // Email validation (if provided)
-  if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-    return alert("Invalid email format");
-  }
+    if (!validate()) return;
 
-  // Phone validation (if provided)
-  if (formData.phone && !/^[0-9]{7,15}$/.test(formData.phone)) {
-    return alert("Invalid phone number (7-15 digits only)");
-  }
+    try {
+      setLoading(true);
 
-  // Password strength
-  if (formData.password.length < 6) {
-    return alert("Password must be at least 6 characters");
-  }
+      await axios.post("http://127.0.0.1:8000/api/staff/", formData);
 
-  try {
-    setLoading(true);
-
-    await axios.post("http://127.0.0.1:8000/api/staff/", formData);
-
-    alert("Staff Added Successfully!");
-    navigate("/admin/staff");
-  } catch (error: any) {
-    console.log(error.response?.data);
-    alert("Failed to add staff!");
-  } finally {
-    setLoading(false);
-  }
-};
+      alert("Staff Added Successfully!");
+      navigate("/admin/staff");
+    } catch (error: any) {
+      console.log(error.response?.data);
+      alert("Failed to add staff!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -95,6 +119,12 @@ const AdminAddStaff: React.FC = () => {
           border-color:#16a34a;
         }
 
+        .error {
+          color: red;
+          font-size: 12px;
+          margin-top: 4px;
+        }
+
         .btn {
           background:#16a34a;
           color:white;
@@ -125,17 +155,24 @@ const AdminAddStaff: React.FC = () => {
             <form onSubmit={handleSubmit}>
               <div className="field">
                 <label>Name</label>
-                <input name="name" onChange={handleChange} required />
+                <input name="name" onChange={handleChange} />
+                {errors.name && <span className="error">{errors.name}</span>}
               </div>
 
               <div className="field">
                 <label>Username</label>
-                <input name="username" onChange={handleChange} required />
+                <input name="username" onChange={handleChange} />
+                {errors.username && (
+                  <span className="error">{errors.username}</span>
+                )}
               </div>
 
               <div className="field">
                 <label>Email</label>
                 <input name="email" onChange={handleChange} />
+                {errors.email && (
+                  <span className="error">{errors.email}</span>
+                )}
               </div>
 
               <div className="field">
@@ -144,18 +181,26 @@ const AdminAddStaff: React.FC = () => {
                   name="password"
                   type="password"
                   onChange={handleChange}
-                  required
                 />
+                {errors.password && (
+                  <span className="error">{errors.password}</span>
+                )}
               </div>
 
               <div className="field">
                 <label>Phone</label>
                 <input name="phone" onChange={handleChange} />
+                {errors.phone && (
+                  <span className="error">{errors.phone}</span>
+                )}
               </div>
 
               <div className="field">
                 <label>Address</label>
                 <input name="address" onChange={handleChange} />
+                {errors.address && (
+                  <span className="error">{errors.address}</span>
+                )}
               </div>
 
               <div className="field">

@@ -109,7 +109,7 @@ const AdminPromotion: React.FC = () => {
 
         /* BUTTON */
         .addBtn{
-          background:linear-gradient(135deg,#2563eb,#1d4ed8);
+          background:linear-gradient(135deg,#16a34a,#22c55e);
           color:#fff;
           border:none;
           padding:10px 14px;

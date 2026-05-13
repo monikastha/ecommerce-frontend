@@ -213,7 +213,7 @@ const AdminUpdateStaff: React.FC = () => {
                   onChange={handleChange}
                 >
                   <option value="assistant">Assistant</option>
-                  <option value="staff">Staff</option>
+                  {/* <option value="staff">Staff</option> */}
                   <option value="warehouse_staff">Warehouse Staff</option>
                 </select>
               </div>

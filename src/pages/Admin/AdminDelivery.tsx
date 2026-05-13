@@ -2,11 +2,52 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-import { FaSearch, FaTruck } from "react-icons/fa";
+import { FaSearch, FaTruck, FaEdit, FaTrash } from "react-icons/fa";
+
+interface Delivery {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
 
 const AdminDelivery: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+
+  // SAMPLE DATA
+  const [deliveries] = useState<Delivery[]>([
+    {
+      id: 1,
+      name: "Ram Shrestha",
+      email: "ram@example.com",
+      phone: "9812345678",
+      address: "Kathmandu",
+    },
+    {
+      id: 2,
+      name: "Sita Gurung",
+      email: "sita@example.com",
+      phone: "9823456789",
+      address: "Lalitpur",
+    },
+    {
+      id: 3,
+      name: "Aayush Karki",
+      email: "aayush@example.com",
+      phone: "9801122334",
+      address: "Bhaktapur",
+    },
+  ]);
+
+  // SEARCH FILTER
+  const filteredData = deliveries.filter(
+    (d) =>
+      d.name.toLowerCase().includes(search.toLowerCase()) ||
+      d.email.toLowerCase().includes(search.toLowerCase()) ||
+      d.phone.includes(search)
+  );
 
   return (
     <>
@@ -67,7 +108,6 @@ const AdminDelivery: React.FC = () => {
           justify-content:center;
           border-radius:14px;
           font-size:20px;
-          box-shadow:0 6px 15px rgba(37,99,235,0.25);
         }
 
         .title{
@@ -79,10 +119,9 @@ const AdminDelivery: React.FC = () => {
         .subtitle{
           font-size:13px;
           color:#64748b;
-          margin-top:3px;
         }
 
-        /* CATEGORY-STYLE SEARCH (FIXED DESIGN) */
+        /* SEARCH */
         .search-box{
           display:flex;
           align-items:center;
@@ -92,18 +131,6 @@ const AdminDelivery: React.FC = () => {
           border-radius:12px;
           border:1px solid #e2e8f0;
           width:280px;
-          transition:0.3s;
-        }
-
-        .search-box:focus-within{
-          border-color:#2563eb;
-          box-shadow:0 0 0 4px rgba(37,99,235,0.1);
-          background:#fff;
-        }
-
-        .search-box svg{
-          color:#94a3b8;
-          font-size:14px;
         }
 
         .search{
@@ -114,9 +141,8 @@ const AdminDelivery: React.FC = () => {
           font-size:13px;
         }
 
-        /* BUTTON */
         .addBtn{
-          background:linear-gradient(135deg,#2563eb,#1d4ed8);
+          background:linear-gradient(135deg,#16a34a,#22c55e);
           color:white;
           border:none;
           padding:10px 14px;
@@ -124,12 +150,6 @@ const AdminDelivery: React.FC = () => {
           cursor:pointer;
           font-weight:600;
           font-size:13px;
-          transition:0.2s;
-        }
-
-        .addBtn:hover{
-          transform:translateY(-2px);
-          box-shadow:0 10px 20px rgba(37,99,235,0.25);
         }
 
         /* TABLE */
@@ -165,17 +185,31 @@ const AdminDelivery: React.FC = () => {
           background:#f9fafb;
         }
 
-        .empty{
-          text-align:center;
-          padding:40px;
-          color:#94a3b8;
-          font-size:13px;
+        /* ACTION BUTTONS (FIXED ICON STYLE) */
+        .actions button {
+          margin-right:8px;
+          border:none;
+          padding:6px 10px;
+          border-radius:6px;
+          cursor:pointer;
+          transition:0.2s;
+          color:white;
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          font-size:14px;
         }
 
-        @media(max-width:900px){
-          .search-box{
-            width:100%;
-          }
+        .editBtn {
+          background:#2563eb;
+        }
+
+        .deleteBtn {
+          background:#dc2626;
+        }
+
+        .actions button:hover {
+          transform:translateY(-2px);
         }
       `}</style>
 
@@ -197,14 +231,11 @@ const AdminDelivery: React.FC = () => {
 
                 <div>
                   <h2 className="title">Delivery Management</h2>
-                  <p className="subtitle">
-                    Manage delivery staff and assignments
-                  </p>
+                  <p className="subtitle">Manage delivery staff and assignments</p>
                 </div>
               </div>
 
-              {/* SEARCH + BUTTON */}
-              <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap:"wrap" }}>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
 
                 <div className="search-box">
                   <FaSearch />
@@ -242,11 +273,42 @@ const AdminDelivery: React.FC = () => {
                 </thead>
 
                 <tbody>
-                  <tr>
-                    <td colSpan={6} className="empty">
-                      No delivery data available
-                    </td>
-                  </tr>
+                  {filteredData.length > 0 ? (
+                    filteredData.map((d) => (
+                      <tr key={d.id}>
+                        <td>{d.id}</td>
+                        <td>{d.name}</td>
+                        <td>{d.email}</td>
+                        <td>{d.phone}</td>
+                        <td>{d.address}</td>
+
+                        {/* ACTIONS FIXED */}
+                        <td className="actions">
+                          <button
+                            className="editBtn"
+                            onClick={() =>
+                              navigate(`/admin/delivery/update/${d.id}`)
+                            }
+                          >
+                            <FaEdit />
+                          </button>
+
+                          <button
+                            className="deleteBtn"
+                            onClick={() => alert(`Delete ${d.id}`)}
+                          >
+                            <FaTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="empty">
+                        No matching delivery data found
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
 
               </table>

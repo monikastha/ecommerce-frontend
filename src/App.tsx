@@ -20,8 +20,9 @@ import AdminAddCategory from "./pages/Admin/AdminAddCategory";
 import AdminAddSubCategory from "./pages/Admin/AdminAddSubCategory";
 
 import AdminProduct from "./pages/Admin/AdminProduct";
-
+import AdminOrder from "./pages/Admin/AdminOrder";
 import AdminPromotion from "./pages/Admin/AdminPromotion";
+import AdminEarnings from "./pages/Admin/AdminEarnigns";
 import AdminAddPromotion from "./pages/Admin/AdminAddPromotion";
 
 import AdminLocation from "./pages/Admin/AdminLocation";
@@ -69,10 +70,11 @@ const App = () => {
         <Route path="/admin/subcategory/add" element={<AdminAddSubCategory />} />
 
         <Route path="/admin/product" element={<AdminProduct />} />
+             <Route path="/admin/earnings" element={<AdminEarnings />} />
 
         <Route path="/admin/promotion" element={<AdminPromotion />} />
         <Route path="/admin/promotion/add" element={<AdminAddPromotion />} />
-
+          <Route path="/admin/order" element={<AdminOrder />} />
         <Route path="/admin/location" element={<AdminLocation />} />
         <Route path="/admin/location/add" element={<AdminAddLocation />} />
         <Route path="/assistant/dashboard" element={<AssistantDashboard />} />
@@ -91,6 +93,7 @@ const App = () => {
          <Route path="/confirmcode" element={<ConfirmCode />} />
          <Route path="/signupway" element={<SignupWay />} />
          <Route path="/emailverified" element={<EmailVerifiedSuccess/>} />
+         
        </Routes>
     </BrowserRouter>
   );

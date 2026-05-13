@@ -13,19 +13,29 @@ const AdminAddLocation: React.FC = () => {
     status: "Active",
   });
 
+  const [errors, setErrors] = useState<any>({});
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
+  };
+
+  const validate = () => {
+    let newErrors: any = {};
+
+    if (!form.locationName.trim()) newErrors.locationName = "Required";
+    if (!form.province.trim()) newErrors.province = "Required";
+    if (!form.city.trim()) newErrors.city = "Required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!form.locationName || !form.province || !form.city) {
-      alert("Please fill all required fields");
-      return;
-    }
+    if (!validate()) return;
 
     alert("Location added successfully");
     navigate("/admin/location");
@@ -35,19 +45,16 @@ const AdminAddLocation: React.FC = () => {
     <>
       <div className="wrapper">
 
-        {/* SIDEBAR */}
         <AdminSidebar />
 
-        {/* MAIN */}
         <div className="main">
 
-          {/* NAVBAR */}
           <AdminNavbar />
 
-          {/* CONTENT */}
           <div className="container">
 
             <div className="card">
+
               <h2>Add Location</h2>
 
               <form onSubmit={handleSubmit}>
@@ -55,47 +62,61 @@ const AdminAddLocation: React.FC = () => {
                 <input
                   name="locationName"
                   placeholder="Location Name"
+                  value={form.locationName}
                   onChange={handleChange}
                 />
+                {errors.locationName && (
+                  <p className="error">{errors.locationName}</p>
+                )}
 
                 <input
                   name="province"
                   placeholder="Province"
+                  value={form.province}
                   onChange={handleChange}
                 />
+                {errors.province && (
+                  <p className="error">{errors.province}</p>
+                )}
 
                 <input
                   name="city"
                   placeholder="City"
+                  value={form.city}
                   onChange={handleChange}
                 />
+                {errors.city && (
+                  <p className="error">{errors.city}</p>
+                )}
 
-                <select name="status" onChange={handleChange}>
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
 
                 <div className="btnRow">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/admin/location")}
-                  >
+                  <button type="button" onClick={() => navigate("/admin/location")}>
                     Back
                   </button>
 
-                  <button type="submit">
-                    Save
-                  </button>
+                  <button type="submit">Save</button>
                 </div>
 
               </form>
+
             </div>
 
           </div>
 
         </div>
+
       </div>
 
+      {/* FIXED STYLES */}
       <style>{`
         *{
           margin:0;
@@ -104,25 +125,28 @@ const AdminAddLocation: React.FC = () => {
           font-family:'Poppins',sans-serif;
         }
 
-        // .wrapper{
-        //   display:flex;
-        //   min-height:100vh;
-        //   background:#f1f5f9;
-        // }
+        body{
+          background:#f1f5f9;
+        }
 
-        /* FIXED LAYOUT */
+        .wrapper{
+          display:flex;
+          min-height:100vh;
+        }
+
         .main{
           flex:1;
-          margin-left:260px;
           display:flex;
           flex-direction:column;
+          background:#f1f5f9;
         }
 
         .container{
           padding:30px;
           display:flex;
           justify-content:center;
-          align-items:flex-start;
+          align-items:center;
+          min-height:80vh;
         }
 
         .card{
@@ -150,6 +174,12 @@ const AdminAddLocation: React.FC = () => {
         input:focus, select:focus{
           border-color:#2563eb;
           box-shadow:0 0 0 3px rgba(37,99,235,0.15);
+        }
+
+        .error{
+          color:#dc2626;
+          font-size:12px;
+          margin-top:4px;
         }
 
         .btnRow{
