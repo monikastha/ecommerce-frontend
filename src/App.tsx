@@ -54,6 +54,9 @@ const App = () => {
         <Route path="/admin/register" element={<AdminRegister />} />
         {/* <Route path="/login" element={<LoginPage />} /> */}
 
+        {/* Seller Register Route */}
+        {/* <Route path="/seller/register" element={<SellerRegister />} /> */}
+
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
         <Route path="/admin/staff" element={<AdminStaff />} />
@@ -67,7 +70,10 @@ const App = () => {
 
         <Route path="/admin/category" element={<AdminCategory />} />
         <Route path="/admin/category/add" element={<AdminAddCategory />} />
-        <Route path="/admin/subcategory/add" element={<AdminAddSubCategory />} />
+        <Route
+          path="/admin/subcategory/add"
+          element={<AdminAddSubCategory />}
+        />
 
         <Route path="/admin/product" element={<AdminProduct />} />
              <Route path="/admin/earnings" element={<AdminEarnings />} />
