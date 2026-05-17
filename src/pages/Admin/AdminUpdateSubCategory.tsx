@@ -47,7 +47,7 @@ const AdminAddSubCategory: React.FC = () => {
     setApiError("");
     setLoading(true);
 
-    // Basic form validation
+    // Basic validation
     if (!formData.category) {
       setErrors({ category: "Please select parent category" });
       setLoading(false);
@@ -60,7 +60,7 @@ const AdminAddSubCategory: React.FC = () => {
     }
 
     try {
-      // payload fields match backend write_only target
+      // FIX: Changed 'category' to 'category_id' to match the Django serializer write-only target
       const payload = {
         name: formData.name.trim(),
         category_id: parseInt(formData.category),   
