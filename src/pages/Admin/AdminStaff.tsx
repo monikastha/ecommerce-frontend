@@ -3,17 +3,16 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
-
+import { FaEdit, FaTrash, FaPlus, FaUsersCog } from "react-icons/fa";
+const apiUrl = import.meta.env.VITE_API_URL;
 const AdminStaff: React.FC = () => {
   const navigate = useNavigate();
   const [staff, setStaff] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
-  // FETCH STAFF
   const fetchStaff = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/staff/");
+      const res = await axios.get(`${apiUrl}/api/staff/`);
       setStaff(res.data);
     } catch (err) {
       console.log(err);
@@ -24,7 +23,6 @@ const AdminStaff: React.FC = () => {
     fetchStaff();
   }, []);
 
-  // DELETE
   const handleDelete = async (id: number) => {
     if (!window.confirm("Delete this staff?")) return;
 
@@ -36,31 +34,61 @@ const AdminStaff: React.FC = () => {
     }
   };
 
-  // FILTER STAFF (SEARCH)
-  const filteredStaff = staff.filter((s) =>
-    s.name?.toLowerCase().includes(search.toLowerCase()) ||
-    s.username?.toLowerCase().includes(search.toLowerCase()) ||
-    s.email?.toLowerCase().includes(search.toLowerCase()) ||
-    s.role?.toLowerCase().includes(search.toLowerCase())
-  );
+  // ✅ FIXED: ASC ORDER (ID 1 TOP → ID 9 BOTTOM)
+  const filteredStaff = [...staff]
+    .sort((a: any, b: any) => a.id - b.id)
+    .filter(
+      (s) =>
+        s.name?.toLowerCase().includes(search.toLowerCase()) ||
+        s.username?.toLowerCase().includes(search.toLowerCase()) ||
+        s.email?.toLowerCase().includes(search.toLowerCase()) ||
+        s.role?.toLowerCase().includes(search.toLowerCase())
+    );
 
-  // STATS
   const totalStaff = staff.length;
-  const totalAssistant = staff.filter((s) => s.role === "assistant").length;
+
+  const totalAssistant = staff.filter(
+    (s) => s.role === "assistant"
+  ).length;
+
   const totalWarehouse = staff.filter(
-    (s) => s.role === "warehouse_staff"
+    (s) => s.role === "warehousestaff"
   ).length;
 
   return (
     <>
       <style>{`
         .wrapper { display:flex; }
-        .sidebar { width:260px; position:fixed; height:100vh; background:#1e293b; }
-        .main { margin-left:260px; width:100%; background:#f5f7fa; min-height:100vh; }
+
+        .sidebar {
+          width:260px;
+          position:fixed;
+          height:100vh;
+          background:#1e293b;
+        }
+
+        .main {
+          margin-left:260px;
+          width:100%;
+          background:#f5f7fa;
+          min-height:100vh;
+        }
 
         .container { padding:30px; }
 
-        /* HEADER */
+        .header-icon{
+          width:52px;
+          height:52px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          border-radius:14px;
+          background:linear-gradient(135deg,#2563eb,#3b82f6);
+          color:white;
+          font-size:22px;
+          box-shadow:0 6px 15px rgba(37,99,235,0.25);
+        }
+
         .header {
           display:flex;
           justify-content:space-between;
@@ -70,6 +98,12 @@ const AdminStaff: React.FC = () => {
           background:white;
           border-radius:12px;
           box-shadow:0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .titleBox{
+          display:flex;
+          align-items:center;
+          gap:12px;
         }
 
         .titleBox h1 {
@@ -100,13 +134,8 @@ const AdminStaff: React.FC = () => {
           width:220px;
         }
 
-        .searchInput:focus {
-          border-color:#16a34a;
-          box-shadow:0 0 5px rgba(22,163,74,0.3);
-        }
-
         .addBtn {
-          background:linear-gradient(135deg, #16a34a, #22c55e);
+          background:linear-gradient(135deg,#16a34a,#22c55e);
           color:white;
           border:none;
           padding:10px 16px;
@@ -118,11 +147,6 @@ const AdminStaff: React.FC = () => {
           gap:6px;
         }
 
-        .addBtn:hover {
-          transform:translateY(-2px);
-        }
-
-        /* STATS */
         .stats {
           display:flex;
           gap:15px;
@@ -145,10 +169,8 @@ const AdminStaff: React.FC = () => {
         .card p {
           font-size:22px;
           font-weight:bold;
-          margin-top:5px;
         }
 
-        /* TABLE */
         table {
           width:100%;
           border-collapse:collapse;
@@ -159,25 +181,41 @@ const AdminStaff: React.FC = () => {
 
         th, td {
           padding:12px;
+          color:#475569;
           border-bottom:1px solid #e5e7eb;
           text-align:left;
           font-size:14px;
         }
 
         th {
-          background:#f1f5f9;
+          background:#f8fafc;
         }
 
-        .actions button {
-          margin-right:8px;
+        .actions{
+          display:flex;
+          gap:8px;
+        }
+
+        .iconBtn{
+          width:34px;
+          height:34px;
           border:none;
-          padding:6px 10px;
-          border-radius:6px;
+          border-radius:8px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
           cursor:pointer;
         }
 
-        .editBtn { background:#2563eb; color:white; }
-        .deleteBtn { background:#dc2626; color:white; }
+        .iconBtn.edit{
+          background:#2563eb;
+          color:white;
+        }
+
+        .iconBtn.delete{
+          background:#dc2626;
+          color:white;
+        }
       `}</style>
 
       <div className="wrapper">
@@ -193,13 +231,17 @@ const AdminStaff: React.FC = () => {
             {/* HEADER */}
             <div className="header">
 
-              <div className="titleBox">
-                <h1>Staff Management</h1>
+              <div>
+                <div className="titleBox">
+                  <div className="header-icon">
+                    <FaUsersCog />
+                  </div>
+                  <h1>Staff Management</h1>
+                </div>
                 <h3>Manage all staff, assistants & warehouse team</h3>
               </div>
 
               <div className="headerRight">
-
                 <input
                   type="text"
                   placeholder="Search staff..."
@@ -214,14 +256,12 @@ const AdminStaff: React.FC = () => {
                 >
                   <FaPlus /> Add Staff
                 </button>
-
               </div>
 
             </div>
 
             {/* STATS */}
             <div className="stats">
-
               <div className="card">
                 <h3>Total Staff</h3>
                 <p>{totalStaff}</p>
@@ -236,7 +276,6 @@ const AdminStaff: React.FC = () => {
                 <h3>Warehouse Staff</h3>
                 <p>{totalWarehouse}</p>
               </div>
-
             </div>
 
             {/* TABLE */}
@@ -261,10 +300,7 @@ const AdminStaff: React.FC = () => {
                     <td>{s.id}</td>
                     <td>{s.name}</td>
                     <td>{s.username}</td>
-
-                    {/* ⚠️ visible password (not recommended in real apps) */}
                     <td>{s.password || "N/A"}</td>
-
                     <td>{s.email}</td>
                     <td>{s.phone}</td>
                     <td>{s.address}</td>
@@ -272,23 +308,25 @@ const AdminStaff: React.FC = () => {
 
                     <td className="actions">
                       <button
-                        className="editBtn"
-                        onClick={() => navigate(`/admin/staff/update/${s.id}`)}
+                        className="iconBtn edit"
+                        onClick={() =>
+                          navigate(`/admin/staff/update/${s.id}`)
+                        }
                       >
                         <FaEdit />
                       </button>
 
                       <button
-                        className="deleteBtn"
+                        className="iconBtn delete"
                         onClick={() => handleDelete(s.id)}
                       >
                         <FaTrash />
                       </button>
                     </td>
+
                   </tr>
                 ))}
               </tbody>
-
             </table>
 
           </div>

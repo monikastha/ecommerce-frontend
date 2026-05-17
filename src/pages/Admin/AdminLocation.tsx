@@ -1,244 +1,134 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-import { FaMapMarkerAlt } from "react-icons/fa";
+import { FaMapMarkerAlt, FaEdit, FaTrash } from "react-icons/fa";
+import axios from "axios";
+
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/locations/`;
+
+interface Location {
+  id: number;
+  name: string;
+  province: string;
+  city: string;
+  status: string;
+}
 
 const AdminLocation: React.FC = () => {
   const navigate = useNavigate();
+  const [locations, setLocations] = useState<Location[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fetchLocations = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE}?search=${search}`);
+      setLocations(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load locations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLocations();
+  }, [search]);
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this location?")) {
+      try {
+        await axios.delete(`${API_BASE}${id}/`);
+        fetchLocations();
+      } catch (err) {
+        alert("Failed to delete location");
+      }
+    }
+  };
 
   return (
     <>
       <style>{`
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+        body { background:#f4f6f8; }
+        .wrapper { display:flex; min-height:100vh; }
+        .main { flex:1; display:flex; flex-direction:column; background:#f4f6f8; }
+        .container { padding:28px; }
 
-        *{
-          margin:0;
-          padding:0;
-          box-sizing:border-box;
-          font-family:'Poppins',sans-serif;
+        .headerBox {
+          display:flex; justify-content:space-between; align-items:center;
+          background:#fff; padding:22px; border-radius:16px;
+          box-shadow:0 8px 20px rgba(0,0,0,0.06); margin-bottom:22px;
+          flex-wrap:wrap; gap:15px;
+        }
+        .title-section { display:flex; align-items:center; gap:14px; }
+        .header-icon {
+          width:52px; height:52px; background:linear-gradient(135deg,#2563eb,#3b82f6);
+          color:#fff; display:flex; align-items:center; justify-content:center;
+          border-radius:14px; font-size:20px;
+        }
+        .title { font-size:23px; font-weight:700; color:#0f172a; }
+        .subtitle { font-size:13px; color:#64748b; }
+
+        .search {
+          width:280px; padding:11px 14px; border:1px solid #d1d5db;
+          border-radius:10px; outline:none; font-size:14px;
+        }
+        .addBtn {
+          background:linear-gradient(135deg,#16a34a,#22c55e); color:white;
+          border:none; padding:11px 18px; border-radius:10px;
+          cursor:pointer; font-weight:600;
         }
 
-<<<<<<< HEAD
-        .main {
-          flex: 1;
-          margin-left: 0px;
-          background: #f4f6f8;
-          min-height: 100vh;
-=======
-        body{
-          background:#ffffff;
-<<<<<<< HEAD
->>>>>>> d1a0ae8
-=======
->>>>>>> f78f14e33f13c1077d4a575ffc3e55cd796d3d48
->>>>>>> 5e33d4e0c9b580505c7c1a2350bc443822f6b411
-        }
+        .tableBox { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,0.05); }
+        th { background:#f8fafc; padding:16px; text-align:left; color:#475569; font-weight:600; }
+        td { padding:16px; border-top:1px solid #f1f5f9; color:#334155; }
+        tr:hover { background:#f9fafb; }
 
-        .wrapper{
-          display:flex;
-          min-height:100vh;
+        .actionBtn {
+          border:none; padding:8px 10px; border-radius:6px; color:white;
+          cursor:pointer; margin-right:6px; transition:0.2s;
         }
+        .editBtn { background:#2563eb; }
+        .deleteBtn { background:#dc2626; }
+        .actionBtn:hover { transform: translateY(-2px); }
 
-        .main{
-          flex:1;
-          display:flex;
-          flex-direction:column;
-          background:#ffffff;
-        }
-
-        .container{
-          padding:28px;
-        }
-
-        /* HEADER */
-        .headerBox{
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          background:#fff;
-          padding:22px;
-          border-radius:16px;
-          box-shadow:0 8px 20px rgba(0,0,0,0.06);
-          margin-bottom:22px;
-          flex-wrap:wrap;
-          gap:15px;
-          border:1px solid #f1f5f9;
-        }
-
-        .title-section{
-          display:flex;
-          align-items:center;
-          gap:14px;
-        }
-
-        .header-icon{
-          width:52px;
-          height:52px;
-          background:linear-gradient(135deg,#2563eb,#3b82f6);
-          color:#fff;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          border-radius:14px;
-          font-size:18px;
-        }
-
-        .title{
-          font-size:23px;
-          font-weight:700;
-          color:#0f172a;
-        }
-
-        .subtitle{
-          font-size:13px;
-          color:#64748b;
-          margin-top:3px;
-        }
-
-        /* ACTIONS */
-        .actions{
-          display:flex;
-          gap:10px;
-          align-items:center;
-        }
-
-        /* SEARCH (CATEGORY STYLE) */
-        .search{
-          width:200px;
-          padding:10px 14px;
-          border-radius:10px;
-          border:1px solid #d1d5db;
-          outline:none;
-          font-size:13px;
-          transition:0.2s;
-        }
-
-        .search:focus{
-          border-color:#2563eb;
-          box-shadow:0 0 0 3px rgba(37,99,235,0.15);
-        }
-
-        /* BUTTON */
-        .addBtn{
-          background:linear-gradient(135deg,#2563eb,#1d4ed8);
-          color:#fff;
-          border:none;
-          padding:10px 14px;
-          border-radius:10px;
-          cursor:pointer;
-          font-weight:600;
-          font-size:13px;
-        }
-
-        .addBtn:hover{
-          transform:translateY(-2px);
-        }
-
-        /* TABLE */
-        .tableBox{
-          background:#fff;
-          border-radius:16px;
-          overflow:hidden;
-          box-shadow:0 8px 20px rgba(0,0,0,0.05);
-          border:1px solid #f1f5f9;
-        }
-
-        table{
-          width:100%;
-          border-collapse:collapse;
-        }
-
-        th{
-          font-size:13px;
-          padding:15px;
-          text-align:left;
-          color:#475569;
-          background:#f8fafc;
-          font-weight:600;
-        }
-
-        td{
-          font-size:13px;
-          padding:15px;
-          border-top:1px solid #f1f5f9;
-          color:#334155;
-        }
-
-        tr:hover{
-          background:#f9fafb;
-        }
-
-        .empty{
-          text-align:center;
-          padding:40px;
-          color:#94a3b8;
-          font-size:13px;
-        }
-
-        @media(max-width:900px){
-          .search{
-            width:100%;
-          }
-        }
-
+        .status-active { color:#22c55e; font-weight:600; }
+        .status-inactive { color:#ef4444; font-weight:600; }
       `}</style>
 
       <div className="wrapper">
-
         <AdminSidebar />
-
         <div className="main">
-
           <AdminNavbar />
-
           <div className="container">
-
-            {/* HEADER */}
             <div className="headerBox">
-
               <div className="title-section">
-
-                <div className="header-icon">
-                  <FaMapMarkerAlt />
-                </div>
-
+                <div className="header-icon"><FaMapMarkerAlt /></div>
                 <div>
                   <h2 className="title">Location Management</h2>
-                  <p className="subtitle">
-                    Manage provinces, cities and service areas
-                  </p>
+                  <p className="subtitle">Manage provinces, cities and service areas</p>
                 </div>
-
               </div>
 
-              {/* ACTIONS */}
-              <div className="actions">
-
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                 <input
-                  type="text"
-                  placeholder="Search location..."
+                  className="search"
+                  placeholder="Search location, province or city..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="search"
                 />
-
-                <button
-                  className="addBtn"
-                  onClick={() => navigate("/admin/location/add")}
-                >
+                <button className="addBtn" onClick={() => navigate("/admin/location/add")}>
                   + Add Location
                 </button>
-
               </div>
-
             </div>
 
-            {/* TABLE */}
             <div className="tableBox">
-
-              <table>
-
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -249,23 +139,33 @@ const AdminLocation: React.FC = () => {
                     <th>Actions</th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  <tr>
-                    <td colSpan={6} className="empty">
-                      No location data available
-                    </td>
-                  </tr>
+                  {loading ? (
+                    <tr><td colSpan={6} style={{ textAlign: "center", padding: "30px" }}>Loading...</td></tr>
+                  ) : (
+                    locations.map((l) => (
+                      <tr key={l.id}>
+                        <td>{l.id}</td>
+                        <td>{l.name}</td>
+                        <td>{l.province}</td>
+                        <td>{l.city}</td>
+                        <td><span className={l.status === "Active" ? "status-active" : "status-inactive"}>{l.status}</span></td>
+                        <td>
+                          <button className="actionBtn editBtn" onClick={() => navigate(`/admin/location/update/${l.id}`)}>
+                            <FaEdit />
+                          </button>
+                          <button className="actionBtn deleteBtn" onClick={() => handleDelete(l.id)}>
+                            <FaTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
-
               </table>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
     </>
   );
