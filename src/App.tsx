@@ -21,6 +21,7 @@ import AdminDelivery from "./pages/Admin/AdminDelivery";
 import AdminAddDelivery from "./pages/Admin/AdminAddDelivery";
 import AdminCategory from "./pages/Admin/AdminCategory";
 import AdminAddCategory from "./pages/Admin/AdminAddCategory";
+import AdminUpdateCategory from "./pages/Admin/AdminUpdateCategory";
 import AdminAddSubCategory from "./pages/Admin/AdminAddSubCategory";
 import AdminProduct from "./pages/Admin/AdminProduct";
 import AdminOrder from "./pages/Admin/AdminOrder";
@@ -29,6 +30,7 @@ import AdminEarnings from "./pages/Admin/AdminEarnigns"; // Fixed typo reference
 import AdminAddPromotion from "./pages/Admin/AdminAddPromotion";
 import AdminLocation from "./pages/Admin/AdminLocation";
 import AdminAddLocation from "./pages/Admin/AdminAddLocation";
+import AdminUpdateLocation from "./pages/Admin/AdminUpdateLocation";
 
 // Assistant Pages
 import AssistantDashboard from "./pages/Assistant/AssistantDashboard";

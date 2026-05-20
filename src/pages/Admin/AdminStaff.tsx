@@ -4,7 +4,7 @@ import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 import { FaEdit, FaTrash, FaPlus, FaUsersCog } from "react-icons/fa";
-
+const apiUrl = import.meta.env.VITE_API_URL;
 const AdminStaff: React.FC = () => {
   const navigate = useNavigate();
   const [staff, setStaff] = useState<any[]>([]);
@@ -12,7 +12,7 @@ const AdminStaff: React.FC = () => {
 
   const fetchStaff = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/staff/");
+      const res = await axios.get(`${apiUrl}/api/staff/`);
       setStaff(res.data);
     } catch (err) {
       console.log(err);

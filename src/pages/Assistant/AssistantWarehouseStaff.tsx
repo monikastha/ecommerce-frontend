@@ -1,10 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
 import { FaSearch } from "react-icons/fa";
 
 const WarehouseStaff: React.FC = () => {
+  const [staff, setStaff] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+
+  const fetchWarehouseStaff = async () => {
+    try {
+      // Axios request to your Django backend
+      const res = await axios.get("http://127.0.0.1:8000/api/staff/");
+      setStaff(res.data);
+    } catch (err) {
+      console.error("Error fetching staff records:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchWarehouseStaff();
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this warehouse staff record?")) return;
+
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/staff/${id}/`);
+      fetchWarehouseStaff();
+    } catch (err) {
+      console.error("Error deleting staff record:", err);
+    }
+  };
+
+  // Filter backend response for role 'warehousestaff' and process search match
+  const filteredStaff = staff
+    .filter((s) => s.role === "warehousestaff")
+    .filter(
+      (s) =>
+        s.name?.toLowerCase().includes(search.toLowerCase()) ||
+        s.username?.toLowerCase().includes(search.toLowerCase()) ||
+        s.email?.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => a.id - b.id);
 
   return (
     <div className="wrapper">
@@ -14,7 +52,6 @@ const WarehouseStaff: React.FC = () => {
         <AssistantNavbar />
 
         <div className="container">
-
           {/* HEADER */}
           <div className="headerBox">
             <div>
@@ -47,17 +84,33 @@ const WarehouseStaff: React.FC = () => {
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Address</th>
-                  <th>Actions</th>
+          
                 </tr>
               </thead>
+              <tbody>
+                {filteredStaff.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.id}</td>
+                    <td>{s.name}</td>
+                    <td>{s.username}</td>
+                    <td>{s.email}</td>
+                    <td>{s.phone || "N/A"}</td>
+                    <td>{s.address || "N/A"}</td>
+                    <td>
+                      
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
 
             {/* EMPTY STATE */}
-            <div className="emptyState">
-              No warehouse staff available
-            </div>
+            {filteredStaff.length === 0 && (
+              <div className="emptyState">
+                No warehouse staff available
+              </div>
+            )}
           </div>
-
         </div>
       </div>
 
@@ -140,12 +193,34 @@ const WarehouseStaff: React.FC = () => {
           border-collapse: collapse;
         }
 
-        .table th {
-          background: #f9fafb;
-          text-align: left;
+        .table th, .table td {
           padding: 14px;
           font-size: 14px;
+          text-align: left;
           color: #374151;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table th {
+          background: #f9fafb;
+          color: #374151;
+          font-weight: 600;
+        }
+
+        .iconBtn {
+          width: 34px;
+          height: 34px;
+          border: none;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .iconBtn.delete {
+          background: #dc2626;
+          color: white;
         }
 
         .emptyState {
