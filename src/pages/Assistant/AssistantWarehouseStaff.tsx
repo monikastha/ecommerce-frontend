@@ -2,15 +2,17 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaEdit, FaTrash } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const WarehouseStaff: React.FC = () => {
   const [staff, setStaff] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
+  const navigate = useNavigate();
+
   const fetchWarehouseStaff = async () => {
     try {
-      // Axios request to your Django backend
       const res = await axios.get("http://127.0.0.1:8000/api/staff/");
       setStaff(res.data);
     } catch (err) {
@@ -23,7 +25,12 @@ const WarehouseStaff: React.FC = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this warehouse staff record?")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this warehouse staff record?"
+      )
+    )
+      return;
 
     try {
       await axios.delete(`http://127.0.0.1:8000/api/staff/${id}/`);
@@ -33,7 +40,6 @@ const WarehouseStaff: React.FC = () => {
     }
   };
 
-  // Filter backend response for role 'warehousestaff' and process search match
   const filteredStaff = staff
     .filter((s) => s.role === "warehousestaff")
     .filter(
@@ -52,7 +58,6 @@ const WarehouseStaff: React.FC = () => {
         <AssistantNavbar />
 
         <div className="container">
-          {/* HEADER */}
           <div className="headerBox">
             <div>
               <h2 className="title">Warehouse Staff</h2>
@@ -61,9 +66,9 @@ const WarehouseStaff: React.FC = () => {
               </p>
             </div>
 
-            {/* SEARCH BOX */}
             <div className="searchBox">
               <FaSearch className="searchIcon" />
+
               <input
                 type="text"
                 placeholder="Search staff..."
@@ -73,7 +78,6 @@ const WarehouseStaff: React.FC = () => {
             </div>
           </div>
 
-          {/* TABLE */}
           <div className="tableBox">
             <table className="table">
               <thead>
@@ -84,9 +88,10 @@ const WarehouseStaff: React.FC = () => {
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Address</th>
-          
+                  <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {filteredStaff.map((s) => (
                   <tr key={s.id}>
@@ -96,15 +101,29 @@ const WarehouseStaff: React.FC = () => {
                     <td>{s.email}</td>
                     <td>{s.phone || "N/A"}</td>
                     <td>{s.address || "N/A"}</td>
-                    <td>
-                      
+
+                    <td className="actions">
+                      <button
+                        className="iconBtn edit"
+                        onClick={() =>
+                          navigate(`/assistant/staff/update/${s.id}`)
+                        }
+                      >
+                        <FaEdit />
+                      </button>
+
+                      <button
+                        className="iconBtn delete"
+                        onClick={() => handleDelete(s.id)}
+                      >
+                        <FaTrash />
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            {/* EMPTY STATE */}
             {filteredStaff.length === 0 && (
               <div className="emptyState">
                 No warehouse staff available
@@ -114,7 +133,6 @@ const WarehouseStaff: React.FC = () => {
         </div>
       </div>
 
-      {/* CSS */}
       <style>{`
         .wrapper {
           display: flex;
@@ -136,7 +154,7 @@ const WarehouseStaff: React.FC = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: #fff;
+          background: white;
           padding: 18px 22px;
           border-radius: 12px;
           margin-bottom: 16px;
@@ -147,7 +165,6 @@ const WarehouseStaff: React.FC = () => {
           margin: 0;
           font-size: 22px;
           font-weight: 600;
-          color: #111827;
         }
 
         .subtitle {
@@ -156,7 +173,6 @@ const WarehouseStaff: React.FC = () => {
           color: #6b7280;
         }
 
-        /* SEARCH BOX */
         .searchBox {
           display: flex;
           align-items: center;
@@ -173,16 +189,14 @@ const WarehouseStaff: React.FC = () => {
           background: transparent;
           margin-left: 8px;
           width: 100%;
-          font-size: 14px;
         }
 
         .searchIcon {
           color: #6b7280;
-          font-size: 14px;
         }
 
         .tableBox {
-          background: #fff;
+          background: white;
           padding: 18px;
           border-radius: 12px;
           box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -193,18 +207,20 @@ const WarehouseStaff: React.FC = () => {
           border-collapse: collapse;
         }
 
-        .table th, .table td {
+        .table th,
+        .table td {
           padding: 14px;
-          font-size: 14px;
           text-align: left;
-          color: #374151;
           border-bottom: 1px solid #e5e7eb;
         }
 
         .table th {
           background: #f9fafb;
-          color: #374151;
-          font-weight: 600;
+        }
+
+        .actions {
+          display: flex;
+          gap: 8px;
         }
 
         .iconBtn {
@@ -216,6 +232,11 @@ const WarehouseStaff: React.FC = () => {
           align-items: center;
           justify-content: center;
           cursor: pointer;
+        }
+
+        .iconBtn.edit {
+          background: #2563eb;
+          color: white;
         }
 
         .iconBtn.delete {
