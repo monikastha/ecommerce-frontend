@@ -125,10 +125,12 @@ const App = () => {
           <Route path="signup" element={<BuyerSignUp />} />
           <Route path="home" element={<BuyerHome />} />
         </Route>
-        
-        {/* Redirect for redundant buyer home path */}
-        <Route path="/home/BuyerHome" element={<Navigate to="/buyer/home" replace />} />
 
+        {/* Redirect for redundant buyer home path */}
+        <Route
+          path="/home/BuyerHome"
+          element={<Navigate to="/buyer/home" replace />}
+        />
       </Routes>
     </BrowserRouter>
   );
