@@ -38,11 +38,24 @@ import AssistantProductManagement from "./pages/Assistant/AssistantProductManage
 import AssistantOrder from "./pages/Assistant/AssistantOrder";
 import AssistantSeller from "./pages/Assistant/AssistantSeller";
 import LoginForALl from "./pages/authentication/LoginForAll"
+
 import BuyerSignUp  from "./pages/authentication/BuyerSignUp";
 import BuyerHome from "./pages/Buyer/home/BuyerHome";
 import ConfirmCode from "./pages/authentication/ConfirmCode";
 import SignupWay from "./pages/authentication/SignupWay";
-import EmailVerifiedSuccess from "./pages/authentication/EmailVerifiedSuccess"
+import EmailVerifiedSuccess from "./pages/authentication/EmailVerifiedSuccess";
+import ProductPage from "./pages/Buyer/home/ProductPage";
+import ViewAllProducts from "./pages/Buyer/home/ViewAllProduct";
+import ViewAllCategories from "./pages/Buyer/home/ViewAllCategories";
+import Fashion from "./pages/Buyer/home/Fashion";
+import Electronics from "./pages/Buyer/home/Electronics";
+import HomeGoods from "./pages/Buyer/home/HomeGoods";
+import Cosmetics from "./pages/Buyer/home/Cosmetics";
+import Shoes from "./pages/Buyer/home/Shoes";
+import Accessories from "./pages/Buyer/home/Accessories";
+import Medicine from "./pages/Buyer/home/Medicine";
+import StudyMaterials from "./pages/Buyer/home/StudyMaterials";
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -74,7 +87,7 @@ const App = () => {
 
         <Route path="/admin/promotion" element={<AdminPromotion />} />
         <Route path="/admin/promotion/add" element={<AdminAddPromotion />} />
-          <Route path="/admin/order" element={<AdminOrder />} />
+        <Route path="/admin/order" element={<AdminOrder />} />
         <Route path="/admin/location" element={<AdminLocation />} />
         <Route path="/admin/location/add" element={<AdminAddLocation />} />
         <Route path="/assistant/dashboard" element={<AssistantDashboard />} />
@@ -86,15 +99,24 @@ const App = () => {
         <Route path="/assistant/order" element={<AssistantOrder />} />
         <Route path="/assistant/seller" element={<AssistantSeller />} />
 
-        <Route path="/buyer/home" element={<BuyerHome />} />
-        <Route path="/home/BuyerHome" element={<BuyerHome />} />
+        <Route path="/buyerhome" element={<BuyerHome />} />
         <Route path="/buyer/signup" element={<BuyerSignUp />} />
-         <Route path="/login" element={<LoginForALl />} />
-         <Route path="/confirmcode" element={<ConfirmCode />} />
-         <Route path="/signupway" element={<SignupWay />} />
-         <Route path="/emailverified" element={<EmailVerifiedSuccess/>} />
-         
-       </Routes>
+        <Route path="/login" element={<LoginForALl />} />
+        <Route path="/confirmcode" element={<ConfirmCode />} />
+        <Route path="/signupway" element={<SignupWay />} />
+        <Route path="/emailverified" element={<EmailVerifiedSuccess/>} />
+        <Route path="/product" element={<ProductPage />} />
+        <Route path="/allproducts" element={<ViewAllProducts />} />
+        <Route path="/allcategories" element={<ViewAllCategories />} />
+        <Route path="/fashion" element={<Fashion />} />
+        <Route path="/electronics" element={<Electronics />} />
+        <Route path="/homegoods" element={<HomeGoods />} />
+        <Route path="/cosmetics" element={<Cosmetics />} />
+        <Route path="/shoes" element={<Shoes />} />
+        <Route path="/accessories" element={<Accessories />} />
+        <Route path="/medicine" element={<Medicine />} />
+        <Route path="/studymaterials" element={<StudyMaterials />} />
+      </Routes>
     </BrowserRouter>
   );
 };

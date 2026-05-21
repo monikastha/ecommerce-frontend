@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+
 import shoesImg from "../../../assets/shoes4.jpg";
 import Necklace from "../../../assets/accessories2.jpg";
 import iphun from "../../../assets/iphun.jpg";
@@ -16,9 +17,6 @@ import cartoon2 from "../../../assets/cartoon2.png";
 import logoImg from "../../../assets/logo.png";
 import homeLogo from "../../../assets/homeremovebg.png";
 import login from "../../../assets/login.png";
-import signup from "../../../assets/signupRemove.png";
-import account from "../../../assets/accountbgremove.png";
-import logout from "../../../assets/logoutbgremoved.png";
 import cart from "../../../assets/cartbgremove.png";
 
 
@@ -122,9 +120,6 @@ const reviews = [
 const NAV_ITEMS = [
   { label: "Home", emoji: homeLogo },
   { label: "Login", emoji: login },
-  { label: "SignUp", emoji: signup },
-  { label: "Account", emoji: account },
-  { label: "Logout", emoji: logout },
   { label: "Cart", emoji: cart },
 ];
 
