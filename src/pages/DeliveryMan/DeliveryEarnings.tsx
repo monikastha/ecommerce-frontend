@@ -1,15 +1,7 @@
 import React from "react";
-import {
-  Home,
-  Package,
-  DollarSign,
-  LogOut,
-  Bell,
-  Search,
-  TrendingUp,
-} from "lucide-react";
-
-import logo from "../../assets/logo.png";
+import { TrendingUp, DollarSign } from "lucide-react";
+import DeliverymanSidebar from "./DeliverymanSidebar";
+import DeliverymanNavbar from "./DeliverymanNavbar";
 
 const DeliveryEarnings: React.FC = () => {
   const earningsData = [
@@ -41,291 +33,241 @@ const DeliveryEarnings: React.FC = () => {
     0
   );
 
+  const paidCount = earningsData.filter((i) => i.status === "Paid").length;
+  const pendingCount = earningsData.filter((i) => i.status === "Pending").length;
+
   return (
-    <div style={styles.container}>
-      {/* SIDEBAR */}
-      <div style={styles.sidebar}>
-        <div style={styles.logoSection}>
-          <img src={logo} alt="Logo" style={styles.logo} />
-        </div>
+    <>
+      <style>{`
+        .earnings-layout {
+          display: flex;
+          min-height: 100vh;
+          background: #f1f5f9;
+          font-family: 'Poppins', sans-serif;
+        }
 
-        <div style={styles.menu}>
-          <div style={styles.menuItem}>
-            <Home size={22} />
-            <span>Dashboard</span>
-          </div>
+        .earnings-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
 
-          <div style={styles.menuItem}>
-            <Package size={22} />
-            <span>Orders</span>
-          </div>
+        .earnings-content {
+          padding: 25px;
+        }
 
-          <div style={styles.activeMenu}>
-            <DollarSign size={22} />
-            <span>Earnings</span>
-          </div>
+        .earnings-header h1 {
+          font-size: 24px;
+          color: #0f172a;
+          margin: 0;
+        }
 
-          <div style={styles.menuItem}>
-            <LogOut size={22} />
-            <span>Logout</span>
+        .earnings-header p {
+          color: #64748b;
+          font-size: 13px;
+          margin-top: 4px;
+          margin-bottom: 20px;
+        }
+
+        /* CARDS */
+        .earnings-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          margin-bottom: 25px;
+        }
+
+        .earnings-card {
+          background: white;
+          padding: 22px;
+          border-radius: 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .earnings-card-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          flex-shrink: 0;
+        }
+
+        .icon-green  { background: linear-gradient(135deg, #10b981, #34d399); }
+        .icon-blue   { background: linear-gradient(135deg, #2563eb, #60a5fa); }
+        .icon-orange { background: linear-gradient(135deg, #f97316, #fb923c); }
+
+        .earnings-card h4 {
+          margin: 0;
+          font-size: 12px;
+          color: #64748b;
+        }
+
+        .earnings-card h2 {
+          margin: 4px 0 0;
+          font-size: 22px;
+          color: #0f172a;
+        }
+
+        /* TABLE */
+        .earnings-table-box {
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+          overflow: hidden;
+        }
+
+        .earnings-table-box h2 {
+          padding: 18px 20px;
+          font-size: 16px;
+          color: #0f172a;
+          border-bottom: 1px solid #e2e8f0;
+          margin: 0;
+        }
+
+        .earnings-table-box table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .earnings-table-box th {
+          background: #f8fafc;
+          padding: 12px 16px;
+          text-align: left;
+          font-size: 12px;
+          color: #64748b;
+          font-weight: 600;
+        }
+
+        .earnings-table-box td {
+          padding: 13px 16px;
+          border-bottom: 1px solid #f1f5f9;
+          font-size: 14px;
+          color: #334155;
+        }
+
+        .earnings-table-box tr:last-child td {
+          border-bottom: none;
+        }
+
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .status-paid {
+          background: #dcfce7;
+          color: #166534;
+        }
+
+        .status-pending {
+          background: #fef3c7;
+          color: #92400e;
+        }
+      `}</style>
+
+      <div className="earnings-layout">
+
+        <DeliverymanSidebar />
+
+        <div className="earnings-main">
+
+          <DeliverymanNavbar />
+
+          <div className="earnings-content">
+
+            {/* HEADER */}
+            <div className="earnings-header">
+              <h1>My Earnings</h1>
+              <p>Track your delivery payments and history</p>
+            </div>
+
+            {/* CARDS */}
+            <div className="earnings-cards">
+
+              <div className="earnings-card">
+                <div className="earnings-card-icon icon-green">
+                  <TrendingUp size={24} />
+                </div>
+                <div>
+                  <h4>Total Earnings</h4>
+                  <h2>Rs. {totalEarnings}</h2>
+                </div>
+              </div>
+
+              <div className="earnings-card">
+                <div className="earnings-card-icon icon-blue">
+                  <DollarSign size={24} />
+                </div>
+                <div>
+                  <h4>Paid Orders</h4>
+                  <h2>{paidCount} Orders</h2>
+                </div>
+              </div>
+
+              <div className="earnings-card">
+                <div className="earnings-card-icon icon-orange">
+                  <DollarSign size={24} />
+                </div>
+                <div>
+                  <h4>Pending</h4>
+                  <h2>{pendingCount} Orders</h2>
+                </div>
+              </div>
+
+            </div>
+
+            {/* TABLE */}
+            <div className="earnings-table-box">
+              <h2>Earnings History</h2>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th>Earning ID</th>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Delivery Fee</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {earningsData.map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.id}</td>
+                      <td>{item.orderId}</td>
+                      <td>{item.date}</td>
+                      <td>Rs. {item.deliveryFee}</td>
+                      <td>
+                        <span
+                          className={`status-badge ${
+                            item.status === "Paid"
+                              ? "status-paid"
+                              : "status-pending"
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
           </div>
         </div>
       </div>
-
-      {/* MAIN */}
-      <div style={styles.main}>
-        {/* NAVBAR */}
-        <div style={styles.navbar}>
-          <h1 style={styles.heading}>Delivery Earnings</h1>
-
-          <div style={styles.navRight}>
-            <div style={styles.searchBox}>
-              <Search size={18} />
-              <input
-                type="text"
-                placeholder="Search earnings..."
-                style={styles.input}
-              />
-            </div>
-
-            <div style={styles.iconBox}>
-              <Bell size={22} />
-              <span style={styles.notification}>2</span>
-            </div>
-
-            <img
-              src="https://i.pravatar.cc/40"
-              alt="profile"
-              style={styles.topProfile}
-            />
-          </div>
-        </div>
-
-        {/* CARDS */}
-        <div style={styles.cardGrid}>
-          <div style={styles.card}>
-            <TrendingUp size={28} />
-            <h2>Total Earnings</h2>
-            <h1>Rs {totalEarnings}</h1>
-          </div>
-
-          <div style={styles.card}>
-            <DollarSign size={28} />
-            <h2>Paid</h2>
-            <h1>2 Orders</h1>
-          </div>
-
-          <div style={styles.card}>
-            <DollarSign size={28} />
-            <h2>Pending</h2>
-            <h1>1 Order</h1>
-          </div>
-        </div>
-
-        {/* TABLE */}
-        <div style={styles.tableContainer}>
-          <h2>Earnings History</h2>
-
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>Earning ID</th>
-                <th style={styles.th}>Order ID</th>
-                <th style={styles.th}>Date</th>
-                <th style={styles.th}>Fee</th>
-                <th style={styles.th}>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {earningsData.map((item, index) => (
-                <tr key={index}>
-                  <td style={styles.td}>{item.id}</td>
-                  <td style={styles.td}>{item.orderId}</td>
-                  <td style={styles.td}>{item.date}</td>
-                  <td style={styles.td}>Rs {item.deliveryFee}</td>
-
-                  <td style={styles.td}>
-                    <span
-                      style={{
-                        ...styles.status,
-                        background:
-                          item.status === "Paid" ? "#dcfce7" : "#fef3c7",
-                        color: item.status === "Paid" ? "#166534" : "#92400e",
-                      }}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    </>
   );
-};
-
-/* STYLES */
-const styles: { [key: string]: React.CSSProperties } = {
-  container: {
-    display: "flex",
-    minHeight: "100vh",
-    background: "#f5f5f5",
-  },
-
-  sidebar: {
-    width: "260px",
-    background: "#d8aeb4",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-  },
-
-  logoSection: {
-    background: "#fff",
-    padding: "20px",
-    textAlign: "center",
-  },
-
-  logo: {
-    width: "150px",
-  },
-
-  menu: {
-    display: "flex",
-    flexDirection: "column",
-    padding: "20px",
-    gap: "10px",
-  },
-
-  menuItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "12px",
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
-
-  activeMenu: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "12px",
-    fontWeight: "bold",
-    background: "#ff4d4d",
-    color: "#fff",
-    borderRadius: "6px",
-  },
-
-  main: {
-    flex: 1,
-    padding: "20px",
-  },
-
-  navbar: {
-    display: "flex",
-    justifyContent: "space-between",
-    background: "#fff",
-    padding: "15px",
-    borderRadius: "10px",
-    alignItems: "center",
-  },
-
-  heading: {
-    margin: 0,
-  },
-
-  navRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: "15px",
-  },
-
-  searchBox: {
-    display: "flex",
-    alignItems: "center",
-    background: "#eee",
-    padding: "8px 12px",
-    borderRadius: "20px",
-  },
-
-  input: {
-    border: "none",
-    outline: "none",
-    background: "transparent",
-    marginLeft: "8px",
-  },
-
-  iconBox: {
-    position: "relative",
-  },
-
-  notification: {
-    position: "absolute",
-    top: "-6px",
-    right: "-6px",
-    background: "red",
-    color: "#fff",
-    borderRadius: "50%",
-    width: "16px",
-    height: "16px",
-    fontSize: "10px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  topProfile: {
-    width: "40px",
-    borderRadius: "50%",
-  },
-
-  cardGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "20px",
-    marginTop: "20px",
-  },
-
-  card: {
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "12px",
-    textAlign: "center",
-  },
-
-  tableContainer: {
-    marginTop: "30px",
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "12px",
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
-
-  th: {
-    background: "#f3f4f6",
-    padding: "12px",
-    textAlign: "left",
-  },
-
-  td: {
-    padding: "12px",
-    borderBottom: "1px solid #eee",
-  },
-
-  status: {
-    padding: "5px 10px",
-    borderRadius: "20px",
-    fontSize: "12px",
-    fontWeight: "bold",
-  },
 };
 
 export default DeliveryEarnings;

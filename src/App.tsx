@@ -1,7 +1,22 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import DeliverymanDashboard from "./pages/DeliveryMan/DeliverymanDashboard";
+import DeliverymanOrder from "./pages/DeliveryMan/DeliverymanOrder";
+import DeliverymanTracking from "./pages/DeliveryMan/DeliverymanTracking";
+import DeliveryEarnings from "./pages/DeliveryMan/DeliveryEarnings";
+import AssignedDeliveries from "./pages/DeliveryMan/AssignedDeliveries";
+import TodayOrders from "./pages/DeliveryMan/TodayOrders";
+import PendingOrders from "./pages/DeliveryMan/PendingOrders";
+import OrderDetails from "./pages/DeliveryMan/OrderDetails";
+
+import WarehouseStaffDashboard from "./pages/WarehouseStaff/WarehouseStaffDashboard";
+import InventoryManagement from "./pages/WarehouseStaff/InventoryManagement";
+import OrderProcessing from "./pages/WarehouseStaff/OrderProcessing";
+import WarehouseOrderTracking from "./pages/WarehouseStaff/WarehouseOrdersTracking";
+import WarehouseReports from "./pages/WarehouseStaff/WarehouseReports";
+
 
 // import Home from "./pages/common/Home";
-import AdminRegister from "./pages/authentication/AdminRegister";
+// import AdminRegister from "./pages/authentication/AdminRegister";
 // import LoginPage from "./pages/authentication/LoginPage";
 
 import AdminDashboard from "./pages/Admin/AdminDashboard";
@@ -53,8 +68,8 @@ const App = () => {
         <Route path="/" element={<BuyerHome />} />
 
         {/*Login For ALl Page Routes*/}
-
-        <Route path="/admin/register" element={<AdminRegister />} />
+{/* 
+        <Route path="/admin/register" element={<AdminRegister />} /> */}
         {/* <Route path="/login" element={<LoginPage />} /> */}
 
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -121,6 +136,22 @@ const App = () => {
         <Route path="/confirmcode" element={<ConfirmCode />} />
         <Route path="/signupway" element={<SignupWay />} />
         <Route path="/emailverified" element={<EmailVerifiedSuccess />} />
+
+        {/* DELIVERY MAN ROUTES */}
+      <Route path="/delivery/dashboard" element={<DeliverymanDashboard />} />
+      <Route path="/delivery/orders" element={<DeliverymanOrder />} />
+      <Route path="/delivery/tracking" element={<DeliverymanTracking />} />
+      <Route path="/delivery/earnings" element={<DeliveryEarnings />} />
+      <Route path="/delivery/assigned" element={<AssignedDeliveries />} />
+      <Route path="/delivery/today-orders" element={<TodayOrders />} />
+      <Route path="/delivery/pending-orders" element={<PendingOrders />} />
+      <Route path="/delivery/orders/:id" element={<OrderDetails />} />
+
+      <Route path="/warehouse/dashboard" element={<WarehouseStaffDashboard />} />
+      <Route path="/warehouse/inventory" element={<InventoryManagement />} />
+      <Route path="/warehouse/orders" element={<OrderProcessing />} />
+      <Route path="/warehouse/tracking" element={<WarehouseOrderTracking />} />
+      <Route path="/warehouse/reports" element={<WarehouseReports />} />
       </Routes>
     </BrowserRouter>
   );

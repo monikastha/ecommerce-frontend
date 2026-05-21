@@ -1,58 +1,66 @@
-import { Bell, Search } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import logo from "../../assets/logo.png";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBell, faUser, faRightFromBracket, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 const WarehouseStaffNavbar = () => {
-  return (
-    <div style={styles.navbar}>
-      
-      <h2>Warehouse Panel</h2>
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
 
-      <div style={styles.right}>
-        <div style={styles.search}>
-          <Search size={16} />
-          <input placeholder="Search..." style={styles.input} />
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
+
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        .navbar { height:72px; background:white; display:flex; justify-content:space-between; padding:0 20px; align-items:center; }
+
+        .search { display:flex; gap:8px; background:#f1f5f9; padding:8px 12px; border-radius:10px; }
+
+        .icon { cursor:pointer; }
+        .profile { width:40px; border-radius:50%; cursor:pointer; }
+      `}</style>
+
+      <div className="navbar">
+        <div>
+          <h3>{getGreeting()}, Warehouse Staff</h3>
+          <p>Manage inventory & orders</p>
         </div>
 
-        <Bell />
-        <img
-          src="https://i.pravatar.cc/40"
-          style={styles.profile}
-          alt="profile"
-        />
-      </div>
-    </div>
-  );
-};
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <div className="search">
+            <FontAwesomeIcon icon={faSearch} />
+            <input placeholder="Search..." />
+          </div>
 
-const styles: any = {
-  navbar: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: "15px",
-    background: "#fff",
-    borderBottom: "1px solid #ddd",
-  },
-  right: {
-    display: "flex",
-    alignItems: "center",
-    gap: "15px",
-  },
-  search: {
-    display: "flex",
-    alignItems: "center",
-    background: "#eee",
-    padding: "5px 10px",
-    borderRadius: "10px",
-  },
-  input: {
-    border: "none",
-    outline: "none",
-    background: "transparent",
-    marginLeft: "5px",
-  },
-  profile: {
-    width: "35px",
-    borderRadius: "50%",
-  },
+          <FontAwesomeIcon icon={faBell} className="icon" />
+
+          <div ref={ref}>
+            <img src={logo} className="profile" onClick={() => setOpen(!open)} />
+
+            {open && (
+              <div className="dropdown">
+                <div><FontAwesomeIcon icon={faUser} /> Profile</div>
+                <div><FontAwesomeIcon icon={faRightFromBracket} /> Logout</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
 };
 
 export default WarehouseStaffNavbar;

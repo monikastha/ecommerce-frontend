@@ -12,6 +12,21 @@ import DeliverymanSidebar from "./DeliverymanSidebar";
 import DeliverymanNavbar from "./DeliverymanNavbar";
 
 const DeliverymanOrder: React.FC = () => {
+  const activeOrders = [
+    {
+      id: "#1234",
+      name: "Ram Kumar",
+      route: "Lagankhel → New Road",
+      status: "In Transit",
+    },
+    {
+      id: "#1235",
+      name: "Sita Magar",
+      route: "Patan → Thamel",
+      status: "Picked Up",
+    },
+  ];
+
   const completedOrders = [
     {
       id: "#1240",
@@ -31,66 +46,66 @@ const DeliverymanOrder: React.FC = () => {
 
   return (
     <div className="layout">
+
       <DeliverymanSidebar />
 
       <div className="main">
+
         <DeliverymanNavbar />
 
         <div className="content">
-          
-          <div className="breadcrumb">
-            <span className="active">Orders</span>
-            <span>Home &gt; Orders</span>
+
+          {/* HEADER */}
+          <div className="pageHeader">
+            <h1>Orders Management</h1>
+            <p>Track and manage your deliveries</p>
           </div>
 
           {/* TOP GRID */}
           <div className="topGrid">
 
             {/* ACTIVE ORDERS */}
-            <div className="card">
+            <div className="cardBox">
 
-              <h2 className="title">
-                <ShoppingBag size={18} color="#3b82f6" />
-                Active Deliveries (2)
-              </h2>
-
-              <div className="orderCard">
-                <div className="orderId">#1234</div>
-                <div className="orderInfo">
-                  <p><strong>Ram Kumar</strong></p>
-                  <p>🏠 Lagankhel → 📍 New Road</p>
-                </div>
-                <span className="badgeOrange">In Transit</span>
+              <div className="sectionTitle">
+                <ShoppingBag size={18} />
+                <h3>Active Deliveries ({activeOrders.length})</h3>
               </div>
 
-              <div className="orderCard">
-                <div className="orderId">#1235</div>
-                <div className="orderInfo">
-                  <p><strong>Sita Magar</strong></p>
-                  <p>🏠 Patan → 📍 Thamel</p>
+              {activeOrders.map((order, i) => (
+                <div className="orderCard" key={i}>
+                  <div className="orderId">{order.id}</div>
+
+                  <div className="orderInfo">
+                    <strong>{order.name}</strong>
+                    <p>{order.route}</p>
+                  </div>
+
+                  <span className="badge orange">
+                    {order.status}
+                  </span>
                 </div>
-                <span className="badgeGreen">Picked Up</span>
-              </div>
+              ))}
 
             </div>
 
             {/* STATS */}
             <div className="statsCol">
 
-              <div className="statBoxBlue">
-                <ClipboardList size={26} />
+              <div className="statBox blue">
+                <ClipboardList size={24} />
                 <div>
                   <h4>Today's Orders</h4>
                   <h2>8</h2>
                 </div>
               </div>
 
-              <div className="statBoxOrange">
-                <Clock size={26} />
+              <div className="statBox orange">
+                <Clock size={24} />
                 <div>
                   <h4>Pending</h4>
                   <h2>2</h2>
-                  <small className="urgent">
+                  <small>
                     <AlertCircle size={12} /> 1 urgent
                   </small>
                 </div>
@@ -101,7 +116,8 @@ const DeliverymanOrder: React.FC = () => {
 
           {/* TABLE */}
           <div className="tableBox">
-            <h2>Recent Completed Orders</h2>
+
+            <h2>Completed Orders</h2>
 
             <table>
               <thead>
@@ -124,11 +140,12 @@ const DeliverymanOrder: React.FC = () => {
                     <td>{o.amt}</td>
                     <td>{o.time}</td>
                     <td>
-                      <span className="badgeGreen">Delivered</span>
+                      <span className="badge green">Delivered</span>
                     </td>
                   </tr>
                 ))}
               </tbody>
+
             </table>
 
           </div>
