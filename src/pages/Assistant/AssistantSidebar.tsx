@@ -209,7 +209,7 @@ const AssistantSidebar = () => {
             className={activeItem === "emergency" ? "active" : ""}
             onClick={() => {
               setActiveItem("emergency");
-              navigate("/assistant/emergency-delivery");
+              navigate("/assistant/emergency/orders");
             }}
           >
             <div className="menu-left">

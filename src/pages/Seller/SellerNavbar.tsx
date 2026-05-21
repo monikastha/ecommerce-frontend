@@ -1,4 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+<<<<<<< HEAD
+=======
+import { useNavigate } from "react-router-dom";
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
 import logo from "../../assets/logo.png";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,11 +13,20 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 
+<<<<<<< HEAD
 const AdminNavbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // ✅ Time-based greeting (Nepal time works automatically from browser)
+=======
+const SellerNavbar = () => {
+  const [profileOpen, setProfileOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const navigate = useNavigate();
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -22,6 +35,19 @@ const AdminNavbar = () => {
     return "Good Night";
   };
 
+<<<<<<< HEAD
+=======
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/login";
+  };
+
+  const handleProfile = () => {
+    navigate("/seller/profile");
+    setProfileOpen(false);
+  };
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -53,11 +79,14 @@ const AdminNavbar = () => {
           z-index:100;
         }
 
+<<<<<<< HEAD
         .navbar-left{
           display:flex;
           flex-direction:column;
         }
 
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         .navbar-left h2{
           font-size:18px;
           margin:0;
@@ -77,7 +106,10 @@ const AdminNavbar = () => {
           gap:15px;
         }
 
+<<<<<<< HEAD
         /* ✅ SEARCH FIXED */
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         .search-box{
           display:flex;
           align-items:center;
@@ -85,16 +117,24 @@ const AdminNavbar = () => {
           background:#f1f5f9;
           padding:10px 14px;
           border-radius:12px;
+<<<<<<< HEAD
 
           width:260px;
           flex-shrink:0;   /* 🔥 IMPORTANT FIX */
           border:1px solid transparent;
+=======
+          width:260px;
+          flex-shrink:0;
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
           transition:0.3s;
         }
 
         .search-box:focus-within{
           background:#fff;
+<<<<<<< HEAD
           border-color:#2563eb;
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
           box-shadow:0 0 0 3px rgba(37,99,235,0.12);
         }
 
@@ -106,16 +146,22 @@ const AdminNavbar = () => {
           font-size:13px;
         }
 
+<<<<<<< HEAD
         .search-icon{
           color:#94a3b8;
         }
 
         /* ICON */
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         .icon{
           font-size:18px;
           cursor:pointer;
           color:#475569;
+<<<<<<< HEAD
           transition:0.2s;
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         }
 
         .icon:hover{
@@ -123,7 +169,10 @@ const AdminNavbar = () => {
           transform:scale(1.1);
         }
 
+<<<<<<< HEAD
         /* PROFILE */
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         .profile{
           width:42px;
           height:42px;
@@ -132,11 +181,14 @@ const AdminNavbar = () => {
           border:2px solid #e2e8f0;
         }
 
+<<<<<<< HEAD
         .profile:hover{
           border-color:#2563eb;
         }
 
         /* DROPDOWN */
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         .dropdown{
           position:absolute;
           top:55px;
@@ -156,7 +208,10 @@ const AdminNavbar = () => {
           align-items:center;
           gap:10px;
           color:#334155;
+<<<<<<< HEAD
           transition:0.2s;
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         }
 
         .dropdown div:hover{
@@ -167,7 +222,10 @@ const AdminNavbar = () => {
           color:#ef4444 !important;
         }
 
+<<<<<<< HEAD
         /* RESPONSIVE */
+=======
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         @media(max-width:768px){
           .search-box{
             display:none;
@@ -179,8 +237,13 @@ const AdminNavbar = () => {
 
         {/* LEFT */}
         <div className="navbar-left">
+<<<<<<< HEAD
           <h2>{getGreeting()}, Admin 👋</h2>
           <p>Welcome back to your dashboard</p>
+=======
+          <h2>{getGreeting()}, Seller 👋</h2>
+          <p>Manage your store efficiently</p>
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         </div>
 
         {/* RIGHT */}
@@ -188,7 +251,11 @@ const AdminNavbar = () => {
 
           {/* SEARCH */}
           <div className="search-box">
+<<<<<<< HEAD
             <FontAwesomeIcon icon={faSearch} className="search-icon" />
+=======
+            <FontAwesomeIcon icon={faSearch} />
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
             <input placeholder="Search products, orders..." />
           </div>
 
@@ -206,15 +273,28 @@ const AdminNavbar = () => {
 
             {profileOpen && (
               <div className="dropdown">
+<<<<<<< HEAD
                 <div>
+=======
+
+                <div onClick={handleProfile}>
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
                   <FontAwesomeIcon icon={faUser} />
                   Profile
                 </div>
 
+<<<<<<< HEAD
                 <div className="logout">
                   <FontAwesomeIcon icon={faRightFromBracket} />
                   Logout
                 </div>
+=======
+                <div className="logout" onClick={handleLogout}>
+                  <FontAwesomeIcon icon={faRightFromBracket} />
+                  Logout
+                </div>
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
               </div>
             )}
           </div>
@@ -225,4 +305,8 @@ const AdminNavbar = () => {
   );
 };
 
+<<<<<<< HEAD
 export default AdminNavbar;
+=======
+export default SellerNavbar;
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96

@@ -1,8 +1,14 @@
 import React, { useState } from "react";
+<<<<<<< HEAD
+=======
+import { useNavigate } from "react-router-dom";
+import logo from "../../assets/logo.png";
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
 
 const styles: { [key: string]: React.CSSProperties } = {
   body: {
     fontFamily: "'Poppins', sans-serif",
+<<<<<<< HEAD
     background: "#f0f2f5",
     margin: 0,
     padding: 0,
@@ -59,10 +65,27 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: "flex-start",
     justifyContent: "center",
   },
+=======
+    margin: 0,
+    padding: 0,
+  },
+
+  mainWrapper: {
+    display: "flex",
+    minHeight: "100vh",
+    background: "#eef0f3",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "40px", // smaller + balanced gap
+    padding: "20px",
+  },
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   leftPanel: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+<<<<<<< HEAD
     paddingTop: "60px",
   },
   logoCircle: {
@@ -92,27 +115,56 @@ const styles: { [key: string]: React.CSSProperties } = {
     letterSpacing: "0.5px",
     marginTop: "2px",
   },
+=======
+  },
+
+  logoImg: {
+    width: "420px",
+    maxWidth: "100%",
+    height: "auto",
+    objectFit: "contain",
+  },
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   formCard: {
     background: "#ffffff",
     borderRadius: "12px",
     padding: "28px 32px",
+<<<<<<< HEAD
     width: "340px",
     boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
   },
+=======
+    width: "360px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
+  },
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   formTitle: {
     fontSize: "22px",
     fontWeight: 700,
     textAlign: "center",
+<<<<<<< HEAD
     color: "#111",
     marginBottom: "18px",
   },
   formGroup: {
     marginBottom: "12px",
   },
+=======
+    marginBottom: "18px",
+  },
+
+  formGroup: {
+    marginBottom: "10px",
+  },
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   label: {
     display: "block",
     fontSize: "11.5px",
     fontWeight: 600,
+<<<<<<< HEAD
     color: "#444",
     marginBottom: "3px",
   },
@@ -145,10 +197,30 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: "12px",
     marginBottom: "12px",
   },
+=======
+    marginBottom: "3px",
+  },
+
+  input: {
+    width: "100%",
+    padding: "8px 10px",
+    border: "1px solid #d0d0d0",
+    borderRadius: "5px",
+    fontSize: "12px",
+  },
+
+  uploadRow: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "10px",
+  },
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   uploadBox: {
     flex: 1,
     background: "#d9d9d9",
     borderRadius: "6px",
+<<<<<<< HEAD
     height: "68px",
     display: "flex",
     alignItems: "center",
@@ -173,6 +245,27 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: "13px",
     userSelect: "none",
   },
+=======
+    height: "65px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "11px",
+  },
+
+  pwWrapper: {
+    position: "relative",
+  },
+
+  pwToggle: {
+    position: "absolute",
+    right: "10px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    cursor: "pointer",
+  },
+
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   btnNext: {
     width: "100%",
     padding: "10px",
@@ -182,6 +275,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 600,
     border: "none",
     borderRadius: "6px",
+<<<<<<< HEAD
     cursor: "pointer",
     marginTop: "6px",
     fontFamily: "'Poppins', sans-serif",
@@ -259,15 +353,30 @@ const PasswordField = ({
   placeholder: string;
   id: string;
 }) => {
+=======
+    marginTop: "10px",
+    cursor: "pointer",
+  },
+};
+
+/* PASSWORD FIELD */
+const PasswordField = ({ placeholder }: { placeholder: string }) => {
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
   const [show, setShow] = useState(false);
 
   return (
     <div style={styles.pwWrapper}>
       <input
+<<<<<<< HEAD
         id={id}
         type={show ? "text" : "password"}
         placeholder={placeholder}
         style={styles.inputWithPadding}
+=======
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        style={styles.input}
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
       />
       <span style={styles.pwToggle} onClick={() => setShow(!show)}>
         {show ? "🙈" : "👁"}
@@ -277,6 +386,7 @@ const PasswordField = ({
 };
 
 const SellerRegister: React.FC = () => {
+<<<<<<< HEAD
   return (
     <div style={styles.body}>
       {/* Page Label */}
@@ -382,6 +492,95 @@ const SellerRegister: React.FC = () => {
           >
             Next
           </button>
+=======
+  const navigate = useNavigate();
+
+  return (
+    <div style={styles.body}>
+      <div style={styles.mainWrapper}>
+        {/* LOGO */}
+        <div style={styles.leftPanel}>
+          <img src={logo} alt="SAJILO MART" style={styles.logoImg} />
+        </div>
+
+        {/* FORM */}
+        <div style={styles.formCard}>
+          <div style={styles.formTitle}>Sign Up</div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Name</label>
+            <input style={styles.input} />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Citizenship</label>
+            <input style={styles.input} />
+          </div>
+
+          <div style={styles.uploadRow}>
+            <div style={styles.uploadBox}>Logo Upload</div>
+            <div style={styles.uploadBox}>Document Upload</div>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>PAN No</label>
+            <input style={styles.input} />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Email</label>
+            <input style={styles.input} />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Phone</label>
+            <input style={styles.input} />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Password</label>
+            <PasswordField placeholder="Password" />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Confirm Password</label>
+            <PasswordField placeholder="Confirm Password" />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Address</label>
+            <input style={styles.input} />
+          </div>
+
+          <button
+            style={styles.btnNext}
+            onClick={() => navigate("/confirmcode")}
+          >
+            Next
+          </button>
+
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: "12px",
+              fontSize: "12px",
+              color: "#777",
+            }}
+          >
+            Already have an account?{" "}
+            <span
+              onClick={() => navigate("/login")}
+              style={{
+                color: "#1a5fbd",
+                fontWeight: 600,
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Login
+            </span>
+          </div>
+>>>>>>> 4b960a4ed5413eab9f0b20d4a1b6eb4b51942d96
         </div>
       </div>
     </div>
