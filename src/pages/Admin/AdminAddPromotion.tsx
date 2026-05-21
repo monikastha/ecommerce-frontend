@@ -1,54 +1,111 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 
 const AdminAddPromotion: React.FC = () => {
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/admin/promotions`;
   const [formData, setFormData] = useState({
     name: "",
-    type: "Discount",
-    discount: "",
-    appliesTo: "",
-    startDate: "",
-    endDate: "",
+    d_type: "percentage",
+    d_value: "",
+    applies_to: "all",
+    start_date: "",
+    end_date: "",
+    status: "active",   // ✅ ADDED
   });
 
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<any>({});
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+  
+
+  useEffect(() => {
+    fetch(`${API_BASE}`)
+      .then(res => res.json())
+      .then(data => setCategories(data));
+  }, []);
+
+  const handleChange = (e: any) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const toggleCategory = (id: number) => {
+    setSelectedCategories(prev =>
+      prev.includes(id)
+        ? prev.filter(c => c !== id)
+        : [...prev, id]
+    );
   };
 
   const validate = () => {
     let err: any = {};
 
-    if (!formData.name.trim()) err.name = "Required";
-    if (!formData.discount.trim()) err.discount = "Required";
-    if (!formData.appliesTo.trim()) err.appliesTo = "Required";
-    if (!formData.startDate) err.startDate = "Required";
-    if (!formData.endDate) err.endDate = "Required";
+    if (!formData.name) err.name = "Name required";
+    if (!formData.d_value) err.d_value = "Discount required";
+    if (!formData.start_date) err.start_date = "Start date required";
+    if (!formData.end_date) err.end_date = "End date required";
 
-    if (formData.startDate && formData.endDate) {
-      if (formData.endDate < formData.startDate) {
-        err.endDate = "End date must be after start date";
-      }
+    if (
+      formData.applies_to === "category" &&
+      selectedCategories.length === 0
+    ) {
+      err.categories = "Select at least one category";
     }
 
     setErrors(err);
     return Object.keys(err).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
+
     if (!validate()) return;
 
-    alert("Promotion added successfully");
-    navigate("/admin/promotion");
+    setLoading(true);
+
+    const payload = {
+      ...formData,
+      d_value: formData.d_value ? parseFloat(formData.d_value) : null,
+      categories:
+        formData.applies_to === "category"
+          ? selectedCategories
+          : []
+    };
+
+    try {
+      const res = await fetch(
+        `${API_BASE}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Promotion created");
+        navigate("/admin/promotion");
+      } else {
+        alert(JSON.stringify(data));
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -69,92 +126,97 @@ const AdminAddPromotion: React.FC = () => {
 
               <form onSubmit={handleSubmit}>
 
+                {/* NAME */}
                 <div className="field">
-                  <label>Promotion Name</label>
-                  <input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter promotion name"
-                  />
+                  <label>Name</label>
+                  <input name="name" onChange={handleChange} />
                   {errors.name && <p className="error">{errors.name}</p>}
                 </div>
 
+                {/* TYPE */}
                 <div className="field">
-                  <label>Type</label>
-                  <select
-                    name="type"
-                    value={formData.type}
-                    onChange={handleChange}
-                  >
-                    <option value="Discount">Discount</option>
-                    <option value="Coupon">Coupon</option>
+                  <label>Discount Type</label>
+                  <select name="d_type" onChange={handleChange}>
+                    <option value="percentage">Percentage</option>
+                    <option value="fixed">Fixed</option>
                   </select>
                 </div>
 
+                {/* VALUE */}
                 <div className="field">
-                  <label>Discount</label>
-                  <input
-                    name="discount"
-                    value={formData.discount}
-                    onChange={handleChange}
-                    placeholder="%"
-                  />
-                  {errors.discount && (
-                    <p className="error">{errors.discount}</p>
-                  )}
+                  <label>Discount Value</label>
+                  <input name="d_value" onChange={handleChange} />
+                  {errors.d_value && <p className="error">{errors.d_value}</p>}
                 </div>
 
+                {/* APPLIES */}
                 <div className="field">
                   <label>Applies To</label>
-                  <input
-                    name="appliesTo"
-                    value={formData.appliesTo}
-                    onChange={handleChange}
-                  />
-                  {errors.appliesTo && (
-                    <p className="error">{errors.appliesTo}</p>
-                  )}
+                  <select name="applies_to" onChange={handleChange}>
+                    <option value="all">All Products</option>
+                    <option value="category">Category</option>
+                  </select>
                 </div>
 
+                {/* CATEGORY */}
+                {formData.applies_to === "category" && (
+                  <div className="field">
+                    <label>Categories</label>
+
+                    {categories.map(cat => (
+                      <label key={cat.id} className="checkbox">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(cat.id)}
+                          onChange={() => toggleCategory(cat.id)}
+                        />
+                        {cat.name}
+                      </label>
+                    ))}
+
+                    {errors.categories && (
+                      <p className="error">{errors.categories}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* START DATE */}
                 <div className="field">
                   <label>Start Date</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                  />
-                  {errors.startDate && (
-                    <p className="error">{errors.startDate}</p>
-                  )}
+                  <input type="datetime-local" name="start_date" onChange={handleChange} />
+                  {errors.start_date && <p className="error">{errors.start_date}</p>}
                 </div>
 
+                {/* END DATE */}
                 <div className="field">
                   <label>End Date</label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                  />
-                  {errors.endDate && (
-                    <p className="error">{errors.endDate}</p>
-                  )}
+                  <input type="datetime-local" name="end_date" onChange={handleChange} />
+                  {errors.end_date && <p className="error">{errors.end_date}</p>}
                 </div>
 
+                {/* ✅ STATUS ADDED */}
+                <div className="field">
+                  <label>Status</label>
+                  <select name="status" onChange={handleChange} value={formData.status}>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="expired">Expired</option>
+                  </select>
+                </div>
+
+                {/* BUTTONS */}
                 <div className="btnRow">
 
                   <button
                     type="button"
-                    onClick={() => navigate("/admin/promotion")}
                     className="backBtn"
+                    onClick={() => navigate("/admin/promotion")}
                   >
-                    Back
+                    Cancel
                   </button>
 
-                  <button type="submit" className="addBtn">
-                    Save
+                  <button className="addBtn" disabled={loading}>
+                    {loading ? "Saving..." : "Create"}
                   </button>
 
                 </div>
@@ -169,17 +231,13 @@ const AdminAddPromotion: React.FC = () => {
 
       </div>
 
-      {/* FIXED STYLES */}
+      {/* CSS SAME */}
       <style>{`
         *{
           margin:0;
           padding:0;
           box-sizing:border-box;
           font-family:'Poppins',sans-serif;
-        }
-
-        body{
-          background:#f4f6f8;
         }
 
         .layout{
@@ -198,32 +256,28 @@ const AdminAddPromotion: React.FC = () => {
           padding:30px;
           display:flex;
           justify-content:center;
-          align-items:center;
-          min-height:80vh;
         }
 
         .card{
           width:100%;
-          max-width:600px;
+          max-width:650px;
           background:white;
-          padding:25px;
-          border-radius:12px;
-          box-shadow:0 10px 25px rgba(0,0,0,0.08);
+          padding:30px;
+          border-radius:16px;
+          box-shadow:0 8px 20px rgba(0,0,0,0.06);
         }
 
         h2{
-          margin-bottom:15px;
-          color:#0f172a;
+          margin-bottom:20px;
         }
 
         .field{
-          margin-bottom:12px;
+          margin-bottom:15px;
         }
 
         label{
-          font-size:13px;
           font-weight:600;
-          color:#334155;
+          font-size:13px;
           display:block;
           margin-bottom:6px;
         }
@@ -232,37 +286,42 @@ const AdminAddPromotion: React.FC = () => {
           width:100%;
           padding:10px;
           border:1px solid #ddd;
-          border-radius:8px;
-          outline:none;
+          border-radius:10px;
+        }
+
+        .checkbox{
+          display:flex;
+          gap:8px;
+          margin:5px 0;
+        }
+
+        .btnRow{
+          display:flex;
+          gap:10px;
+          margin-top:15px;
+        }
+
+        .backBtn{
+          flex:1;
+          background:#e5e7eb;
+          border:none;
+          padding:10px;
+          border-radius:10px;
+        }
+
+        .addBtn{
+          flex:1;
+          background:#16a34a;
+          color:white;
+          border:none;
+          padding:10px;
+          border-radius:10px;
         }
 
         .error{
           color:red;
           font-size:12px;
           margin-top:4px;
-        }
-
-        .btnRow{
-          display:flex;
-          gap:10px;
-          margin-top:10px;
-        }
-
-        .backBtn{
-          flex:1;
-          padding:10px;
-          background:#e5e7eb;
-          border:none;
-          border-radius:8px;
-        }
-
-        .addBtn{
-          flex:1;
-          padding:10px;
-          background:#4f46e5;
-          color:white;
-          border:none;
-          border-radius:8px;
         }
       `}</style>
     </>

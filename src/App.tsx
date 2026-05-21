@@ -29,6 +29,7 @@ import AdminPromotion from "./pages/Admin/AdminPromotion";
 // import AdminEarnings from "./pages/Admin/AdminEarnings";
 import AdminAddPromotion from "./pages/Admin/AdminAddPromotion";
 import AdminLocation from "./pages/Admin/AdminLocation";
+import AdminUpdatePromotion from "./pages/Admin/AdminUpdatePromotion";
 import AdminAddLocation from "./pages/Admin/AdminAddLocation";
 import AdminUpdateLocation from "./pages/Admin/AdminUpdateLocation";
 
@@ -96,7 +97,7 @@ const App = () => {
 
           <Route path="promotion" element={<AdminPromotion />} />
           <Route path="promotion/add" element={<AdminAddPromotion />} />
-
+          <Route path="/admin/promotion/edit/:id" element={<AdminUpdatePromotion />} />
           {/* <Route path="earnings" element={<AdminEarnings />} /> */}
 
           <Route path="location" element={<AdminLocation />} />
@@ -144,6 +145,7 @@ const App = () => {
         <Route path="/buyer">
           <Route path="signup" element={<BuyerSignUp />} />
           <Route path="home" element={<BuyerHome />} />
+          <Route path="confirmcode" element={<ConfirmCode />} />
         </Route>
 
         {/* ====================== REDIRECTS & 404 ====================== */}
