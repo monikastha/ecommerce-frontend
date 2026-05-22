@@ -1,65 +1,59 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 
+// ====================== COMMON & AUTH ======================
 import Home from "./pages/common/Home";
+import LoginForAll from "./pages/authentication/LoginForAll";
 import AdminRegister from "./pages/authentication/AdminRegister";
-// import LoginPage from "./pages/authentication/LoginPage";
+import BuyerSignUp from "./pages/authentication/BuyerSignUp";
+import SellerRegister from "./pages/authentication/SellerRegister";
+import ConfirmCode from "./pages/authentication/ConfirmCode";
+import SignupWay from "./pages/authentication/SignupWay";
+import EmailVerifiedSuccess from "./pages/authentication/EmailVerifiedSuccess";
 
+// ====================== ADMIN PAGES ======================
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminStaff from "./pages/Admin/AdminStaff";
 import AdminAddStaff from "./pages/Admin/AdminAddStaff";
 import AdminUpdateStaff from "./pages/Admin/AdminUpdateStaff";
-
 import AdminSeller from "./pages/Admin/AdminSeller";
 import AdminBuyer from "./pages/Admin/AdminBuyer";
-
 import AdminDelivery from "./pages/Admin/AdminDelivery";
 import AdminAddDelivery from "./pages/Admin/AdminAddDelivery";
-
 import AdminCategory from "./pages/Admin/AdminCategory";
 import AdminAddCategory from "./pages/Admin/AdminAddCategory";
+import AdminUpdateCategory from "./pages/Admin/AdminUpdateCategory";
 import AdminAddSubCategory from "./pages/Admin/AdminAddSubCategory";
-
 import AdminProduct from "./pages/Admin/AdminProduct";
 import AdminOrder from "./pages/Admin/AdminOrder";
 import AdminPromotion from "./pages/Admin/AdminPromotion";
-import AdminEarnings from "./pages/Admin/AdminEarnigns";
+// import AdminEarnings from "./pages/Admin/AdminEarnings";
 import AdminAddPromotion from "./pages/Admin/AdminAddPromotion";
-
 import AdminLocation from "./pages/Admin/AdminLocation";
 import AdminAddLocation from "./pages/Admin/AdminAddLocation";
+import AdminUpdateLocation from "./pages/Admin/AdminUpdateLocation";
 
+// ====================== ASSISTANT PAGES ======================
 import AssistantDashboard from "./pages/Assistant/AssistantDashboard";
-
 import AssistantCategory from "./pages/Assistant/AssistantCategory";
 import AssistantAddCategory from "./pages/Assistant/AssistantAddCategory";
 import AssistantAddSubCategory from "./pages/Assistant/AssistantAddSubCategory";
 import AssistantWarehouseStaff from "./pages/Assistant/AssistantWarehouseStaff";
+import AssistantUpdateWarehouseStaff from "./pages/Assistant/AssistantUpdateWarehouseStaff";
 import AssistantProductManagement from "./pages/Assistant/AssistantProductManagement";
+import AssistantEmergencyOrders from "./pages/Assistant/AssistantEmergencyOrders";
 import AssistantOrder from "./pages/Assistant/AssistantOrder";
 import AssistantSeller from "./pages/Assistant/AssistantSeller";
 import LoginForALl from "./pages/authentication/LoginForAll"
-
 import BuyerSignUp  from "./pages/authentication/BuyerSignUp";
 import BuyerHome from "./pages/Buyer/home/BuyerHome";
 import ConfirmCode from "./pages/authentication/ConfirmCode";
 import SignupWay from "./pages/authentication/SignupWay";
-import EmailVerifiedSuccess from "./pages/authentication/EmailVerifiedSuccess";
-import ProductPage from "./pages/Buyer/home/ProductPage";
-import ViewAllProducts from "./pages/Buyer/home/ViewAllProduct";
-import ViewAllCategories from "./pages/Buyer/home/ViewAllCategories";
-import Fashion from "./pages/Buyer/home/Fashion";
-import Electronics from "./pages/Buyer/home/Electronics";
-import HomeGoods from "./pages/Buyer/home/HomeGoods";
-import Cosmetics from "./pages/Buyer/home/Cosmetics";
-import Shoes from "./pages/Buyer/home/Shoes";
-import Accessories from "./pages/Buyer/home/Accessories";
-import Medicine from "./pages/Buyer/home/Medicine";
-import StudyMaterials from "./pages/Buyer/home/StudyMaterials";
-
+import EmailVerifiedSuccess from "./pages/authentication/EmailVerifiedSuccess"
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ====================== PUBLIC ROUTES ====================== */}
         <Route path="/" element={<Home />} />
 
         {/*Login For ALl Page Routes*/}
@@ -87,7 +81,7 @@ const App = () => {
 
         <Route path="/admin/promotion" element={<AdminPromotion />} />
         <Route path="/admin/promotion/add" element={<AdminAddPromotion />} />
-        <Route path="/admin/order" element={<AdminOrder />} />
+          <Route path="/admin/order" element={<AdminOrder />} />
         <Route path="/admin/location" element={<AdminLocation />} />
         <Route path="/admin/location/add" element={<AdminAddLocation />} />
         <Route path="/assistant/dashboard" element={<AssistantDashboard />} />
@@ -99,24 +93,15 @@ const App = () => {
         <Route path="/assistant/order" element={<AssistantOrder />} />
         <Route path="/assistant/seller" element={<AssistantSeller />} />
 
-        <Route path="/buyerhome" element={<BuyerHome />} />
+        <Route path="/buyer/home" element={<BuyerHome />} />
+        <Route path="/home/BuyerHome" element={<BuyerHome />} />
         <Route path="/buyer/signup" element={<BuyerSignUp />} />
-        <Route path="/login" element={<LoginForALl />} />
-        <Route path="/confirmcode" element={<ConfirmCode />} />
-        <Route path="/signupway" element={<SignupWay />} />
-        <Route path="/emailverified" element={<EmailVerifiedSuccess/>} />
-        <Route path="/product" element={<ProductPage />} />
-        <Route path="/allproducts" element={<ViewAllProducts />} />
-        <Route path="/allcategories" element={<ViewAllCategories />} />
-        <Route path="/fashion" element={<Fashion />} />
-        <Route path="/electronics" element={<Electronics />} />
-        <Route path="/homegoods" element={<HomeGoods />} />
-        <Route path="/cosmetics" element={<Cosmetics />} />
-        <Route path="/shoes" element={<Shoes />} />
-        <Route path="/accessories" element={<Accessories />} />
-        <Route path="/medicine" element={<Medicine />} />
-        <Route path="/studymaterials" element={<StudyMaterials />} />
-      </Routes>
+         <Route path="/login" element={<LoginForALl />} />
+         <Route path="/confirmcode" element={<ConfirmCode />} />
+         <Route path="/signupway" element={<SignupWay />} />
+         <Route path="/emailverified" element={<EmailVerifiedSuccess/>} />
+         
+       </Routes>
     </BrowserRouter>
   );
 };

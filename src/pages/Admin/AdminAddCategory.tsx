@@ -2,254 +2,178 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import axios from "axios";
+
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/productcategory/categories/`;
 
 const AdminAddCategory: React.FC = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    categoryName: "",
-    subCategory: "",
+    name: "",
     description: "",
-    image: null as File | null,
+    // is_active removed
   });
 
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<any>({});
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({
-        ...prev,
-        image: e.target.files![0],
-      }));
+      const file = e.target.files[0];
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
     }
   };
 
   const validate = () => {
     let temp: any = {};
-
-    if (!formData.categoryName.trim())
-      temp.categoryName = "Category name is required";
-
-    if (!formData.subCategory.trim())
-      temp.subCategory = "Subcategory is required";
-
-    if (!formData.description.trim())
-      temp.description = "Description is required";
-
-    if (!formData.image)
-      temp.image = "Image is required";
-
+    if (!formData.name.trim()) temp.name = "Category name is required";
+    if (!formData.description.trim()) temp.description = "Description is required";
     setErrors(temp);
-
     return Object.keys(temp).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validate()) return;
 
-    alert("Category added successfully!");
+    setLoading(true);
+    const form = new FormData();
+    form.append("name", formData.name);
+    form.append("description", formData.description);
+    form.append("is_active", "true"); // Default to active
+    if (image) form.append("image", image);
 
-    setFormData({
-      categoryName: "",
-      subCategory: "",
-      description: "",
-      image: null,
-    });
-
-    navigate("/admin/category");
+    try {
+      await axios.post(API_BASE, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Category added successfully!");
+      navigate("/admin/category");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.name?.[0] || "Failed to add category");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
-      {/* STYLE BLOCK (NORMAL CSS IN SAME FILE) */}
       <style>{`
-        .admin-layout {
-          display: flex;
-        }
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+        body{background:#f1f5f9;}
 
-        .sidebar {
-          width: 260px;
-          position: fixed;
-          top: 0;
-          left: 0;
-          height: 100vh;
-        }
+        .wrapper{display:flex;min-height:100vh;}
+        .main{flex:1;margin-left:0px;background:#f1f5f9;}
+        .container{padding:40px;display:flex;justify-content:center;}
 
-        .main {
-          flex: 1;
-          margin-left: 260px;
-          background: linear-gradient(135deg, #f5f7fa, #e4ecf5);
-          min-height: 100vh;
+        .card{
+          width:100%; max-width:620px; background:#fff; padding:40px;
+          border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.08);
         }
+        h2{text-align:center;margin-bottom:30px;color:#0f172a;font-size:26px;}
 
-        .page {
-          padding: 30px;
-          display: flex;
-          justify-content: center;
-        }
-
-        .card {
-          width: 100%;
-          max-width: 650px;
-          background: #fff;
-          padding: 25px;
-          border-radius: 12px;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-        }
-
-        .title {
-          font-size: 22px;
+        .form-group { margin-bottom: 24px; }
+        label {
+          display: block;
+          margin-bottom: 8px;
           font-weight: 600;
-          margin-bottom: 5px;
+          color: #334155;
         }
-
-        .subtitle {
-          font-size: 13px;
-          color: #666;
-          margin-bottom: 15px;
-        }
-
-        .form {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .field {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        }
-
         input, textarea {
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          outline: none;
+          width:100%; padding:13px; border:1px solid #e2e8f0;
+          border-radius:10px; font-size:15px;
         }
+        textarea { min-height: 120px; resize: vertical; }
 
-        textarea {
-          min-height: 80px;
+        .error { color:#ef4444; font-size:13px; margin-top:5px; }
+
+        .btnRow {
+          display:flex; gap:15px; margin-top:35px;
         }
-
-        .error {
-          color: red;
-          font-size: 12px;
+        button {
+          flex:1; padding:14px; border:none; border-radius:10px;
+          font-weight:600; font-size:16px; cursor:pointer;
         }
+        .submitBtn { background:#2563eb; color:white; }
+        .cancelBtn { background:#e5e7eb; color:#334155; }
 
-        .buttonRow {
-          display: flex;
-          gap: 10px;
-          margin-top: 10px;
-        }
-
-        .btn {
-          flex: 1;
-          padding: 12px;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 600;
-        }
-
-        .backBtn {
-          background: #e5e7eb;
-        }
-
-        .addBtn {
-          background: #4f46e5;
-          color: white;
+        .preview-img {
+          max-width: 250px; 
+          margin-top: 12px; 
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
         }
       `}</style>
 
-      <div className="admin-layout">
-        <div className="sidebar">
-          <AdminSidebar />
-        </div>
-
+      <div className="wrapper">
+        <AdminSidebar />
         <div className="main">
           <AdminNavbar />
-
-          <div className="page">
+          <div className="container">
             <div className="card">
-              <div className="title">Add Category</div>
-              <div className="subtitle">
-                Create new product category and subcategory
-              </div>
+              <h2>Add New Category</h2>
 
-              <form onSubmit={handleSubmit} className="form">
-
-                <div className="field">
-                  <label>Category Name</label>
+              <form onSubmit={handleSubmit}>
+                {/* Category Name */}
+                <div className="form-group">
+                  <label>Category Name:</label>
                   <input
-                    name="categoryName"
-                    value={formData.categoryName}
+                    name="name"
+                    placeholder="Enter category name"
+                    value={formData.name}
                     onChange={handleChange}
                   />
-                  {errors.categoryName && (
-                    <span className="error">{errors.categoryName}</span>
-                  )}
+                  {errors.name && <p className="error">{errors.name}</p>}
                 </div>
 
-                <div className="field">
-                  <label>Sub Category</label>
-                  <input
-                    name="subCategory"
-                    value={formData.subCategory}
-                    onChange={handleChange}
-                  />
-                  {errors.subCategory && (
-                    <span className="error">{errors.subCategory}</span>
-                  )}
-                </div>
-
-                <div className="field">
-                  <label>Description</label>
+                {/* Description */}
+                <div className="form-group">
+                  <label>Description:</label>
                   <textarea
                     name="description"
+                    placeholder="Enter category description"
                     value={formData.description}
                     onChange={handleChange}
                   />
-                  {errors.description && (
-                    <span className="error">{errors.description}</span>
-                  )}
+                  {errors.description && <p className="error">{errors.description}</p>}
                 </div>
 
-                <div className="field">
-                  <label>Image</label>
-                  <input type="file" onChange={handleFileChange} />
-                  {errors.image && (
-                    <span className="error">{errors.image}</span>
-                  )}
+                {/* Image Upload */}
+                <div className="form-group">
+                  <label>Category Image:</label>
+                  <input type="file" accept="image/*" onChange={handleImageChange} />
                 </div>
 
-                <div className="buttonRow">
+                {preview && (
+                  <div className="form-group">
+                    <label>Image Preview</label>
+                    <img src={preview} alt="preview" className="preview-img" />
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div className="btnRow">
                   <button
                     type="button"
-                    className="btn backBtn"
+                    className="cancelBtn"
                     onClick={() => navigate("/admin/category")}
                   >
-                    Back
+                    Cancel
                   </button>
-
-                  <button type="submit" className="btn addBtn">
-                    Add Category
+                  <button type="submit" className="submitBtn" disabled={loading}>
+                    {loading ? "Saving..." : "Add Category"}
                   </button>
                 </div>
-
               </form>
             </div>
           </div>
