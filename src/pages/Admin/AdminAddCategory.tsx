@@ -69,6 +69,9 @@ const AdminAddCategory: React.FC = () => {
   return (
     <>
       <style>{`
+         body {
+  font-family: "Poppins", sans-serif;
+}
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
         body{background:#f1f5f9;}
 

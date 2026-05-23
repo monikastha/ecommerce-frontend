@@ -1,8 +1,37 @@
 import { useState } from "react";
 
-export default function SajiloMartLogout() {
-  const [activeNav, setActiveNav] = useState("Logout");
-  const [showModal, setShowModal] = useState(true);
+interface Review {
+  id: number;
+  customerName: string;
+  productName: string;
+  date: string;
+  comment: string;
+  status: "Pending" | "Responded";
+}
+
+const reviews: Review[] = [
+  {
+    id: 1,
+    customerName: "Monika Shrestha",
+    productName: "Wireless Bluetooth Headphones",
+    date: "2024-01-15",
+    comment:
+      "Amazing sound quality! The noise cancellation works perfectly and the battery life is incredible. Highly recommend!",
+    status: "Pending",
+  },
+  {
+    id: 2,
+    customerName: "Binita pariyar",
+    productName: "Portable Phone Charger",
+    date: "2024-01-12",
+    comment:
+      "Does the job but takes longer to charge than expected. Build quality is decent for the price.",
+    status: "Responded",
+  },
+];
+
+export default function SajiloMartCustomerEngagement() {
+  const [activeNav, setActiveNav] = useState("Customer Engagement");
 
   const navItems = [
     {
@@ -48,10 +77,10 @@ export default function SajiloMartLogout() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#6b7280", fontFamily: "sans-serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#b0bec5", fontFamily: "sans-serif", display: "flex", flexDirection: "column" }}>
       {/* Top system bar */}
       <div style={{ backgroundColor: "#2c3e50", color: "#ccc", fontSize: "13px", padding: "7px 16px" }}>
-        Seller Logout 1
+        Seller Customer Engagement 1
       </div>
 
       {/* Page body */}
@@ -113,9 +142,9 @@ export default function SajiloMartLogout() {
                     gap: "10px",
                     padding: "12px 16px",
                     cursor: "pointer",
-                    backgroundColor: "transparent",
+                    backgroundColor: activeNav === item.label ? "#e8380d" : "transparent",
                     color: "white",
-                    fontWeight: "400",
+                    fontWeight: activeNav === item.label ? "600" : "400",
                     fontSize: "13px",
                   }}
                 >
@@ -124,18 +153,15 @@ export default function SajiloMartLogout() {
                 </div>
               ))}
 
-              {/* Logout — active */}
+              {/* Logout */}
               <div
-                onClick={() => { setActiveNav("Logout"); setShowModal(true); }}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "10px",
                   padding: "12px 16px",
                   cursor: "pointer",
-                  backgroundColor: "#e8380d",
                   color: "white",
-                  fontWeight: "600",
                   fontSize: "13px",
                   marginTop: "4px",
                 }}
@@ -238,7 +264,15 @@ export default function SajiloMartLogout() {
               </div>
 
               {/* Avatar */}
-              <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "#c8a060", flexShrink: 0 }} />
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: "#c8a060",
+                  flexShrink: 0,
+                }}
+              />
             </div>
           </div>
 
@@ -255,91 +289,131 @@ export default function SajiloMartLogout() {
             }}
           >
             <span>Dashboard</span>
-            <span>Logout &gt; Dashboard</span>
+            <span>Review &gt; Dashboard</span>
           </div>
 
-          {/* Content area with modal */}
-          <div style={{ flex: 1, padding: "30px 18px", position: "relative" }}>
-            {showModal && (
-              <div
-                style={{
-                  width: "340px",
-                  backgroundColor: "white",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                  border: "1px solid #ddd",
-                }}
-              >
-                {/* Modal blue top bar with X */}
+          {/* Content */}
+          <div style={{ padding: "18px 18px", flex: 1 }}>
+            <h2 style={{ margin: "0 0 4px", fontSize: "22px", fontWeight: "700", color: "#111" }}>Product Reviews</h2>
+            <p style={{ margin: "0 0 18px", fontSize: "13px", color: "#666" }}>Engage with your customers.</p>
+
+            {/* Review Cards */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {reviews.map((review) => (
                 <div
+                  key={review.id}
                   style={{
-                    backgroundColor: "#4a90b8",
-                    height: "52px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    paddingRight: "0",
+                    backgroundColor: "#d9d9d9",
+                    borderRadius: "8px",
+                    padding: "14px 16px",
                   }}
                 >
+                  {/* Card header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2px" }}>
+                    <div>
+                      <div style={{ fontSize: "15px", fontWeight: "700", color: "#111" }}>{review.customerName}</div>
+                      <div style={{ fontSize: "12px", color: "#555", marginTop: "2px" }}>{review.productName}</div>
+                      <div style={{ fontSize: "12px", color: "#555" }}>{review.date}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      {review.status === "Pending" && (
+                        <div
+                          style={{
+                            backgroundColor: "#f59e0b",
+                            color: "white",
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            padding: "3px 10px",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          Update
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          backgroundColor: review.status === "Pending" ? "#374151" : "#374151",
+                          color: "white",
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          padding: "3px 10px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {review.status}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comment */}
+                  <p style={{ margin: "10px 0 12px", fontSize: "13px", color: "#222", lineHeight: "1.5" }}>
+                    {review.comment}
+                  </p>
+
+                  {/* Respond button */}
                   <button
-                    onClick={() => setShowModal(false)}
                     style={{
-                      width: "52px",
-                      height: "52px",
-                      backgroundColor: "#c0392b",
-                      border: "2px solid #e74c3c",
-                      color: "white",
-                      fontSize: "20px",
-                      fontWeight: "bold",
-                      cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
+                      gap: "6px",
+                      backgroundColor: "#374151",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                      padding: "6px 14px",
+                      fontSize: "13px",
+                      fontWeight: "500",
+                      cursor: "pointer",
                     }}
                   >
-                    ✕
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                    </svg>
+                    Respond
                   </button>
                 </div>
+              ))}
+            </div>
 
-                {/* Modal body */}
-                <div style={{ padding: "24px 24px 28px", textAlign: "center" }}>
-                  <p style={{ fontSize: "16px", color: "#111", margin: "0 0 22px", fontWeight: "400" }}>
-                    Are you sure you want to logout?
-                  </p>
-                  <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-                    <button
-                      style={{
-                        padding: "8px 32px",
-                        fontSize: "14px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        backgroundColor: "white",
-                        cursor: "pointer",
-                        color: "#111",
-                      }}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => setShowModal(false)}
-                      style={{
-                        padding: "8px 32px",
-                        fontSize: "14px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        backgroundColor: "white",
-                        cursor: "pointer",
-                        color: "#111",
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+            {/* Pagination */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "20px",
+              }}
+            >
+              <span style={{ fontSize: "12px", color: "#555" }}>Showing page 1 out of 4 pages</span>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  style={{
+                    padding: "5px 14px",
+                    backgroundColor: "#1e3a5f",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Previous
+                </button>
+                <button
+                  style={{
+                    padding: "5px 14px",
+                    backgroundColor: "#1e3a5f",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Next
+                </button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

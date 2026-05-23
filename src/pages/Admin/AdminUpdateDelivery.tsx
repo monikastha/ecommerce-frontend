@@ -1,13 +1,14 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/deliveryman/delivery`;
 
-const AdminAddDelivery: React.FC = () => {
+const AdminUpdateDelivery: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -15,12 +16,38 @@ const AdminAddDelivery: React.FC = () => {
     email: "",
     phone: "",
     address: "",
-    password: "",
+    password: "", // Optional for update
   });
 
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  // Fetch existing deliveryman data
+  useEffect(() => {
+    const fetchDeliveryman = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/${id}/`);
+        const data = res.data;
+
+        setFormData({
+          name: data.name || "",
+          username: data.username || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          password: "", // Leave blank for security
+        });
+      } catch (error) {
+        setServerError("Failed to load delivery staff data");
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    if (id) fetchDeliveryman();
+  }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,9 +64,11 @@ const AdminAddDelivery: React.FC = () => {
     if (!formData.email.trim()) temp.email = "Email is required";
     if (!formData.phone.trim()) temp.phone = "Phone is required";
     if (!formData.address.trim()) temp.address = "Address is required";
-    if (!formData.password) temp.password = "Password is required";
-    else if (formData.password.length < 6) 
+
+    // Password is optional on update, but if entered must be strong
+    if (formData.password && formData.password.length < 6) {
       temp.password = "Password must be at least 6 characters";
+    }
 
     setErrors(temp);
     return Object.keys(temp).length === 0;
@@ -54,25 +83,27 @@ const AdminAddDelivery: React.FC = () => {
     setLoading(true);
 
     try {
-      await axios.post(`${API_BASE}/`, formData);
+      const payload = { ...formData };
+      // Remove password if empty (don't update it)
+      if (!payload.password) delete payload.password;
 
-      alert("Delivery staff added successfully!");
-      
-      setFormData({
-        name: "", username: "", email: "", phone: "", address: "", password: ""
-      });
+      await axios.put(`${API_BASE}/${id}/`, payload);
 
+      alert("Delivery staff updated successfully!");
       navigate("/admin/delivery");
     } catch (error: any) {
-      console.error(error.response?.data);
       const errorMsg = error.response?.data?.error || 
                       error.response?.data?.message || 
-                      "Failed to add delivery staff. Please try again.";
+                      "Failed to update delivery staff.";
       setServerError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return <div className="wrapper"><div className="main"><AdminNavbar />Loading...</div></div>;
+  }
 
   return (
     <div className="wrapper">
@@ -84,7 +115,9 @@ const AdminAddDelivery: React.FC = () => {
           padding: 0;
           box-sizing: border-box;
         }
-
+        body{
+        font-family: 'Poppins', sans-serif;
+        }
         .wrapper { 
           display: flex; 
           font-family: 'Poppins', sans-serif;
@@ -183,20 +216,20 @@ const AdminAddDelivery: React.FC = () => {
           font-family: 'Poppins', sans-serif;
         }
 
-        .addBtn {
+        .updateBtn {
           flex: 1;
           padding: 13px;
           border: none;
           border-radius: 10px;
-          background: #16a34a;
+          background: #2563eb;
           color: white;
           cursor: pointer;
           font-weight: 600;
           font-family: 'Poppins', sans-serif;
         }
 
-        .addBtn:disabled {
-          background: #86efac;
+        .updateBtn:disabled {
+          background: #93c5fd;
           cursor: not-allowed;
         }
 
@@ -224,8 +257,8 @@ const AdminAddDelivery: React.FC = () => {
 
         <div className="page">
           <div className="card">
-            <h2>Add Delivery Staff</h2>
-            <p>Fill in the details below</p>
+            <h2>Update Delivery Staff</h2>
+            <p>Edit delivery staff information</p>
 
             {serverError && <p className="server-error">{serverError}</p>}
 
@@ -249,8 +282,14 @@ const AdminAddDelivery: React.FC = () => {
               </div>
 
               <div className="field">
-                <label>Password</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChange} />
+                <label>New Password (optional)</label>
+                <input 
+                  type="password" 
+                  name="password" 
+                  value={formData.password} 
+                  onChange={handleChange} 
+                  placeholder="Leave blank to keep current password"
+                />
                 {errors.password && <span className="error">{errors.password}</span>}
               </div>
 
@@ -272,11 +311,11 @@ const AdminAddDelivery: React.FC = () => {
                   className="backBtn"
                   onClick={() => navigate("/admin/delivery")}
                 >
-                  Back
+                  Cancel
                 </button>
 
-                <button type="submit" className="addBtn" disabled={loading}>
-                  {loading ? "Adding..." : "Add Delivery Staff"}
+                <button type="submit" className="updateBtn" disabled={loading}>
+                  {loading ? "Updating..." : "Update Delivery Staff"}
                 </button>
               </div>
             </form>
@@ -287,4 +326,4 @@ const AdminAddDelivery: React.FC = () => {
   );
 };
 
-export default AdminAddDelivery;
+export default AdminUpdateDelivery;

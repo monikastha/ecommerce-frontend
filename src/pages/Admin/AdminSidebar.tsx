@@ -24,8 +24,8 @@ const AdminSidebar = () => {
     <>
       <style>{`
         .sidebar {
-          width: 260px;
-          min-height: 100vh;
+          width: 250px;
+          min-height: 120vh;
           background: #445C6D;
           color: white;
           font-family: sans-serif;
@@ -97,7 +97,7 @@ const AdminSidebar = () => {
         }
 
         .submenu li:hover {
-           width:230px;
+           width:190px;
           background: #9B0F06;
           color: white;
         }

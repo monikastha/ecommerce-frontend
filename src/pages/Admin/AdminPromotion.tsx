@@ -64,16 +64,38 @@ const AdminPromotion: React.FC = () => {
   return (
     <>
       <style>{`
-        .wrapper { display:flex; min-height:100vh; }
+         * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-        .main {
-          flex:1;
-          background:#f5f7fa;
-        }
+  .wrapper {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+  }
 
-        .container {
-          padding:30px;
-        }
+  .sidebar {
+    width: 260px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    background: #1e293b;
+    z-index: 100;
+  }
+
+  .main {
+    margin-left: 260px;
+    flex: 1;
+    background: #f5f7fa;
+    min-height: 100vh;
+  }
+
+  .container { 
+    padding: 30px; 
+  }
 
         /* SAME CATEGORY HEADER STYLE */
         .header {
@@ -84,7 +106,6 @@ const AdminPromotion: React.FC = () => {
           padding:15px 20px;
           background:white;
           border-radius:12px;
-          box-shadow:0 2px 8px rgba(0,0,0,0.06);
         }
 
         .titleBox {
@@ -161,7 +182,7 @@ const AdminPromotion: React.FC = () => {
           font-size:12px;
         }
 
-        .active { background:#dcfce7; color:#166534; }
+        
         .inactive { background:#fef3c7; color:#854d0e; }
         .expired { background:#fee2e2; color:#b91c1c; }
 

@@ -58,23 +58,38 @@ const AdminStaff: React.FC = () => {
   return (
     <>
       <style>{`
-        .wrapper { display:flex; }
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-        .sidebar {
-          width:260px;
-          position:fixed;
-          height:100vh;
-          background:#1e293b;
-        }
+  .wrapper {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+  }
 
-        .main {
-          margin-left:260px;
-          width:100%;
-          background:#f5f7fa;
-          min-height:100vh;
-        }
+  .sidebar {
+    width: 260px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    background: #1e293b;
+    z-index: 100;
+  }
 
-        .container { padding:30px; }
+  .main {
+    margin-left: 260px;
+    flex: 1;
+    background: #f5f7fa;
+    min-height: 100vh;
+  }
+
+  .container { 
+    padding: 30px; 
+  }
 
         .header-icon{
           width:52px;

@@ -9,7 +9,7 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 
-const AdminNavbar = () => {
+const DeliverymanNavbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -179,7 +179,7 @@ const AdminNavbar = () => {
 
         {/* LEFT */}
         <div className="navbar-left">
-          <h2>{getGreeting()}, Admin 👋</h2>
+          <h2>{getGreeting()}, Deliveryman 👋</h2>
           <p>Welcome back to your dashboard</p>
         </div>
 
@@ -225,4 +225,4 @@ const AdminNavbar = () => {
   );
 };
 
-export default AdminNavbar;
+export default DeliverymanNavbar;
