@@ -263,7 +263,7 @@ export default function ProductDetails() {
 
                   {/* Thumbnails */}
                   <div style={styles.thumbnails}>
-                    {[...Array(5)].map((_, i) => (
+                    {thumbnails.map((_, i) => (
                       <div
                         key={i}
                         onClick={() => setSelectedThumb(i)}

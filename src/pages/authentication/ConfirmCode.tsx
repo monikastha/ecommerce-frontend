@@ -1,5 +1,8 @@
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import type React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function ConfirmRegistration() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -8,6 +11,11 @@ export default function ConfirmRegistration() {
   const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const email =
+    (location.state as { email?: string } | null)?.email ||
+    sessionStorage.getItem("seller_otp_email") ||
+    "";
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleDigitChange = (index: number, value: string) => {
@@ -46,7 +54,12 @@ export default function ConfirmRegistration() {
 
   const fullCode = code.join("");
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (!email) {
+      setError("Seller email is missing. Please register again.");
+      return;
+    }
+
     if (fullCode.length < 6) {
       setError("Please enter the complete 6-digit confirmation code.");
       return;
@@ -55,15 +68,29 @@ export default function ConfirmRegistration() {
     setError("");
     setLoading(true);
 
-    // ✅ fake delay (no API)
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${API_BASE}/api/seller/verify-otp/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp: fullCode }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.detail || "OTP verification failed.");
+      }
+
+      sessionStorage.removeItem("seller_otp_email");
       setLoading(false);
       setSuccess(true);
 
       setTimeout(() => {
-        navigate("/emailverified"); // 👉 success page route
+        navigate("/emailverified");
       }, 1200);
-    }, 1000);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : "OTP verification failed.");
+    }
   };
 
   return (
@@ -218,7 +245,9 @@ export default function ConfirmRegistration() {
             {code.map((digit, i) => (
               <input
                 key={i}
-                ref={(el) => (inputRefs.current[i] = el)}
+                ref={(el) => {
+                  inputRefs.current[i] = el;
+                }}
                 className="otp-box"
                 value={digit}
                 maxLength={1}
@@ -241,7 +270,7 @@ export default function ConfirmRegistration() {
 
           <div className="resend-row">
             Didn't receive code?
-            <button className="resend-btn" onClick={() => alert("Mock resend")}>
+            <button className="resend-btn" onClick={() => navigate("/seller/signup")}>
               Resend
             </button>
           </div>

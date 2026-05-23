@@ -20,7 +20,7 @@ const initialOrders: Order[] = [
 ];
 
 export default function SajiloMartOrders() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders] = useState<Order[]>(initialOrders);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeNav, setActiveNav] = useState("Orders Management");
 

@@ -4,7 +4,7 @@ import AdminNavbar from "./AdminNavbar";
 import { FaUserTie } from "react-icons/fa";
 import axios from "axios";
 
-const API_BASE = "http://localhost:8000/api/seller";
+const API_BASE = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/api/seller`;
 
 interface Seller {
   id: number;

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import WarehouseStaffSidebar from "./WarehouseStaffSidebar";
 import WarehouseStaffNavbar from "./WarehouseStaffNavbar";
-import { FaWarehouse, FaBoxOpen, FaCheckCircle } from "react-icons/fa";
 
 type Order = {
   id: string;

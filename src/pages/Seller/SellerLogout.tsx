@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export default function SajiloMartLogout() {
-  const [activeNav, setActiveNav] = useState("Logout");
+  const [, setActiveNav] = useState("Logout");
   const [showModal, setShowModal] = useState(true);
 
   const navItems = [

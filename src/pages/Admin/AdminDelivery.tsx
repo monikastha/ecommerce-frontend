@@ -182,6 +182,11 @@ const AdminDelivery: React.FC = () => {
 
             {/* TABLE */}
             <div className="tableBox">
+              {error && (
+                <div style={{ padding: "14px 16px", color: "#b91c1c", background: "#fee2e2", fontSize: "13px" }}>
+                  {error}
+                </div>
+              )}
               <table>
                 <thead>
                   <tr>

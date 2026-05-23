@@ -83,7 +83,7 @@ const AdminUpdateDelivery: React.FC = () => {
     setLoading(true);
 
     try {
-      const payload = { ...formData };
+      const payload: Partial<typeof formData> = { ...formData };
       // Remove password if empty (don't update it)
       if (!payload.password) delete payload.password;
 
