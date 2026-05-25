@@ -69,7 +69,7 @@ const WarehouseStaffDashboard = () => {
 
               <div className="card" onClick={() => navigate("/warehouse/orders")}>
                 <div>
-                  <h3>Total Orders</h3>
+                  <h3>Total Stock</h3>
                   <h2>120</h2>
                 </div>
                 <FaClipboardList className="icon" />
@@ -77,7 +77,7 @@ const WarehouseStaffDashboard = () => {
 
               <div className="card" onClick={() => navigate("/warehouse/orders?filter=Pending")}>
                 <div>
-                  <h3>Pending Orders</h3>
+                  <h3>Out of Stock</h3>
                   <h2>30</h2>
                 </div>
                 <FaClock className="icon" />
@@ -85,7 +85,7 @@ const WarehouseStaffDashboard = () => {
 
               <div className="card" onClick={() => navigate("/warehouse/orders?filter=Completed")}>
                 <div>
-                  <h3>Completed Orders</h3>
+                  <h3>Instock</h3>
                   <h2>80</h2>
                 </div>
                 <FaCheckCircle className="icon" />
