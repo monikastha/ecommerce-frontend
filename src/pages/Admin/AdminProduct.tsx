@@ -1,243 +1,157 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 import { FaBoxOpen } from "react-icons/fa";
 
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+type Product = {
+  id: number;
+  seller_name?: string;
+  name: string;
+  category_name?: string;
+  price: string;
+  image?: string;
+  status: "pending" | "approved" | "rejected";
+  is_published: boolean;
+};
+
 const AdminProduct: React.FC = () => {
   const [search, setSearch] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_ORIGIN}/api/products/`);
+      setProducts(res.data);
+    } catch (error) {
+      console.error("Failed to load products", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const updateStatus = async (id: number, action: "approve" | "reject") => {
+    if (!window.confirm(`${action === "approve" ? "Approve" : "Reject"} this product?`)) return;
+    try {
+      await axios.post(`${API_ORIGIN}/api/products/${id}/${action}/`);
+      fetchProducts();
+    } catch (error) {
+      alert(`Failed to ${action} product`);
+    }
+  };
+
+  const filteredProducts = useMemo(
+    () =>
+      products.filter((product) => {
+        const query = search.toLowerCase();
+        return (
+          product.name.toLowerCase().includes(query) ||
+          (product.seller_name || "").toLowerCase().includes(query) ||
+          (product.category_name || "").toLowerCase().includes(query)
+        );
+      }),
+    [products, search]
+  );
+
+  const imageUrl = (path?: string) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
 
   return (
     <>
       <style>{`
-
-        *{
-          margin:0;
-          padding:0;
-          box-sizing:border-box;
-          font-family:'Poppins',sans-serif;
-        }
-
-        .wrapper {
-          display: flex;
-        }
-
-        .sidebar {
-          width: 260px;
-          position: fixed;
-          top: 0;
-          left: 0;
-          height: 100vh;
-        }
-
-        .main {
-          flex: 1;
-          margin-left: 260px;
-          background: #ffffff;
-          min-height: 100vh;
-        }
-
-        .container {
-          padding: 25px;
-        }
-
-        /* HEADER */
-        .headerBox {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #fff;
-          padding: 20px 22px;
-          border-radius: 14px;
-          margin-bottom: 18px;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-          flex-wrap: wrap;
-          gap: 15px;
-        }
-
-        .title-section {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-
-        .header-icon {
-          width: 52px;
-          height: 52px;
-          background: linear-gradient(135deg,#2563eb,#3b82f6);
-          color: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 14px;
-          font-size: 20px;
-        }
-
-        .title {
-          font-size: 22px;
-          font-weight: 700;
-          color:#0f172a;
-        }
-
-        .subtitle {
-          font-size: 13px;
-          color: #6b7280;
-          margin-top: 4px;
-        }
-
-        .actions {
-          display: flex;
-          align-items: center;
-        }
-
-        /* ✅ CATEGORY STYLE SEARCH BAR */
-        .search {
-          width: 200px;
-          padding: 10px 12px;
-          border-radius: 10px;
-          border: 1px solid #d1d5db;
-          outline: none;
-          font-size: 13px;
-          transition: 0.2s;
-        }
-
-        .search:focus {
-          border-color: #2563eb;
-          box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
-        }
-
-        /* TABLE */
-        .tableBox {
-          background: #fff;
-          padding: 15px;
-          border-radius: 14px;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        th {
-          text-align: left;
-          padding: 14px;
-          font-size: 13px;
-          background: #f8fafc;
-          color: #475569;
-        }
-
-        td {
-          padding: 14px;
-          border-top: 1px solid #f1f5f9;
-          font-size: 13px;
-          color:#334155;
-        }
-
-        tr:hover {
-          background: #f9fafb;
-        }
-
-        .empty {
-          text-align: center;
-          padding: 35px;
-          color: #94a3b8;
-          font-size: 13px;
-        }
-
-        /* RESPONSIVE */
-        @media(max-width:900px){
-          .search{
-            width:100%;
-          }
-
-          .actions{
-            width:100%;
-          }
-        }
-
+        *{ margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+        .wrapper{ display:flex; }
+        .sidebar{ width:260px; position:fixed; top:0; left:0; height:100vh; }
+        .main{ flex:1; margin-left:260px; background:#ffffff; min-height:100vh; }
+        .container{ padding:25px; }
+        .headerBox{ display:flex; justify-content:space-between; align-items:center; background:#fff; padding:20px 22px; border-radius:14px; margin-bottom:18px; box-shadow:0 8px 20px rgba(0,0,0,0.06); flex-wrap:wrap; gap:15px; }
+        .title-section{ display:flex; align-items:center; gap:14px; }
+        .header-icon{ width:52px; height:52px; background:linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; display:flex; align-items:center; justify-content:center; border-radius:14px; font-size:20px; }
+        .title{ font-size:22px; font-weight:700; color:#0f172a; }
+        .subtitle{ font-size:13px; color:#6b7280; margin-top:4px; }
+        .search{ width:240px; padding:10px 12px; border-radius:10px; border:1px solid #d1d5db; outline:none; font-size:13px; }
+        .tableBox{ background:#fff; padding:15px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,0.05); overflow-x:auto; }
+        table{ width:100%; border-collapse:collapse; min-width:900px; }
+        th{ text-align:left; padding:14px; font-size:13px; background:#f8fafc; color:#475569; }
+        td{ padding:14px; border-top:1px solid #f1f5f9; font-size:13px; color:#334155; vertical-align:middle; }
+        tr:hover{ background:#f9fafb; }
+        .empty{ text-align:center; padding:35px; color:#94a3b8; font-size:13px; }
+        .status{ padding:5px 11px; border-radius:999px; font-size:12px; font-weight:700; }
+        .pending{ background:#fef3c7; color:#b45309; }
+        .approved{ background:#dcfce7; color:#166534; }
+        .rejected{ background:#fee2e2; color:#991b1b; }
+        .productImg{ width:52px; height:52px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0; }
+        .actionBtn{ border:none; border-radius:7px; color:white; padding:7px 10px; margin-right:6px; cursor:pointer; font-weight:600; font-size:12px; }
+        .approve{ background:#16a34a; }
+        .reject{ background:#dc2626; }
       `}</style>
 
       <div className="wrapper">
-
-        {/* SIDEBAR */}
-        <div className="sidebar">
-          <AdminSidebar />
-        </div>
-
-        {/* MAIN */}
+        <div className="sidebar"><AdminSidebar /></div>
         <div className="main">
-
           <AdminNavbar />
-
           <div className="container">
-
-            {/* HEADER */}
             <div className="headerBox">
-
               <div className="title-section">
-
-                <div className="header-icon">
-                  <FaBoxOpen />
-                </div>
-
+                <div className="header-icon"><FaBoxOpen /></div>
                 <div>
                   <h2 className="title">Product Management</h2>
-                  <p className="subtitle">
-                    Manage seller products, pricing, and status
-                  </p>
+                  <p className="subtitle">Approve, reject, and review seller products</p>
                 </div>
-
               </div>
-
-              {/* SEARCH (CATEGORY STYLE) */}
-              <div className="actions">
-
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="search"
-                />
-
-              </div>
-
+              <input type="text" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="search" />
             </div>
 
-            {/* TABLE */}
             <div className="tableBox">
-
               <table>
-
                 <thead>
                   <tr>
-                    <th>Seller ID</th>
-                    <th>Seller Name</th>
+                    <th>ID</th>
+                    <th>Seller</th>
                     <th>Product Name</th>
                     <th>Category</th>
                     <th>Price</th>
                     <th>Image</th>
                     <th>Status</th>
+                    <th>Published</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  <tr>
-                    <td colSpan={8} className="empty">
-                      No product data available
-                    </td>
-                  </tr>
+                  {loading ? (
+                    <tr><td colSpan={9} className="empty">Loading products...</td></tr>
+                  ) : filteredProducts.length === 0 ? (
+                    <tr><td colSpan={9} className="empty">No product data available</td></tr>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <tr key={product.id}>
+                        <td>#{product.id}</td>
+                        <td>{product.seller_name || "-"}</td>
+                        <td><strong>{product.name}</strong></td>
+                        <td>{product.category_name || "-"}</td>
+                        <td>Rs. {product.price}</td>
+                        <td>{product.image ? <img src={imageUrl(product.image)} alt={product.name} className="productImg" /> : "-"}</td>
+                        <td><span className={`status ${product.status}`}>{product.status}</span></td>
+                        <td>{product.is_published ? "Yes" : "No"}</td>
+                        <td>
+                          <button className="actionBtn approve" onClick={() => updateStatus(product.id, "approve")}>Approve</button>
+                          <button className="actionBtn reject" onClick={() => updateStatus(product.id, "reject")}>Reject</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
-
               </table>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
     </>
   );

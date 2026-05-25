@@ -1,13 +1,14 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
 import axios from "axios";
 
 const API_BASE = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/api/productcategory/categories/`;
 
-const AssistantAddCategory: React.FC = () => {
+const AssistantUpdateCategory: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -15,9 +16,35 @@ const AssistantAddCategory: React.FC = () => {
   });
 
   const [image, setImage] = useState<File | null>(null);
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const getFullUrl = (path: string | null) => {
+    if (!path) return "";
+    return path.startsWith("http") ? path : `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}${path}`;
+  };
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${API_BASE}${id}/`);
+        setFormData({
+          name: res.data.name,
+          description: res.data.description || "",
+        });
+        setCurrentImage(res.data.image);
+      } catch (err) {
+        alert("Failed to load category data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategory();
+  }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,7 +62,6 @@ const AssistantAddCategory: React.FC = () => {
   const validate = () => {
     let temp: any = {};
     if (!formData.name.trim()) temp.name = "Category name is required";
-    if (!formData.description.trim()) temp.description = "Description is required";
     setErrors(temp);
     return Object.keys(temp).length === 0;
   };
@@ -44,24 +70,25 @@ const AssistantAddCategory: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
 
-    setLoading(true);
+    setSubmitting(true);
     const form = new FormData();
     form.append("name", formData.name);
     form.append("description", formData.description);
     form.append("is_active", "true");
+
     if (image) form.append("image", image);
 
     try {
-      await axios.post(API_BASE, form, {
+      await axios.put(`${API_BASE}${id}/`, form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert("Category added successfully!");
+      alert("Category updated successfully!");
       navigate("/assistant/category");
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.name?.[0] || "Failed to add category");
+      alert(err.response?.data?.name?.[0] || "Failed to update category");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -160,11 +187,11 @@ const AssistantAddCategory: React.FC = () => {
           color: #334155;
         }
 
-        .preview-img {
-          max-width: 250px;
-          margin-top: 12px;
+        .preview-img, .current-img {
+          max-width: 280px;
+          margin-top: 10px;
           border-radius: 12px;
-          border: 1px solid #e2e8f0;
+          border: 2px solid #e2e8f0;
         }
       `}</style>
 
@@ -176,60 +203,73 @@ const AssistantAddCategory: React.FC = () => {
 
           <div className="container">
             <div className="card">
-              <h2>Add New Category</h2>
+              <h2>Update Category</h2>
 
-              <form onSubmit={handleSubmit}>
-                {/* Category Name */}
-                <div className="form-group">
-                  <label>Category Name:</label>
-                  <input
-                    name="name"
-                    placeholder="Enter category name"
-                    value={formData.name}
-                    onChange={handleChange}
-                  />
-                  {errors.name && <p className="error">{errors.name}</p>}
-                </div>
-
-                {/* Description */}
-                <div className="form-group">
-                  <label>Description:</label>
-                  <textarea
-                    name="description"
-                    placeholder="Enter category description"
-                    value={formData.description}
-                    onChange={handleChange}
-                  />
-                  {errors.description && <p className="error">{errors.description}</p>}
-                </div>
-
-                {/* Image Upload */}
-                <div className="form-group">
-                  <label>Category Image:</label>
-                  <input type="file" accept="image/*" onChange={handleImageChange} />
-                </div>
-
-                {preview && (
+              {loading ? (
+                <p style={{ textAlign: "center", padding: "40px" }}>Loading category data...</p>
+              ) : (
+                <form onSubmit={handleSubmit}>
                   <div className="form-group">
-                    <label>Image Preview</label>
-                    <img src={preview} alt="preview" className="preview-img" />
+                    <label>Category Name <span style={{ color: "red" }}>*</span></label>
+                    <input
+                      name="name"
+                      placeholder="Enter category name"
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
+                    {errors.name && <p className="error">{errors.name}</p>}
                   </div>
-                )}
 
-                {/* Buttons */}
-                <div className="btnRow">
-                  <button
-                    type="button"
-                    className="cancelBtn"
-                    onClick={() => navigate("/assistant/category")}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="submitBtn" disabled={loading}>
-                    {loading ? "Saving..." : "Add Category"}
-                  </button>
-                </div>
-              </form>
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea
+                      name="description"
+                      placeholder="Enter category description"
+                      value={formData.description}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  {/* Current Image */}
+                  {currentImage && !preview && (
+                    <div className="form-group">
+                      <label>Current Image</label>
+                      <img
+                        src={getFullUrl(currentImage)}
+                        alt="Current"
+                        className="current-img"
+                      />
+                    </div>
+                  )}
+
+                  {/* New Image Upload */}
+                  <div className="form-group">
+                    <label>Change Image (Optional)</label>
+                    <input type="file" accept="image/*" onChange={handleImageChange} />
+                  </div>
+
+                  {/* Preview */}
+                  {preview && (
+                    <div className="form-group">
+                      <label>New Image Preview</label>
+                      <img src={preview} alt="preview" className="preview-img" />
+                    </div>
+                  )}
+
+                  <div className="btnRow">
+                    <button
+                      type="button"
+                      className="cancelBtn"
+                      onClick={() => navigate("/assistant/category")}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" className="submitBtn" disabled={submitting}>
+                      {submitting ? "Updating..." : "Update Category"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>
@@ -238,4 +278,4 @@ const AssistantAddCategory: React.FC = () => {
   );
 };
 
-export default AssistantAddCategory;
+export default AssistantUpdateCategory;

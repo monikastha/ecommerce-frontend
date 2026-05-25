@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,17 +10,28 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 
-const AdminNavbar = () => {
+const SellerNavbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ Time-based greeting (Nepal time works automatically from browser)
+  const navigate = useNavigate();
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
     if (hour < 17) return "Good Afternoon";
     if (hour < 21) return "Good Evening";
     return "Good Night";
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/login";
+  };
+
+  const handleProfile = () => {
+    navigate("/seller/profile");
+    setProfileOpen(false);
   };
 
   useEffect(() => {
@@ -53,11 +65,6 @@ const AdminNavbar = () => {
           z-index:100;
         }
 
-        .navbar-left{
-          display:flex;
-          flex-direction:column;
-        }
-
         .navbar-left h2{
           font-size:18px;
           margin:0;
@@ -77,7 +84,6 @@ const AdminNavbar = () => {
           gap:15px;
         }
 
-        /* ✅ SEARCH FIXED */
         .search-box{
           display:flex;
           align-items:center;
@@ -85,16 +91,13 @@ const AdminNavbar = () => {
           background:#f1f5f9;
           padding:10px 14px;
           border-radius:12px;
-
           width:260px;
-          flex-shrink:0;   /* 🔥 IMPORTANT FIX */
-          border:1px solid transparent;
+          flex-shrink:0;
           transition:0.3s;
         }
 
         .search-box:focus-within{
           background:#fff;
-          border-color:#2563eb;
           box-shadow:0 0 0 3px rgba(37,99,235,0.12);
         }
 
@@ -106,16 +109,10 @@ const AdminNavbar = () => {
           font-size:13px;
         }
 
-        .search-icon{
-          color:#94a3b8;
-        }
-
-        /* ICON */
         .icon{
           font-size:18px;
           cursor:pointer;
           color:#475569;
-          transition:0.2s;
         }
 
         .icon:hover{
@@ -123,7 +120,6 @@ const AdminNavbar = () => {
           transform:scale(1.1);
         }
 
-        /* PROFILE */
         .profile{
           width:42px;
           height:42px;
@@ -132,11 +128,6 @@ const AdminNavbar = () => {
           border:2px solid #e2e8f0;
         }
 
-        .profile:hover{
-          border-color:#2563eb;
-        }
-
-        /* DROPDOWN */
         .dropdown{
           position:absolute;
           top:55px;
@@ -156,7 +147,6 @@ const AdminNavbar = () => {
           align-items:center;
           gap:10px;
           color:#334155;
-          transition:0.2s;
         }
 
         .dropdown div:hover{
@@ -167,7 +157,6 @@ const AdminNavbar = () => {
           color:#ef4444 !important;
         }
 
-        /* RESPONSIVE */
         @media(max-width:768px){
           .search-box{
             display:none;
@@ -179,8 +168,8 @@ const AdminNavbar = () => {
 
         {/* LEFT */}
         <div className="navbar-left">
-          <h2>{getGreeting()}, Admin 👋</h2>
-          <p>Welcome back to your dashboard</p>
+          <h2>{getGreeting()}, Seller 👋</h2>
+          <p>Manage your store efficiently</p>
         </div>
 
         {/* RIGHT */}
@@ -188,7 +177,7 @@ const AdminNavbar = () => {
 
           {/* SEARCH */}
           <div className="search-box">
-            <FontAwesomeIcon icon={faSearch} className="search-icon" />
+            <FontAwesomeIcon icon={faSearch} />
             <input placeholder="Search products, orders..." />
           </div>
 
@@ -206,15 +195,17 @@ const AdminNavbar = () => {
 
             {profileOpen && (
               <div className="dropdown">
-                <div>
+
+                <div onClick={handleProfile}>
                   <FontAwesomeIcon icon={faUser} />
                   Profile
                 </div>
 
-                <div className="logout">
+                <div className="logout" onClick={handleLogout}>
                   <FontAwesomeIcon icon={faRightFromBracket} />
                   Logout
                 </div>
+
               </div>
             )}
           </div>
@@ -225,4 +216,4 @@ const AdminNavbar = () => {
   );
 };
 
-export default AdminNavbar;
+export default SellerNavbar;
