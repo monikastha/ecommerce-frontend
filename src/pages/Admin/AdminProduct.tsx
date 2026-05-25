@@ -9,9 +9,13 @@ const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 type Product = {
   id: number;
   seller_name?: string;
+  seller_email?: string;
   name: string;
+  code?: string;
   category_name?: string;
   price: string;
+  quantity: number;
+  description?: string;
   image?: string;
   status: "pending" | "approved" | "rejected";
   is_published: boolean;
@@ -41,10 +45,23 @@ const AdminProduct: React.FC = () => {
   const updateStatus = async (id: number, action: "approve" | "reject") => {
     if (!window.confirm(`${action === "approve" ? "Approve" : "Reject"} this product?`)) return;
     try {
-      await axios.post(`${API_ORIGIN}/api/products/${id}/${action}/`);
+      const body = action === "reject"
+        ? { rejection_reason: window.prompt("Reason for rejection (optional)") || "" }
+        : undefined;
+      await axios.post(`${API_ORIGIN}/api/products/${id}/${action}/`, body);
       fetchProducts();
-    } catch (error) {
-      alert(`Failed to ${action} product`);
+    } catch (error: any) {
+      alert(error?.response?.data?.error || `Failed to ${action} product`);
+    }
+  };
+
+  const updatePublication = async (id: number, publish: boolean) => {
+    if (!window.confirm(`${publish ? "Publish" : "Unpublish"} this product?`)) return;
+    try {
+      await axios.post(`${API_ORIGIN}/api/products/${id}/${publish ? "publish" : "unpublish"}/`);
+      fetchProducts();
+    } catch (error: any) {
+      alert(error?.response?.data?.error || `Failed to ${publish ? "publish" : "unpublish"} product`);
     }
   };
 
@@ -91,6 +108,9 @@ const AdminProduct: React.FC = () => {
         .actionBtn{ border:none; border-radius:7px; color:white; padding:7px 10px; margin-right:6px; cursor:pointer; font-weight:600; font-size:12px; }
         .approve{ background:#16a34a; }
         .reject{ background:#dc2626; }
+        .publish{ background:#2563eb; }
+        .unpublish{ background:#64748b; }
+        .approvedLabel{ display:inline-block; padding:7px 10px; margin-right:6px; border-radius:7px; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; }
       `}</style>
 
       <div className="wrapper">
@@ -118,31 +138,50 @@ const AdminProduct: React.FC = () => {
                     <th>Product Name</th>
                     <th>Category</th>
                     <th>Price</th>
+                    <th>Stock</th>
                     <th>Image</th>
-                    <th>Status</th>
+                    <th>Description</th>
                     <th>Published</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={9} className="empty">Loading products...</td></tr>
+                    <tr><td colSpan={11} className="empty">Loading products...</td></tr>
                   ) : filteredProducts.length === 0 ? (
-                    <tr><td colSpan={9} className="empty">No product data available</td></tr>
+                    <tr><td colSpan={11} className="empty">No product data available</td></tr>
                   ) : (
                     filteredProducts.map((product) => (
                       <tr key={product.id}>
                         <td>#{product.id}</td>
-                        <td>{product.seller_name || "-"}</td>
-                        <td><strong>{product.name}</strong></td>
+                        <td>
+                          <strong>{product.seller_name || "-"}</strong>
+                          {product.seller_email && <div style={{ color: "#64748b", fontSize: "12px" }}>{product.seller_email}</div>}
+                        </td>
+                        <td>
+                          <strong>{product.name}</strong>
+                          {product.code && <div style={{ color: "#64748b", fontSize: "12px" }}>Code: {product.code}</div>}
+                        </td>
                         <td>{product.category_name || "-"}</td>
                         <td>Rs. {product.price}</td>
+                        <td>{product.quantity}</td>
                         <td>{product.image ? <img src={imageUrl(product.image)} alt={product.name} className="productImg" /> : "-"}</td>
-                        <td><span className={`status ${product.status}`}>{product.status}</span></td>
-                        <td>{product.is_published ? "Yes" : "No"}</td>
+                        <td style={{ maxWidth: "260px", whiteSpace: "normal" }}>{product.description || "-"}</td>
+                        <td>{product.is_published ? "published" : "unpublished"}</td>
                         <td>
-                          <button className="actionBtn approve" onClick={() => updateStatus(product.id, "approve")}>Approve</button>
-                          <button className="actionBtn reject" onClick={() => updateStatus(product.id, "reject")}>Reject</button>
+                          {product.status === "approved" ? (
+                            <span className="approvedLabel">Approved</span>
+                          ) : (
+                            <>
+                              <button className="actionBtn approve" onClick={() => updateStatus(product.id, "approve")}>Approve</button>
+                              <button className="actionBtn reject" onClick={() => updateStatus(product.id, "reject")}>Reject</button>
+                            </>
+                          )}
+                          {product.is_published ? (
+                            <button className="actionBtn unpublish" onClick={() => updatePublication(product.id, false)}>Unpublish</button>
+                          ) : (
+                            <button className="actionBtn publish" onClick={() => updatePublication(product.id, true)}>Publish</button>
+                          )}
                         </td>
                       </tr>
                     ))

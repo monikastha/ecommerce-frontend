@@ -24,7 +24,7 @@ const SellerSidebar = () => {
         .sidebar {
           width: 260px;
           min-height: 100vh;
-          background: #445C6D;
+          background: #0B3E60;
           color: white;
           font-family: sans-serif;
           position: fixed;

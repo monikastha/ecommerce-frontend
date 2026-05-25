@@ -1,66 +1,82 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaBoxOpen, FaSearch } from "react-icons/fa";
+import { FaBoxOpen } from "react-icons/fa";
+
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 type Product = {
   id: number;
-  seller_name: string;
+  seller_name?: string;
+  seller_email?: string;
   name: string;
-  category_name: string;
+  code?: string;
+  category_name?: string;
   price: string;
+  quantity: number;
+  description?: string;
+  image?: string;
   status: "pending" | "approved" | "rejected";
   is_published: boolean;
 };
 
-// Mock Data
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    seller_name: "Tech Store Nepal",
-    name: "iPhone 15 Pro",
-    category_name: "Smartphones",
-    price: "125000",
-    status: "pending",
-    is_published: false,
-  },
-  {
-    id: 2,
-    seller_name: "Fashion Hub",
-    name: "Wireless Headphones",
-    category_name: "Electronics",
-    price: "4500",
-    status: "approved",
-    is_published: true,
-  },
-  {
-    id: 3,
-    seller_name: "Home Essentials",
-    name: "Smart LED Bulb",
-    category_name: "Home Appliances",
-    price: "1200",
-    status: "rejected",
-    is_published: false,
-  },
-];
-
 const AssistantProductManagement: React.FC = () => {
   const [search, setSearch] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_ORIGIN}/api/products/`);
+      setProducts(res.data);
+    } catch (error) {
+      console.error("Failed to load products", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const filtered = useMemo(() => 
-    mockProducts.filter((product) => {
+    products.filter((product) => {
       const query = search.toLowerCase();
       return (
         product.name.toLowerCase().includes(query) ||
-        product.seller_name.toLowerCase().includes(query) ||
-        product.category_name.toLowerCase().includes(query)
+        (product.seller_name || "").toLowerCase().includes(query) ||
+        (product.category_name || "").toLowerCase().includes(query)
       );
-    }), [search]
+    }), [products, search]
   );
 
-  const updateStatus = (id: number, action: "approve" | "reject") => {
-    alert(`Product #${id} would be ${action}ed (Demo Mode)`);
+  const updateStatus = async (id: number, action: "approve" | "reject") => {
+    if (!window.confirm(`${action === "approve" ? "Approve" : "Reject"} this product?`)) return;
+    try {
+      const body = action === "reject"
+        ? { rejection_reason: window.prompt("Reason for rejection (optional)") || "" }
+        : undefined;
+      await axios.post(`${API_ORIGIN}/api/products/${id}/${action}/`, body);
+      fetchProducts();
+    } catch (error: any) {
+      alert(error?.response?.data?.error || `Failed to ${action} product`);
+    }
   };
+
+  const updatePublication = async (id: number, publish: boolean) => {
+    if (!window.confirm(`${publish ? "Publish" : "Unpublish"} this product?`)) return;
+    try {
+      await axios.post(`${API_ORIGIN}/api/products/${id}/${publish ? "publish" : "unpublish"}/`);
+      fetchProducts();
+    } catch (error: any) {
+      alert(error?.response?.data?.error || `Failed to ${publish ? "publish" : "unpublish"} product`);
+    }
+  };
+
+  const imageUrl = (path?: string) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
 
   return (
     <>
@@ -133,6 +149,10 @@ const AssistantProductManagement: React.FC = () => {
         }
         .approve { background: #10b981; }
         .reject { background: #ef4444; }
+        .publish { background: #2563eb; }
+        .unpublish { background: #64748b; }
+        .approvedLabel { display: inline-block; padding: 8px 14px; margin-right: 6px; border-radius: 8px; background: #d1fae5; color: #047857; font-size: 13px; font-weight: 700; }
+        .productImg { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; }
       `}</style>
 
       <div className="dashboard-container">
@@ -146,7 +166,7 @@ const AssistantProductManagement: React.FC = () => {
                 <div className="header-icon"><FaBoxOpen /></div>
                 <div>
                   <h2 className="title">Product Management</h2>
-                  <p className="subtitle">Review and manage seller products (Demo Mode)</p>
+                  <p className="subtitle">Review and manage seller products</p>
                 </div>
               </div>
 
@@ -168,27 +188,52 @@ const AssistantProductManagement: React.FC = () => {
                     <th>Product Name</th>
                     <th>Category</th>
                     <th>Price</th>
+                    <th>Stock</th>
+                    <th>Image</th>
+                    <th>Description</th>
                     <th>Status</th>
                     <th>Published</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={8} style={{ textAlign: "center", padding: "60px" }}>No products found</td></tr>
+                  {loading ? (
+                    <tr><td colSpan={11} style={{ textAlign: "center", padding: "60px" }}>Loading products...</td></tr>
+                  ) : filtered.length === 0 ? (
+                    <tr><td colSpan={11} style={{ textAlign: "center", padding: "60px" }}>No products found</td></tr>
                   ) : (
                     filtered.map((product) => (
                       <tr key={product.id}>
                         <td><strong>#{product.id}</strong></td>
-                        <td>{product.seller_name}</td>
-                        <td><strong>{product.name}</strong></td>
-                        <td>{product.category_name}</td>
-                        <td>Rs. {product.price}</td>
-                        <td><span className={`status ${product.status}`}>{product.status.toUpperCase()}</span></td>
-                        <td>{product.is_published ? "✅ Yes" : "❌ No"}</td>
                         <td>
-                          <button className="btn approve" onClick={() => updateStatus(product.id, "approve")}>Approve</button>
-                          <button className="btn reject" onClick={() => updateStatus(product.id, "reject")}>Reject</button>
+                          <strong>{product.seller_name || "-"}</strong>
+                          {product.seller_email && <div style={{ color: "#64748b", fontSize: "12px" }}>{product.seller_email}</div>}
+                        </td>
+                        <td>
+                          <strong>{product.name}</strong>
+                          {product.code && <div style={{ color: "#64748b", fontSize: "12px" }}>Code: {product.code}</div>}
+                        </td>
+                        <td>{product.category_name || "-"}</td>
+                        <td>Rs. {product.price}</td>
+                        <td>{product.quantity}</td>
+                        <td>{product.image ? <img src={imageUrl(product.image)} alt={product.name} className="productImg" /> : "-"}</td>
+                        <td style={{ maxWidth: "260px", whiteSpace: "normal" }}>{product.description || "-"}</td>
+                        <td><span className={`status ${product.status}`}>{product.status.toUpperCase()}</span></td>
+                        <td>{product.is_published ? "published" : "unpublished"}</td>
+                        <td>
+                          {product.status === "approved" ? (
+                            <span className="approvedLabel">Approved</span>
+                          ) : (
+                            <>
+                              <button className="btn approve" onClick={() => updateStatus(product.id, "approve")}>Approve</button>
+                              <button className="btn reject" onClick={() => updateStatus(product.id, "reject")}>Reject</button>
+                            </>
+                          )}
+                          {product.is_published ? (
+                            <button className="btn unpublish" onClick={() => updatePublication(product.id, false)}>Unpublish</button>
+                          ) : (
+                            <button className="btn publish" onClick={() => updatePublication(product.id, true)}>Publish</button>
+                          )}
                         </td>
                       </tr>
                     ))

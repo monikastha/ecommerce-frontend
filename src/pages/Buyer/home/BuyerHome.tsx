@@ -1,5 +1,9 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import BuyerNavbar from "../../../components/BuyerNavbar";
+import BuyerFooter from "../../../components/BuyerFooter";
+
 import shoesImg from "../../../assets/shoes4.jpg";
 import Necklace from "../../../assets/accessories2.jpg";
 import iphun from "../../../assets/iphun.jpg";
@@ -13,13 +17,6 @@ import medicine from "../../../assets/medicine.jpg";
 import studyMaterial from "../../../assets/study-material.jpg";
 import cartoon1 from "../../../assets/cartoon1.png";
 import cartoon2 from "../../../assets/cartoon2.png";
-import logoImg from "../../../assets/logo.png";
-import homeLogo from "../../../assets/homeremovebg.png";
-import login from "../../../assets/login.png";
-import signup from "../../../assets/signupRemove.png";
-import account from "../../../assets/accountbgremove.png";
-import logout from "../../../assets/logoutbgremoved.png";
-import cart from "../../../assets/cartbgremove.png";
 
 
 /* ─────────────────────────────────────────────────────────────
@@ -39,7 +36,6 @@ const TOKEN = {
   // bg / surface
   pageBg: "#f0eff4",
   cardBg: "#ffffff",
-  footerBg: "#100025",
   // text
   textPrimary: "#111827",
   textMuted: "#6b7280",
@@ -58,6 +54,8 @@ const topProducts = [
     rating: 4,
     reviews: 128,
     img: shoesImg,
+    category: "Shoes",
+    sold: 432,
   },
   {
     id: 2,
@@ -67,6 +65,8 @@ const topProducts = [
     rating: 4,
     reviews: 97,
     img: Necklace,
+    category: "Accessories",
+    sold: 210,
   },
   {
     id: 3,
@@ -76,6 +76,8 @@ const topProducts = [
     rating: 5,
     reviews: 251,
     img: iphun,
+    category: "Electronics",
+    sold: 1200,
   },
   {
     id: 4,
@@ -85,20 +87,23 @@ const topProducts = [
     rating: 4,
     reviews: 183,
     img: Headphone,
+    category: "Electronics",
+    sold: 560,
   },
 ];
 
 const categories = [
-  { id: 1, title: "Fashion", sub: "Trendy Outfits", img: trendy },
-  { id: 2, title: "Electronics", sub: "Latest Gadgets", img: laptop },
-  { id: 3, title: "Home Goods", sub: "Home Essentials", img: homeGoods },
-  { id: 4, title: "Cosmetics", sub: "Beauty Products", img: cosmetics },
-  { id: 5, title: "Medicine", sub: "Healthcare", img: medicine },
+  { id: 1, title: "Fashion", sub: "Trendy Outfits", img: trendy, path: "/fashion" },
+  { id: 2, title: "Electronics", sub: "Latest Gadgets", img: laptop, path: "/electronics" },
+  { id: 3, title: "Home Goods", sub: "Home Essentials", img: homeGoods, path: "/homegoods" },
+  { id: 4, title: "Cosmetics", sub: "Beauty Products", img: cosmetics, path: "/cosmetics" },
+  { id: 5, title: "Medicine", sub: "Healthcare", img: medicine, path: "/medicine" },
   {
     id: 6,
     title: "Study Materials",
     sub: "Books & Guides",
     img: studyMaterial,
+    path: "/studymaterials",
   },
 ];
 
@@ -117,26 +122,6 @@ const reviews = [
     rating: 5,
     img: cartoon2,
   },
-];
-
-const NAV_ITEMS = [
-  { label: "Home", emoji: homeLogo },
-  { label: "Login", emoji: login },
-  { label: "SignUp", emoji: signup },
-  { label: "Account", emoji: account },
-  { label: "Logout", emoji: logout },
-  { label: "Cart", emoji: cart },
-];
-
-const CAT_TABS = [
-  "Fashion",
-  "Electronics",
-  "Home Goods",
-  "Cosmetics",
-  "Medicine",
-  "Study Materials",
-  "Shoes",
-  "Others",
 ];
 
 const FEATURES = [
@@ -202,27 +187,15 @@ const Stars = ({ n }: { n: number }) => (
    COMPONENT
 ───────────────────────────────────────────────────────── */
 export default function SajiloMart() {
-  // const [ setHeroImg] = useState<string>(bbGirl);
-  const [activeCat, setActiveCat] = useState("Fashion");
-  const [activeNav, setActiveNav] = useState("Home");
   const [liked, setLiked] = useState<Record<number, boolean>>({});
   const [cartQty, setCartQty] = useState(0);
-  const [email, setEmail] = useState("");
-  const [subbed, setSubbed] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = (ev) => (ev.target?.result as string);
-    r.readAsDataURL(f);
+  const openProduct = (product: (typeof topProducts)[number]) => {
+    navigate(`/product/${product.id}`, { state: product });
   };
 
   /* ── shared tw snippets ── */
-  const btnPrimary =
-    "bg-violet-600 hover:bg-violet-700 text-white font-semibold transition-colors duration-150 cursor-pointer border-none";
   const sectionHead = "flex items-center justify-between mb-5";
   const h2Class = "text-xl font-extrabold text-gray-900 tracking-tight";
   const viewAll =
@@ -236,107 +209,7 @@ export default function SajiloMart() {
         fontFamily: "'Segoe UI',system-ui,sans-serif",
       }}
     >
-      {/* ══════════════════════════════════════
-          HEADER
-      ══════════════════════════════════════ */}
-      <header className="bg-white/95 backdrop-blur border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          {/* Row 1 */}
-          <div className="flex items-center gap-3 py-2">
-            {/* Logo */}
-            <a
-              href="#"
-              className="flex items-center gap-2 shrink-0 no-underline"
-            >
-              <div className="w-10 h-10 rounded-full overflow-hidden shadow-md shadow-green-200 ring-2 ring-green-400/30 shrink-0 flex items-center justify-center bg-white">
-                <img
-                  src={logoImg}
-                  alt="Sajilo Mart"
-                  className="w-10 h-10 object-contain"
-                />
-              </div>
-              <div className="leading-none">
-                <p
-                  className="text-[15px] font-black text-blue-700"
-                  style={{ fontFamily: "Georgia,serif" }}
-                >
-                  Sajilo Mart
-                </p>
-                <p className="text-[9px] text-gray-400 italic mt-0.5">
-                  Shop Anytime, Anywhere
-                </p>
-              </div>
-            </a>
-
-            {/* Search */}
-            <div className="flex flex-1 items-center rounded-full border-2 border-violet-200 overflow-hidden h-9 bg-gray-50 max-w-xl mx-auto">
-              <input
-                type="text"
-                placeholder="Search for products, brands and more..."
-                className="flex-1 h-full px-4 text-sm outline-none bg-transparent border-none text-gray-700 placeholder:text-gray-400"
-              />
-              <button
-                className={`${btnPrimary} w-10 h-9 flex items-center justify-center shrink-0 rounded-none`}
-              >
-                <svg viewBox="0 0 24 24" fill="white" width="15" height="15">
-                  <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Nav icons */}
-            <nav className="flex items-center gap-0.5 shrink-0">
-              {NAV_ITEMS.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    setActiveNav(item.label);
-                    if (item.label === "Login") {
-                      navigate("/login");
-                    }
-                  }}
-                  className={`relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all border-none cursor-pointer
-                    ${
-                      activeNav === item.label
-                        ? "text-violet-700 bg-violet-50 font-bold"
-                        : "text-gray-500 bg-transparent hover:text-violet-600 hover:bg-violet-50"
-                    }`}
-                >
-                  <img
-                    src={item.emoji}
-                    alt="emoji"
-                    className="w-4.25 h-auto object-contain leading-tight"
-                  />
-                  <span>{item.label}</span>
-                  { cartQty > 0 && (
-                    <span className="absolute -top-0.5 right-0.5 min-w-3.5 h-3.5 px-0.5 bg-red-500 text-white rounded-full text-[8px] flex items-center justify-center font-bold leading-none">
-                      {cartQty}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Row 2 — category pills */}
-          <div className="flex gap-2 overflow-x-auto pb-2 pt-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-none]">
-            {CAT_TABS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setActiveCat(c)}
-                className={`shrink-0 px-4 py-1 rounded-full border text-xs font-medium transition-all cursor-pointer
-                  ${
-                    activeCat === c
-                      ? "bg-violet-600 text-white border-violet-600 shadow-sm shadow-violet-300"
-                      : "bg-white text-gray-600 border-gray-300 hover:border-violet-400 hover:text-violet-600"
-                  }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
+      <BuyerNavbar cartQty={cartQty} />
 
       {/* ══════════════════════════════════════
           HERO
@@ -383,10 +256,16 @@ export default function SajiloMart() {
               essentials, and more — all at your fingertips.
             </p>
             <div className="flex flex-wrap gap-3">
-              <button className="bg-yellow-300 hover:bg-yellow-400 text-violet-900 font-extrabold text-sm px-6 py-2.5 rounded-full border-none cursor-pointer transition-all shadow-lg active:scale-95">
+              <button
+                onClick={() => navigate("/buyer/products")}
+                className="bg-yellow-300 hover:bg-yellow-400 text-violet-900 font-extrabold text-sm px-6 py-2.5 rounded-full border-none cursor-pointer transition-all shadow-lg active:scale-95"
+              >
                 Browse Products →
               </button>
-              <button className="bg-transparent hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full border-2 border-white/60 cursor-pointer transition-colors">
+              <button
+                onClick={() => navigate("/buyer/categories")}
+                className="bg-transparent hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full border-2 border-white/60 cursor-pointer transition-colors"
+              >
                 View Offers
               </button>
             </div>
@@ -402,14 +281,6 @@ export default function SajiloMart() {
               alt="Hero Visual"
               className="relative z-20 h-[115%] w-auto object-contain drop-shadow-2xl"
               style={{ marginBottom: "-1px" }} // Ensures it sits flush on the bottom edge
-            />
-
-            <input
-              ref={fileRef}
-              type="file"
-              hidden
-              onChange={onFile}
-              accept="image/*"
             />
           </div>
         </section>
@@ -444,12 +315,15 @@ export default function SajiloMart() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
         <div className={sectionHead}>
           <h2 className={h2Class}>Top sells</h2>
-          <button className={viewAll}>View All Products →</button>
+          <button onClick={() => navigate("/buyer/products")} className={viewAll}>
+            View All Products →
+          </button>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {topProducts.map((p) => (
             <div
               key={p.id}
+              onClick={() => openProduct(p)}
               className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:shadow-violet-100 hover:-translate-y-1 transition-all duration-200 group"
             >
               {/* image area */}
@@ -464,7 +338,10 @@ export default function SajiloMart() {
                 />
                 {/* wishlist */}
                 <button
-                  onClick={() => setLiked((l) => ({ ...l, [p.id]: !l[p.id] }))}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setLiked((l) => ({ ...l, [p.id]: !l[p.id] }));
+                  }}
                   className={`absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white shadow flex items-center justify-center border-none cursor-pointer text-sm transition-colors
                     ${liked[p.id] ? "text-red-500" : "text-gray-300 hover:text-red-400"}`}
                 >
@@ -490,11 +367,20 @@ export default function SajiloMart() {
                   </span>
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded-lg border-none cursor-pointer transition-colors">
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openProduct(p);
+                    }}
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded-lg border-none cursor-pointer transition-colors"
+                  >
                     Buy Now
                   </button>
                   <button
-                    onClick={() => setCartQty((c) => c + 1)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setCartQty((c) => c + 1);
+                    }}
                     className="flex-1 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold py-2 rounded-lg border-none cursor-pointer transition-colors"
                   >
                     Add to cart
@@ -512,12 +398,15 @@ export default function SajiloMart() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
         <div className={sectionHead}>
           <h2 className={h2Class}>Shop by Category</h2>
-          <button className={viewAll}>View All Categories →</button>
+          <button onClick={() => navigate("/buyer/categories")} className={viewAll}>
+            View All Categories →
+          </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {categories.map((c) => (
             <div
               key={c.id}
+              onClick={() => navigate(c.path)}
               className="bg-white rounded-xl border border-gray-100 flex items-center gap-4 p-3 cursor-pointer hover:shadow-md hover:shadow-violet-100 hover:border-violet-200 transition-all duration-200 group"
             >
               <div className="w-16 h-14 rounded-lg overflow-hidden shrink-0 bg-gray-100">
@@ -571,7 +460,9 @@ export default function SajiloMart() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
         <div className={sectionHead}>
           <h2 className={h2Class}>What Our Customers Say</h2>
-          <button className={viewAll}>View All Reviews →</button>
+          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className={viewAll}>
+            Back to Top ↑
+          </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {reviews.map((r) => (
@@ -596,155 +487,7 @@ export default function SajiloMart() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════
-          FOOTER
-      ══════════════════════════════════════ */}
-      <footer
-        className="mt-12 pt-10 pb-4"
-        style={{ background: TOKEN.footerBg, color: "#fff" }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          {/* 4-col grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-8">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center shrink-0">
-                  <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
-                    <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3z" />
-                  </svg>
-                </div>
-                <div>
-                  <p
-                    className="text-base font-black"
-                    style={{ fontFamily: "Georgia,serif" }}
-                  >
-                    Sajilo Mart
-                  </p>
-                  <p className="text-[9px] text-violet-300 italic">
-                    Shop Anytime, Anywhere
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Your trusted online shopping partner for fashion, electronics,
-                home goods and more.
-              </p>
-              {/* social */}
-              <div className="flex gap-2 mt-4">
-                {[
-                  {
-                    cls: "from-orange-400 via-rose-500 to-purple-600 bg-gradient-to-br",
-                    lbl: "📷",
-                  },
-                  { cls: "bg-blue-600", lbl: "f" },
-                  { cls: "bg-sky-400", lbl: "𝕏" },
-                ].map((s) => (
-                  <button
-                    key={s.lbl}
-                    className={`w-8 h-8 rounded-full ${s.cls} text-white text-sm font-bold flex items-center justify-center border-none cursor-pointer hover:opacity-80 transition-opacity`}
-                  >
-                    {s.lbl}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <p className="text-sm font-bold mb-3 text-white">Quick Links</p>
-              {["Home", "About Us", "Products", "Offers", "Contact"].map(
-                (l) => (
-                  <a
-                    key={l}
-                    className="block text-xs text-gray-400 mb-2 cursor-pointer hover:text-violet-300 transition-colors no-underline"
-                  >
-                    {l}
-                  </a>
-                ),
-              )}
-            </div>
-
-            {/* Customer Service */}
-            <div>
-              <p className="text-sm font-bold mb-3 text-white">
-                Customer Service
-              </p>
-              {[
-                "My Account",
-                "Track Order",
-                "Wishlist",
-                "Emergency Fast Delivery",
-                "AI Smart Comparison",
-                "Help Center",
-              ].map((l) => (
-                <a
-                  key={l}
-                  className="block text-xs text-gray-400 mb-2 cursor-pointer hover:text-violet-300 transition-colors no-underline"
-                >
-                  {l}
-                </a>
-              ))}
-            </div>
-
-            {/* Newsletter */}
-            <div>
-              <p className="text-sm font-bold mb-2 text-white">Newsletter</p>
-              <p className="text-xs text-gray-400 leading-relaxed mb-3">
-                Subscribe to get special offers, free giveaways and
-                once-in-a-lifetime deals.
-              </p>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email..."
-                className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#1e0050] text-white text-xs outline-none placeholder:text-gray-500 focus:border-violet-500 transition-colors"
-              />
-              <button
-                onClick={() => {
-                  if (email) setSubbed(true);
-                }}
-                className="w-full mt-2 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold border-none cursor-pointer transition-colors"
-              >
-                {subbed ? "✓ Subscribed!" : "Subscribe"}
-              </button>
-              {/* payment logos */}
-              <div className="flex gap-1.5 mt-3 flex-wrap">
-                {["VISA", "MC", "PayPal", "UPI"].map((p) => (
-                  <span
-                    key={p}
-                    className="bg-white text-gray-800 text-[9px] font-extrabold px-2 py-0.5 rounded tracking-wide"
-                  >
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* bottom bar */}
-          <div className="border-t border-white/10 pt-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <span className="text-xs text-gray-500">
-              © 2026 Sajilo Mart. All rights reserved
-            </span>
-            <div className="flex gap-5">
-              {[
-                "Privacy Policy",
-                "Terms of Service",
-                "Accessibility Statement",
-              ].map((l) => (
-                <span
-                  key={l}
-                  className="text-xs text-gray-500 cursor-pointer hover:text-violet-300 transition-colors"
-                >
-                  {l}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+      <BuyerFooter />
     </div>
   );
 }

@@ -145,7 +145,7 @@ const SignupWay: React.FC = () => {
             </p>
 
             <button
-              onClick={() => navigate("/seller/signup")}
+              onClick={() => navigate("/seller/register")}
               style={{
                 width: "100%",
                 padding: 12,

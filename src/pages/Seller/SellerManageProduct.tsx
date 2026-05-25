@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBox, FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import axios from "axios";
 
 import SellerNavbar from "./SellerNavbar";
 import SellerSidebar from "./SellerSidebar";
+
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 type Product = {
   id: number;
@@ -12,6 +15,7 @@ type Product = {
   category_name?: string;
   price: string;
   quantity: number;
+  description?: string;
   status: "pending" | "approved" | "rejected";
   is_published: boolean;
   image?: string;
@@ -24,18 +28,35 @@ export default function SellerProductManagement() {
   const [loading, setLoading] = useState(true);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
-  // Simulate initial loading
-  useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setProducts([]); // No data
+  const imageUrl = (path?: string) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const sellerId = localStorage.getItem("seller_id");
+      const url = sellerId ? `${API_ORIGIN}/api/products/?seller=${sellerId}` : `${API_ORIGIN}/api/products/`;
+      const res = await axios.get(url);
+      setProducts(res.data);
+    } catch (error) {
+      console.error("Failed to load products", error);
+      setProducts([]);
+    } finally {
       setLoading(false);
-    }, 700);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, []);
 
-  const handleDelete = (id: number, name: string) => {
+  const handleDelete = async (id: number, name: string) => {
     if (!window.confirm(`Delete product "${name}"?`)) return;
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await axios.delete(`${API_ORIGIN}/api/products/${id}/`);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    } catch (error) {
+      alert("Failed to delete product");
+    }
   };
 
   const openZoom = (image: string) => setZoomImage(image);
@@ -266,19 +287,21 @@ export default function SellerProductManagement() {
                   <th>Price</th>
                   <th>Stock</th>
                   <th>Status</th>
+                  <th>Published</th>
+                  <th>Description</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} style={{ textAlign: "center", padding: "80px" }}>
+                    <td colSpan={10} style={{ textAlign: "center", padding: "80px" }}>
                       Loading products...
                     </td>
                   </tr>
                 ) : filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={9} style={{ textAlign: "center", padding: "80px" }}>
+                    <td colSpan={10} style={{ textAlign: "center", padding: "80px" }}>
                       No products found
                     </td>
                   </tr>
@@ -289,10 +312,10 @@ export default function SellerProductManagement() {
                       <td>
                         {product.image ? (
                           <img
-                            src={product.image}
+                            src={imageUrl(product.image)}
                             alt={product.name}
                             className="table-img"
-                            onClick={() => openZoom(product.image!)}
+                            onClick={() => openZoom(imageUrl(product.image))}
                           />
                         ) : (
                           "No Image"
@@ -320,6 +343,9 @@ export default function SellerProductManagement() {
                         <strong style={{ color: product.is_published ? "#16a34a" : "#64748b" }}>
                           {product.is_published ? "Yes" : "No"}
                         </strong>
+                      </td>
+                      <td style={{ maxWidth: "240px", whiteSpace: "normal" }}>
+                        {product.description || "-"}
                       </td>
                       <td className="actions">
                         <button 

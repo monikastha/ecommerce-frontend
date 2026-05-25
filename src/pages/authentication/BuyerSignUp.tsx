@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import logoImg from "../../assets/logo.png";
+import cartoonImg from "../../assets/cartoon1.png";
+
 export default function BuyerSignUp() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -81,18 +84,11 @@ export default function BuyerSignUp() {
           gap: 14px;
         }
 
-        .logo-box {
+        .logo {
           width: 80px;
           height: 80px;
           border-radius: 50%;
-          border: 2px dashed #1a5276;
-          background: rgba(255,255,255,0.55);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 10px;
-          font-weight: 800;
-          color: #1a5276;
+          object-fit: cover;
         }
 
         .brand-text {
@@ -118,27 +114,15 @@ export default function BuyerSignUp() {
         .image-side {
           flex: 0 0 320px;
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           justify-content: center;
           height: 460px;
         }
 
-        .cartoon-placeholder {
+        .cartoon {
           width: 280px;
           height: 380px;
-          border: 2.5px dashed #2980b9;
-          border-radius: 16px;
-          background: rgba(255,255,255,0.35);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          color: #2980b9;
-          font-weight: 800;
-        }
-
-        .cartoon-placeholder .icon {
-          font-size: 48px;
+          object-fit: contain;
         }
 
         .card {
@@ -199,15 +183,6 @@ export default function BuyerSignUp() {
           margin-top: 4px;
         }
 
-        .server-error {
-          background: #fdecea;
-          padding: 10px;
-          border-radius: 8px;
-          color: #c0392b;
-          margin-bottom: 14px;
-          text-align: center;
-        }
-
         .next-btn {
           width: 100%;
           padding: 14px;
@@ -237,7 +212,8 @@ export default function BuyerSignUp() {
 
       <div className="page">
         <nav className="navbar">
-          <div className="logo-box">LOGO</div>
+          <img src={logoImg} alt="Logo" className="logo" />
+
           <div>
             <div className="brand-text">SAJILO MART</div>
             <div className="brand-sub">Shop Anytime Anywhere</div>
@@ -246,18 +222,11 @@ export default function BuyerSignUp() {
 
         <div className="main">
           <div className="image-side">
-            <div className="cartoon-placeholder">
-              <span className="icon">🧒‍♀️</span>
-              Cartoon Image
-            </div>
+            <img src={cartoonImg} alt="Cartoon" className="cartoon" />
           </div>
 
           <div className="card">
             <h1 className="card-title">Sign Up</h1>
-
-            {errors.server && (
-              <div className="server-error">{errors.server}</div>
-            )}
 
             <div className="field">
               <label className="field-label">Full Name</label>

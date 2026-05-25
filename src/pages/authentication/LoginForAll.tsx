@@ -69,8 +69,14 @@ export default function LoginForAll() {
       }
 
       // Store user info
+      localStorage.setItem("user_id", String(data.user_id || ""));
       localStorage.setItem("username", data.username);
       localStorage.setItem("role", data.role);
+      if (data.seller_id) {
+        localStorage.setItem("seller_id", String(data.seller_id));
+      } else {
+        localStorage.removeItem("seller_id");
+      }
 
       // Role-based navigation
       const roleRoutes: { [key: string]: string } = {
