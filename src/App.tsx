@@ -78,6 +78,7 @@ import SellerManageOrders from "./pages/Seller/SellerManageOrders";
 import SellerReviews from "./pages/Seller/SellerReviews";
 import SellerProfile from "./pages/Seller/SellerProfile";
 // import Buyer from "./pages/Assistant/AssistantBuyer";
+// import Buyer from "./pages/Assistant/AssistantBuyer";
 
 const App = () => {
   return (
