@@ -71,15 +71,13 @@ import AssistantUpdateCategory from "./pages/Assistant/AssistantUpdateCategory";
 import SellerDashboards from "./pages/Seller/SellerDashboards";
 import SellerManageProduct from "./pages/Seller/SellerManageProduct";
 import SellerEditProduct from "./pages/Seller/SellerEditProduct";
-import SellerAddProduct from "./pages/Seller/SellerAddProduct";
 import SellerPublishProduct from "./pages/Seller/SellerPublishProduct";
 import SellerUnpublishProduct from "./pages/Seller/SellerUnpublishProduct";
 import SellerOrders from "./pages/Seller/SellerOrders";
 import SellerManageOrders from "./pages/Seller/SellerManageOrders";
 import SellerReviews from "./pages/Seller/SellerReviews";
 import SellerProfile from "./pages/Seller/SellerProfile";
-import SellerLogout from "./pages/Seller/SellerLogout";
-import Buyer from "./pages/Assistant/AssistantBuyer";
+// import Buyer from "./pages/Assistant/AssistantBuyer";
 
 const App = () => {
   return (
@@ -146,7 +144,6 @@ const App = () => {
         <Route element={<ProtectedRoute allowedRoles={["seller"]} />}>
           <Route path="/seller/dashboard" element={<SellerDashboards />} />
           <Route path="/seller/manageproduct" element={<SellerManageProduct />} />
-          <Route path="/seller/product/add" element={<SellerAddProduct />} />
           <Route path="/seller/product/edit/:id" element={<SellerEditProduct />} />
           <Route path="/seller/product/publish" element={<SellerPublishProduct />} />
           <Route path="/seller/product/unpublish" element={<SellerUnpublishProduct />} />
@@ -154,7 +151,6 @@ const App = () => {
           <Route path="/seller/orders/manage" element={<SellerManageOrders />} />
           <Route path="/seller/reviews" element={<SellerReviews />} />
           <Route path="/seller/profile" element={<SellerProfile />} />
-          <Route path="/seller/logout" element={<SellerLogout />} />
         </Route>
 
         {/* ==================== DELIVERY MAN ROUTES ==================== */}
