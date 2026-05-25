@@ -2,14 +2,6 @@ import { useState } from "react";
 import SellerNavbar from "./SellerNavbar";
 import SellerSidebar from "./SellerSidebar";
 
-const thumbnails = [
-  "https://i.imgur.com/1bX5QH6.jpg",
-  "https://i.imgur.com/1bX5QH6.jpg",
-  "https://i.imgur.com/1bX5QH6.jpg",
-  "https://i.imgur.com/1bX5QH6.jpg",
-  "https://i.imgur.com/1bX5QH6.jpg",
-];
-
 export default function ProductDetails() {
   const [selectedThumb, setSelectedThumb] = useState(0);
   const [published] = useState(true);

@@ -17,54 +17,13 @@ const mostSoldData = [
 ];
 
 export default function SellerDashboard() {
-  const styles: { [key: string]: React.CSSProperties } = {
-    container: {
-      display: "flex",
-      width: "100%",
-      minHeight: "100vh",
-      background: "#f3f4f6",
-      fontFamily: "Arial, sans-serif",
-    },
-    main: {
-      flex: 1,
-      display: "flex",
-      flexDirection: "column",
-    },
-    content: {
-      padding: "24px", // slightly more breathing
-    },
-    cardsWrapper: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-      gap: "20px", // increased spacing
-      marginBottom: "28px",
-    },
-    card: {
-      background: "#60a5fa",
-      padding: "18px", // slight breathing
-      borderRadius: "10px",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      color: "#fff",
-    },
-    chartsWrapper: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: "24px", // more breathing between charts
-    },
-    chartBox: {
-      background: "#fff",
-      border: "1px solid #ddd",
-      borderRadius: "10px",
-      padding: "18px", // keep same height feel, just cleaner spacing
-      minHeight: "350px",
-    },
-    chartArea: {
-      width: "100%",
-      height: "300px",
-    },
-  };
+  // Sample stats (you can replace with real data from API later)
+  const stats = [
+    { title: "Total Products", value: 124, icon: "📦", color: "#3b82f6" },
+    { title: "Total Orders", value: 87, icon: "🛒", color: "#10b981" },
+    { title: "Pending Orders", value: 14, icon: "⏳", color: "#f59e0b" },
+    { title: "Delivered Orders", value: 68, icon: "✅", color: "#8b5cf6" },
+  ];
 
   return (
     <div style={styles.container}>
@@ -74,61 +33,143 @@ export default function SellerDashboard() {
         <SellerNavbar />
 
         <div style={styles.content}>
-          
+          <h1 style={styles.pageTitle}>Dashboard Overview</h1>
+
+          {/* Stats Cards */}
           <div style={styles.cardsWrapper}>
-            {["Total Products", "Total Orders", "Pending Orders", "Delivered Orders"].map((title, i) => (
-              <div key={i} style={styles.card}>
+            {stats.map((stat, index) => (
+              <div key={index} style={{ ...styles.card, backgroundColor: stat.color }}>
                 <div>
-                  <div style={{ fontWeight: "bold", color: "#1e293b" }}>{title}</div>
-                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#1e293b" }}>
-                    20
-                  </div>
+                  <div style={styles.cardTitle}>{stat.title}</div>
+                  <div style={styles.cardValue}>{stat.value}</div>
                 </div>
-                <div style={{ fontSize: "24px" }}>📊</div>
+                <div style={styles.cardIcon}>{stat.icon}</div>
               </div>
             ))}
           </div>
 
+          {/* Charts Section */}
           <div style={styles.chartsWrapper}>
-            
+            {/* Monthly Orders Chart */}
             <div style={styles.chartBox}>
-              <div style={{ marginBottom: "12px", fontWeight: "bold" }}>
-                Monthly Orders
-              </div>
+              <div style={styles.chartHeader}>Monthly Orders</div>
               <div style={styles.chartArea}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={monthlyOrdersData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" />
-                    <YAxis />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 13 }} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 13 }} />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="#ef4444" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
+            {/* Most Sold Products Chart */}
             <div style={styles.chartBox}>
-              <div style={{ marginBottom: "12px", fontWeight: "bold" }}>
-                Most Sold
-              </div>
+              <div style={styles.chartHeader}>Most Sold Products</div>
               <div style={styles.chartArea}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={mostSoldData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" />
-                    <YAxis />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 13 }} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 13 }} />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#f97316" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="#f97316" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
     </div>
   );
 }
+
+/* ====================== STYLES ====================== */
+const styles: { [key: string]: React.CSSProperties } = {
+  container: {
+    display: "flex",
+    minHeight: "100vh",
+    background: "#f8fafc",
+  },
+
+  main: {
+    flex: 1,
+    marginLeft: "260px", // Matches sidebar width
+  },
+
+  content: {
+    padding: "28px",
+  },
+
+  pageTitle: {
+    fontSize: "26px",
+    fontWeight: 700,
+    color: "#1e2937",
+    marginBottom: "24px",
+  },
+
+  cardsWrapper: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+    gap: "20px",
+    marginBottom: "32px",
+  },
+
+  card: {
+    padding: "20px",
+    borderRadius: "12px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    color: "white",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    transition: "transform 0.2s",
+  },
+
+  cardTitle: {
+    fontSize: "14px",
+    fontWeight: 500,
+    opacity: 0.95,
+  },
+
+  cardValue: {
+    fontSize: "32px",
+    fontWeight: 800,
+    marginTop: "6px",
+  },
+
+  cardIcon: {
+    fontSize: "38px",
+    opacity: 0.85,
+  },
+
+  chartsWrapper: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "24px",
+  },
+
+  chartBox: {
+    background: "#fff",
+    borderRadius: "12px",
+    padding: "20px",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.06)",
+    border: "1px solid #e2e8f0",
+  },
+
+  chartHeader: {
+    fontSize: "17px",
+    fontWeight: 600,
+    color: "#1e2937",
+    marginBottom: "16px",
+  },
+
+  chartArea: {
+    width: "100%",
+    height: "320px",
+  },
+};

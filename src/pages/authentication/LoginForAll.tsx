@@ -25,6 +25,7 @@ const ROLES: Role[] = [
   { value: "assistant", label: "Assistant", icon: "🤝" },
 ];
 
+<<<<<<< HEAD
 const ROLE_ROUTES: Record<string, string> = {
   admin: "/admin/dashboard",
   assistant: "/assistant/dashboard",
@@ -35,6 +36,9 @@ const ROLE_ROUTES: Record<string, string> = {
 };
 
 export default function LoginPage() {
+=======
+export default function LoginForAll() {
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
   const navigate = useNavigate();
 
   // --- State ---
@@ -48,14 +52,32 @@ export default function LoginPage() {
 
   const selectedRoleObj = ROLES.find((r) => r.value === selectedRole);
 
+<<<<<<< HEAD
   // --- Handlers ---
+=======
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
+<<<<<<< HEAD
     if (!selectedRole) return setError("Select a role");
     if (!username) return setError("Enter username");
     if (!password) return setError("Enter password");
+=======
+    if (!selectedRole) {
+      setError("Please select a role");
+      return;
+    }
+    if (!username.trim()) {
+      setError("Please enter username");
+      return;
+    }
+    if (!password) {
+      setError("Please enter password");
+      return;
+    }
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
 
     setLoading(true);
 
@@ -64,7 +86,11 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+<<<<<<< HEAD
           username,
+=======
+          username: username.trim(),
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
           password,
           role: selectedRole,
         }),
@@ -73,6 +99,7 @@ export default function LoginPage() {
       const data: LoginResponse = await res.json();
 
       if (!res.ok) {
+<<<<<<< HEAD
         throw new Error(data.error || "Login failed");
       }
 
@@ -95,6 +122,36 @@ export default function LoginPage() {
       } else {
         setError("Network Error. Please try again later.");
       }
+=======
+        setError(data.error || "Login failed. Please check your credentials.");
+        setLoading(false);
+        return;
+      }
+
+      // Store user info
+      localStorage.setItem("username", data.username);
+      localStorage.setItem("role", data.role);
+
+      // Role-based navigation
+      const roleRoutes: { [key: string]: string } = {
+        admin: "/admin/dashboard",
+        assistant: "/assistant/dashboard",
+        buyer: "/buyer/dashboard",
+        seller: "/seller/dashboard",
+        delivery: "/delivery/dashboard",
+        warehousestaff: "/warehouse/dashboard",
+      };
+
+      const redirectPath = roleRoutes[data.role];
+
+      if (redirectPath) {
+        navigate(redirectPath);
+      } else {
+        setError("Invalid role received from server");
+      }
+    } catch (err) {
+      setError("Network error. Please check your connection.");
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
     } finally {
       setLoading(false);
     }
@@ -102,7 +159,11 @@ export default function LoginPage() {
 
   return (
     <div className="login-wrapper">
+<<<<<<< HEAD
       {/* LEFT SIDE - BRANDING */}
+=======
+      {/* LEFT SIDE */}
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
       <div className="login-left">
         <img src={logoImg} alt="SajiloMart Logo" />
       </div>
@@ -112,10 +173,15 @@ export default function LoginPage() {
         <h2>
           <b>Sajilo</b>Mart
         </h2>
+        <p className="subtitle">Login to your account</p>
 
+<<<<<<< HEAD
         <p className="subtitle">Login to your account</p>
 
         {/* ROLE SELECTION */}
+=======
+        {/* Role Selector */}
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
         <div className="field">
           <label>Role</label>
           <div className="dropdown">
@@ -126,7 +192,11 @@ export default function LoginPage() {
               {selectedRoleObj
                 ? `${selectedRoleObj.icon} ${selectedRoleObj.label}`
                 : "Select Role"}
+<<<<<<< HEAD
               <span style={{ fontSize: "10px" }}>▼</span>
+=======
+              <span>▼</span>
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
             </div>
 
             {dropdownOpen && (
@@ -148,7 +218,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* USERNAME */}
+        {/* Username */}
         <div className="field">
           <label>Username</label>
           <input
@@ -159,10 +229,14 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* PASSWORD */}
+        {/* Password */}
         <div className="field">
           <label>Password</label>
+<<<<<<< HEAD
           <div className="password-container">
+=======
+          <div className="password">
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Enter password"
@@ -171,19 +245,30 @@ export default function LoginPage() {
             />
             <button
               type="button"
+<<<<<<< HEAD
               className="toggle-password"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
+=======
+              onClick={() => setShowPassword(!showPassword)}
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
             >
               {showPassword ? "🙈" : "👁️"}
             </button>
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* ERROR MESSAGE */}
         {error && <p className="error-text">{error}</p>}
 
         {/* SUBMIT BUTTON */}
+=======
+        {/* Error Message */}
+        {error && <p className="error">{error}</p>}
+
+        {/* Login Button */}
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
         <button className="login-btn" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
@@ -194,8 +279,12 @@ export default function LoginPage() {
       </form>
 
       <style>{`
+<<<<<<< HEAD
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
+=======
+        * { box-sizing: border-box; }
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
         .login-wrapper {
           height: 100vh;
           display: flex;
@@ -205,6 +294,7 @@ export default function LoginPage() {
           background: linear-gradient(135deg, #dbeafe, #93c5fd);
           padding: 40px;
         }
+<<<<<<< HEAD
 
         .login-left img {
           width: 600px;
@@ -212,11 +302,18 @@ export default function LoginPage() {
           filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
         }
 
+=======
+        .login-left img {
+          width: 750px;
+          max-width: 100%;
+        }
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
         .login-card {
           width: 380px;
           background: white;
           padding: 35px;
           border-radius: 18px;
+<<<<<<< HEAD
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
@@ -227,17 +324,31 @@ export default function LoginPage() {
           font-size: 24px;
         }
 
+=======
+          box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        h2 {
+          text-align: center;
+          margin-bottom: 5px;
+          color: #1e40af;
+          font-size: 22px;
+        }
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
         .subtitle {
           text-align: center;
           font-size: 13px;
           color: #666;
           margin-bottom: 25px;
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
         .field {
           margin-bottom: 18px;
           position: relative;
         }
+<<<<<<< HEAD
 
         label {
           display: block;
@@ -343,6 +454,91 @@ export default function LoginPage() {
           font-size: 13px;
         }
 
+=======
+        label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #374151;
+        }
+        input {
+          width: 100%;
+          padding: 11px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          margin-top: 5px;
+          outline: none;
+          font-size: 14px;
+        }
+        .dropdown-btn {
+          width: 100%;
+          padding: 11px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          margin-top: 5px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          background: white;
+          font-size: 14px;
+        }
+        .dropdown-menu {
+          position: absolute;
+          width: 100%;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          margin-top: 5px;
+          z-index: 100;
+          max-height: 250px;
+          overflow-y: auto;
+        }
+        .dropdown-item {
+          padding: 12px;
+          cursor: pointer;
+        }
+        .dropdown-item:hover {
+          background: #f3f4f6;
+        }
+        .password {
+          display: flex;
+          gap: 8px;
+        }
+        .password button {
+          border: none;
+          background: #eee;
+          padding: 0 14px;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+        .login-btn {
+          width: 100%;
+          padding: 12px;
+          border: none;
+          border-radius: 8px;
+          background: #2563eb;
+          color: white;
+          font-weight: 600;
+          cursor: pointer;
+          margin-top: 10px;
+          font-size: 15px;
+        }
+        .login-btn:disabled {
+          background: #93c5fd;
+          cursor: not-allowed;
+        }
+        .error {
+          color: #ef4444;
+          text-align: center;
+          font-size: 13.5px;
+          margin: 10px 0;
+        }
+        .signup {
+          text-align: center;
+          margin-top: 15px;
+          font-size: 13px;
+        }
+>>>>>>> 3a1f539f09209b03811b4e1d0eba5443531b0d16
         .signup a {
           color: #2563eb;
           font-weight: bold;

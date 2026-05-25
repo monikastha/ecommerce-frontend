@@ -1,12 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 import { FaShoppingBag } from "react-icons/fa";
 
 const AdminOrder: React.FC = () => {
-  const navigate = useNavigate();
-
   const [search, setSearch] = useState("");
 
   // SAMPLE DATA

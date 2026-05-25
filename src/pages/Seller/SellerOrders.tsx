@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { FaShoppingCart, FaSearch } from "react-icons/fa";
 
 import SellerNavbar from "./SellerNavbar";
 import SellerSidebar from "./SellerSidebar";
@@ -14,199 +15,295 @@ interface Order {
   price: number;
 }
 
-const initialOrders: Order[] = [
-  {
-    id: "01",
-    status: "Ready For Shipping",
-    customer: "Binita",
-    productName: "Diamond Set",
-    quantity: 1,
-    price: 1999,
-  },
-  {
-    id: "02",
-    status: "Shipped",
-    customer: "Kabita",
-    productName: "Floral Kurthi",
-    quantity: 1,
-    price: 999,
-  },
-  {
-    id: "03",
-    status: "Shipped",
-    customer: "Karuna",
-    productName: "Hand Bag",
-    quantity: 2,
-    price: 1999,
-  },
-  {
-    id: "04",
-    status: "Shipped",
-    customer: "Monika",
-    productName: "Simple Watch",
-    quantity: 2,
-    price: 1499,
-  },
-  {
-    id: "05",
-    status: "New Order",
-    customer: "Sani",
-    productName: "Casual Slipper",
-    quantity: 1,
-    price: 999,
-  },
-];
-
 export default function SellerOrders() {
-  const [orders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]); // Empty for now
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] =
-    useState<"all" | "pending" | "completed">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "pending" | "completed">("all");
 
-  const filteredOrders = orders.filter((o) => {
-    const matchesSearch =
-      o.id.includes(searchQuery) ||
-      o.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.productName.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const matchesSearch =
+        o.id.includes(searchQuery) ||
+        o.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        o.productName.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesTab =
-      activeTab === "all" ||
-      (activeTab === "pending" && o.status === "New Order") ||
-      (activeTab === "completed" && o.status === "Shipped");
+      const matchesTab =
+        activeTab === "all" ||
+        (activeTab === "pending" && o.status === "New Order") ||
+        (activeTab === "completed" && o.status === "Shipped");
 
-    return matchesSearch && matchesTab;
-  });
+      return matchesSearch && matchesTab;
+    });
+  }, [orders, searchQuery, activeTab]);
 
   return (
-    <div className="flex w-full h-screen bg-gray-100 font-sans text-[13px]">
+    <>
+      <style>{`
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-      <SellerSidebar />
+        .wrapper {
+          display: flex;
+          min-height: 100vh;
+          font-family: 'Poppins', sans-serif;
+        }
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+        .sidebar {
+          width: 260px;
+          position: fixed;
+          left: 0;
+          top: 0;
+          height: 100vh;
+          background: #445C6D;
+          z-index: 100;
+        }
 
-        <SellerNavbar />
+        .main {
+          margin-left: 260px;
+          flex: 1;
+          background: #f5f7fa;
+          min-height: 100vh;
+        }
 
-        {/* ✅ PUSH CONTENT DOWN */}
-        <div className="flex-1 overflow-y-auto p-5 pt-10">
+        .container { 
+          padding: 30px; 
+        }
 
-          {/* TOP BAR */}
-          <div className="flex justify-between items-center mb-8">
+        .header {
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center;
+          margin-bottom: 25px; 
+          padding: 15px 20px;
+          background: white; 
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
 
-            {/* TABS */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setActiveTab("all")}
-                className={`px-3 py-2 rounded-md border ${
-                  activeTab === "all"
-                    ? "bg-gray-800 text-white"
-                    : "bg-white"
-                }`}
-              >
-                All Orders
-              </button>
+        .titleBox { 
+          display: flex; 
+          align-items: center; 
+          gap: 12px; 
+        }
+        .header-icon {
+          width: 52px; 
+          height: 52px; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          border-radius: 14px; 
+          background: linear-gradient(135deg, #ef4444, #f97316);
+          color: white; 
+          font-size: 22px;
+        }
+        .titleBox h1 { 
+          font-size: 24px; 
+          font-weight: 700; 
+          margin: 0; 
+          color: #0f172a; 
+        }
+        .titleBox h3 { 
+          font-size: 13px; 
+          color: #64748b; 
+          margin: 4px 0 0 0; 
+        }
 
-              <button
-                onClick={() => setActiveTab("pending")}
-                className={`px-3 py-2 rounded-md border ${
-                  activeTab === "pending"
-                    ? "bg-yellow-500 text-white"
-                    : "bg-white"
-                }`}
-              >
-                Pending
-              </button>
+        .controls {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+          gap: 15px;
+        }
 
-              <button
-                onClick={() => setActiveTab("completed")}
-                className={`px-3 py-2 rounded-md border ${
-                  activeTab === "completed"
-                    ? "bg-green-600 text-white"
-                    : "bg-white"
-                }`}
-              >
-                Completed
-              </button>
+        .tabs {
+          display: flex;
+          gap: 8px;
+          background: white;
+          padding: 6px;
+          border-radius: 10px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .tab {
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          white-space: nowrap;
+        }
+
+        .tab.active {
+          background: #ef4444;
+          color: white;
+        }
+
+        .search-container {
+          display: flex; 
+          align-items: center; 
+          gap: 8px;
+          background: white; 
+          padding: 8px 14px; 
+          border-radius: 10px;
+          border: 1px solid #e2e8f0; 
+          width: 340px;
+        }
+        .searchInput {
+          border: none; 
+          outline: none; 
+          width: 100%; 
+          font-size: 14px;
+        }
+
+        table {
+          width: 100%; 
+          border-collapse: collapse; 
+          background: white;
+          border-radius: 10px; 
+          overflow: hidden; 
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        th, td {
+          padding: 14px; 
+          font-size: 14px; 
+          color: #475569;
+          border-bottom: 1px solid #e5e7eb; 
+          text-align: center;
+        }
+        th { 
+          background: #f8fafc; 
+          font-weight: 600; 
+        }
+
+        .status {
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .actions button {
+          padding: 7px 16px;
+          border: none;
+          border-radius: 6px;
+          font-weight: 500;
+          cursor: pointer;
+          margin: 0 4px;
+          transition: 0.2s;
+        }
+      `}</style>
+
+      <div className="wrapper">
+        <div className="sidebar">
+          <SellerSidebar />
+        </div>
+
+        <div className="main">
+          <SellerNavbar />
+
+          <div className="container">
+            <div className="header">
+              <div className="titleBox">
+                <div className="header-icon">
+                  <FaShoppingCart />
+                </div>
+                <div>
+                  <h1>Order Management</h1>
+                  <h3>Track and manage customer orders</h3>
+                </div>
+              </div>
             </div>
 
-            {/* SEARCH (RIGHT) */}
-            <div className="w-[380px]">
-              <input
-                type="text"
-                placeholder="Search orders..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 outline-none"
-              />
+            {/* Tabs + Search Bar (Side by Side) */}
+            <div className="controls">
+              <div className="tabs">
+                <div
+                  className={`tab ${activeTab === "all" ? "active" : ""}`}
+                  onClick={() => setActiveTab("all")}
+                >
+                  All Orders
+                </div>
+                <div
+                  className={`tab ${activeTab === "pending" ? "active" : ""}`}
+                  onClick={() => setActiveTab("pending")}
+                >
+                  Pending
+                </div>
+                <div
+                  className={`tab ${activeTab === "completed" ? "active" : ""}`}
+                  onClick={() => setActiveTab("completed")}
+                >
+                  Completed
+                </div>
+              </div>
+
+              <div className="search-container">
+                <FaSearch style={{ color: "#94a3b8" }} />
+                <input
+                  type="text"
+                  className="searchInput"
+                  placeholder="Search orders..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
 
-          </div>
-
-          {/* TABLE (NOW LOWER + CENTER FEEL) */}
-          <div className="bg-white rounded-lg overflow-hidden border mt-6">
-
-            <table className="w-full border-collapse">
-
-              <thead className="bg-gray-300">
+            {/* Orders Table */}
+            <table>
+              <thead>
                 <tr>
-                  {[
-                    "Order ID",
-                    "Customer",
-                    "Product",
-                    "Qty",
-                    "Price",
-                    "Status",
-                    "Actions",
-                  ].map((col) => (
-                    <th
-                      key={col}
-                      className="px-4 py-3 text-center font-semibold text-gray-800"
-                    >
-                      {col}
-                    </th>
-                  ))}
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-
               <tbody>
-                {filteredOrders.map((order, idx) => (
-                  <tr
-                    key={order.id}
-                    className={idx % 2 === 0 ? "bg-gray-100" : "bg-gray-200"}
-                  >
-                    <td className="px-4 py-3 text-center">{order.id}</td>
-                    <td className="px-4 py-3 text-center">{order.customer}</td>
-                    <td className="px-4 py-3 text-center">{order.productName}</td>
-                    <td className="px-4 py-3 text-center">{order.quantity}</td>
-                    <td className="px-4 py-3 text-center">
-                      Rs. {order.price}
-                    </td>
-
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-gray-800 font-medium">
-                        {order.status}
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex justify-center gap-2">
-                        <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md">
-                          Accept
-                        </button>
-                        <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md">
-                          Reject
-                        </button>
-                      </div>
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: "100px 20px", textAlign: "center", color: "#64748b" }}>
+                      No orders found
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredOrders.map((order) => (
+                    <tr key={order.id}>
+                      <td><strong>#{order.id}</strong></td>
+                      <td>{order.customer}</td>
+                      <td>{order.productName}</td>
+                      <td>{order.quantity}</td>
+                      <td>Rs. {order.price}</td>
+                      <td>
+                        <span className="status" style={{
+                          background: order.status === "New Order" ? "#fef3c7" :
+                                     order.status === "Ready For Shipping" ? "#dbeafe" : "#dcfce7",
+                          color: order.status === "New Order" ? "#854d0e" :
+                                order.status === "Ready For Shipping" ? "#1e40af" : "#166534",
+                        }}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="actions">
+                        <button style={{ background: "#16a34a", color: "white" }}>
+                          Accept
+                        </button>
+                        <button style={{ background: "#dc2626", color: "white" }}>
+                          Reject
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
-
             </table>
-
           </div>
-
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -18,11 +18,6 @@ const SellerSidebar = () => {
   const [orderMenu, setOrderMenu] = useState(false);
   const [customerMenu, setCustomerMenu] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
-  };
-
   return (
     <>
       <style>{`
@@ -32,48 +27,47 @@ const SellerSidebar = () => {
           background: #445C6D;
           color: white;
           font-family: sans-serif;
+          position: fixed;
+          top: 0;
+          left: 0;
+          overflow-y: auto;
         }
 
         .logo-section {
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 18px 20px;
+          padding: 20px;
           border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
         .logo-section img {
-          margin-top: -30px;
-          width: 390px;
-          height: 270px;
+          width: 180px;
+          height: auto;
         }
 
         .menu {
           list-style: none;
-          margin-top: -65px;
-          padding: 8px 0;
+          padding: 10px 0;
+          margin: 0;
         }
 
         .menu li {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
           padding: 12px 18px;
           cursor: pointer;
           margin: 4px 10px;
           border-radius: 8px;
           color: white;
-          transition: 0.25s;
-          font-size: 14px;
+          transition: all 0.25s;
+          font-size: 14.5px;
         }
 
         .menu li:hover {
-          background: red;
+          background: #9B0F06;
           transform: translateX(4px);
-        }
-
-        .active {
-          font-weight: 500;
         }
 
         .dropdown-title {
@@ -85,13 +79,14 @@ const SellerSidebar = () => {
 
         .submenu {
           list-style: none;
-          padding-left: 20px;
+          padding-left: 35px;
           margin-top: 4px;
+          margin-bottom: 8px;
         }
 
         .submenu li {
-          padding: 10px 14px;
-          font-size: 13px;
+          padding: 9px 14px;
+          font-size: 13.5px;
           margin: 2px 0;
           border-radius: 6px;
           color: white;
@@ -99,9 +94,7 @@ const SellerSidebar = () => {
         }
 
         .submenu li:hover {
-          width: 230px;
           background: #9B0F06;
-          color: white;
         }
       `}</style>
 
@@ -118,18 +111,20 @@ const SellerSidebar = () => {
             className={activeItem === "dashboard" ? "active" : ""}
             onClick={() => {
               setActiveItem("dashboard");
-              navigate("/seller/dashboards");
+              navigate("/seller/dashboard");
             }}
           >
             <FontAwesomeIcon icon={faGauge} />
             Dashboard
           </li>
 
-          {/* Product Management - Now navigates on click */}
-          <li 
+          {/* Product Management */}
+          <li
+            className={activeItem === "products" ? "active" : ""}
             onClick={() => {
+              setActiveItem("products");
               navigate("/seller/manageproduct");
-              setProductMenu(!productMenu);   // Optional: still toggle submenu
+              setProductMenu(!productMenu);
             }}
           >
             <div className="dropdown-title">
@@ -139,30 +134,34 @@ const SellerSidebar = () => {
           </li>
 
           {/* Order Management */}
-          <li onClick={() => {
-            navigate("/seller/orders");
-            setOrderMenu(!orderMenu);
-          }}>
+          <li
+            className={activeItem === "orders" ? "active" : ""}
+            onClick={() => {
+              setActiveItem("orders");
+              navigate("/seller/orders");
+              setOrderMenu(!orderMenu);
+            }}
+          >
             <div className="dropdown-title">
               <FontAwesomeIcon icon={faCartShopping} />
               <span>Order Management</span>
             </div>
           </li>
 
-
           {/* Customer Engagement */}
-          <li onClick={() => {
+          <li
+            className={activeItem === "reviews" ? "active" : ""}
+            onClick={() => {
+              setActiveItem("reviews");
               navigate("/seller/reviews");
-            setCustomerMenu(!customerMenu);
-          }}>
+              setCustomerMenu(!customerMenu);
+            }}
+          >
             <div className="dropdown-title">
               <FontAwesomeIcon icon={faComments} />
               <span>Customer Engagement</span>
             </div>
           </li>
-
-          
-          )
         </ul>
       </div>
     </>

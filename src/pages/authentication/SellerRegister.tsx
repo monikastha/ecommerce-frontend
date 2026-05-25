@@ -1,224 +1,412 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../../assets/logo.png";
+import SellerOtpVerification from "./SellerOtpVerification";
 
-const styles: { [key: string]: React.CSSProperties } = {
-  body: {
-    fontFamily: "'Poppins', sans-serif",
-    margin: 0,
-    padding: 0,
-  },
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-  mainWrapper: {
-    display: "flex",
-    minHeight: "100vh",
-    background: "#eef0f3",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "40px", // smaller + balanced gap
-    padding: "20px",
-  },
-
-  leftPanel: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  logoImg: {
-    width: "420px",
-    maxWidth: "100%",
-    height: "auto",
-    objectFit: "contain",
-  },
-
-  formCard: {
-    background: "#ffffff",
-    borderRadius: "12px",
-    padding: "28px 32px",
-    width: "360px",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-  },
-
-  formTitle: {
-    fontSize: "22px",
-    fontWeight: 700,
-    textAlign: "center",
-    marginBottom: "18px",
-  },
-
-  formGroup: {
-    marginBottom: "10px",
-  },
-
-  label: {
-    display: "block",
-    fontSize: "11.5px",
-    fontWeight: 600,
-    marginBottom: "3px",
-  },
-
-  input: {
-    width: "100%",
-    padding: "8px 10px",
-    border: "1px solid #d0d0d0",
-    borderRadius: "5px",
-    fontSize: "12px",
-  },
-
-  uploadRow: {
-    display: "flex",
-    gap: "10px",
-    marginBottom: "10px",
-  },
-
-  uploadBox: {
-    flex: 1,
-    background: "#d9d9d9",
-    borderRadius: "6px",
-    height: "65px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "11px",
-  },
-
-  pwWrapper: {
-    position: "relative",
-  },
-
-  pwToggle: {
-    position: "absolute",
-    right: "10px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    cursor: "pointer",
-  },
-
-  btnNext: {
-    width: "100%",
-    padding: "10px",
-    background: "#1a5fbd",
-    color: "#fff",
-    fontSize: "14px",
-    fontWeight: 600,
-    border: "none",
-    borderRadius: "6px",
-    marginTop: "10px",
-    cursor: "pointer",
-  },
+const initialForm = {
+  name: "",
+  username: "",
+  citizenship: "",
+  pan_no: "",
+  email: "",
+  phone: "",
+  password: "",
+  confirm_password: "",
+  address: "",
 };
-
-/* PASSWORD FIELD */
-const PasswordField = ({ placeholder }: { placeholder: string }) => {
-  const [show, setShow] = useState(false);
-
-  return (
-    <div style={styles.pwWrapper}>
-      <input
-        type={show ? "text" : "password"}
-        placeholder={placeholder}
-        style={styles.input}
-      />
-      <span style={styles.pwToggle} onClick={() => setShow(!show)}>
-        {show ? "🙈" : "👁"}
-      </span>
-    </div>
-  );
-};
-
+  
 const SellerRegister: React.FC = () => {
+  const [form, setForm] = useState(initialForm);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [document, setDocument] = useState<File | null>(null);
+  const [showOtpVerification, setShowOtpVerification] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setForm({
+      ...form,
+      [event.target.name]: event.target.value,
+    });
+    setError("");
+  };
+
+  const validateForm = () => {
+    const missingField = Object.entries(form).find(([, value]) => !value.trim());
+
+    if (missingField) {
+      setError("Please fill in all seller details.");
+      return false;
+    }
+
+    if (form.password !== form.confirm_password) {
+      setError("Passwords do not match.");
+      return false;
+    }
+
+    if (!logo) {
+      setError("Please upload a shop logo.");
+      return false;
+    }
+
+    if (!document) {
+      setError("Please upload a registration document.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const sendOtp = async () => {
+    const response = await fetch(`${API_BASE}/api/users/send-otp/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: form.email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to send OTP");
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      await sendOtp();
+      setShowOtpVerification(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      await sendOtp();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resend OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const buildRegistrationData = (otp: string) => {
+    const formData = new FormData();
+
+    Object.entries(form).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    formData.append("otp", otp);
+
+    if (logo) {
+      formData.append("logo", logo);
+    }
+
+    if (document) {
+      formData.append("business_certificate", document);
+    }
+
+    return formData;
+  };
+
+  const handleVerifyAndRegister = async (otp: string) => {
+    if (otp.length !== 6) {
+      setError("Please enter the complete 6-digit OTP.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch(`${API_BASE}/api/seller/register/`, {
+        method: "POST",
+        body: buildRegistrationData(otp),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.detail || "Registration failed");
+      }
+
+      alert("Seller registered successfully. Please wait for admin approval.");
+      navigate("/login");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (showOtpVerification) {
+    return (
+      <SellerOtpVerification
+        email={form.email}
+        loading={loading}
+        error={error}
+        onVerify={handleVerifyAndRegister}
+        onResend={handleResendOtp}
+        onBack={() => {
+          setError("");
+          setShowOtpVerification(false);
+        }}
+      />
+    );
+  }
+
   return (
-    <div style={styles.body}>
-      <div style={styles.mainWrapper}>
-        {/* LOGO */}
-        <div style={styles.leftPanel}>
-          <img src={logo} alt="SAJILO MART" style={styles.logoImg} />
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>Seller Registration</h2>
+
+        <div style={styles.grid}>
+          <Field
+            label="Name"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Enter your name"
+          />
+          <Field
+            label="Username"
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            placeholder="Enter username"
+          />
+          <Field
+            label="Citizenship"
+            name="citizenship"
+            value={form.citizenship}
+            onChange={handleChange}
+            placeholder="Citizenship number"
+          />
+          <Field
+            label="PAN No"
+            name="pan_no"
+            value={form.pan_no}
+            onChange={handleChange}
+            placeholder="PAN number"
+          />
+          <Field
+            label="Email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            type="email"
+            placeholder="Enter email"
+          />
+          <Field
+            label="Phone"
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            type="tel"
+            placeholder="Enter phone number"
+          />
+          <Field
+            label="Password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            type="password"
+            placeholder="Enter password"
+          />
+          <Field
+            label="Confirm Password"
+            name="confirm_password"
+            value={form.confirm_password}
+            onChange={handleChange}
+            type="password"
+            placeholder="Confirm password"
+          />
         </div>
 
-        {/* FORM */}
-        <div style={styles.formCard}>
-          <div style={styles.formTitle}>Sign Up</div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Name</label>
-            <input style={styles.input} />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Citizenship</label>
-            <input style={styles.input} />
-          </div>
-
-          <div style={styles.uploadRow}>
-            <div style={styles.uploadBox}>Logo Upload</div>
-            <div style={styles.uploadBox}>Document Upload</div>
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>PAN No</label>
-            <input style={styles.input} />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Email</label>
-            <input style={styles.input} />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Phone</label>
-            <input style={styles.input} />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Password</label>
-            <PasswordField placeholder="Password" />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Confirm Password</label>
-            <PasswordField placeholder="Confirm Password" />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Address</label>
-            <input style={styles.input} />
-          </div>
-
-          <button
-            style={styles.btnNext}
-            onClick={() => navigate("/confirmcode")}
-          >
-            Next
-          </button>
-
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: "12px",
-              fontSize: "12px",
-              color: "#777",
-            }}
-          >
-            Already have an account?{" "}
-            <span
-              onClick={() => navigate("/login")}
-              style={{
-                color: "#1a5fbd",
-                fontWeight: 600,
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
-            >
-              Login
-            </span>
-          </div>
+        <div style={styles.field}>
+          <label style={styles.label}>Address</label>
+          <textarea
+            style={{ ...styles.input, minHeight: "84px", resize: "vertical" }}
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="Enter business address"
+          />
         </div>
+
+        <div style={styles.grid}>
+          <FileField
+            label="Shop Logo"
+            file={logo}
+            accept="image/*"
+            onChange={setLogo}
+          />
+          <FileField
+            label="Registration Document"
+            file={document}
+            accept="image/*,.pdf"
+            onChange={setDocument}
+          />
+        </div>
+
+        {error && <p style={styles.error}>{error}</p>}
+
+        <button
+          style={styles.button}
+          type="button"
+          onClick={handleSendOtp}
+          disabled={loading}
+        >
+          {loading ? "Sending OTP..." : "Continue to OTP verification"}
+        </button>
       </div>
     </div>
   );
 };
 
+type FieldProps = {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  placeholder?: string;
+};
+
+const Field: React.FC<FieldProps> = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+}) => (
+  <div style={styles.field}>
+    <label style={styles.label}>{label}</label>
+    <input
+      style={styles.input}
+      name={name}
+      value={value}
+      onChange={onChange}
+      type={type}
+      placeholder={placeholder}
+    />
+  </div>
+);
+
+type FileFieldProps = {
+  label: string;
+  file: File | null;
+  accept: string;
+  onChange: (file: File | null) => void;
+};
+
+const FileField: React.FC<FileFieldProps> = ({
+  label,
+  file,
+  accept,
+  onChange,
+}) => (
+  <div style={styles.field}>
+    <label style={styles.label}>{label}</label>
+    <input
+      type="file"
+      accept={accept}
+      onChange={(event) => onChange(event.target.files?.[0] || null)}
+    />
+    {file && <p style={styles.preview}>Selected: {file.name}</p>}
+  </div>
+);
+
 export default SellerRegister;
+
+const styles: { [key: string]: React.CSSProperties } = {
+  page: {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#f3f7fb",
+    padding: "24px",
+    overflowY: "auto",
+  },
+  card: {
+    width: "100%",
+    maxWidth: "760px",
+    background: "#fff",
+    padding: "28px",
+    borderRadius: "8px",
+    boxShadow: "0 14px 34px rgba(15, 23, 42, 0.12)",
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  },
+  title: {
+    color: "#0f172a",
+    textAlign: "center",
+    fontSize: "24px",
+    fontWeight: 800,
+    margin: 0,
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: "14px",
+  },
+  field: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+  },
+  label: {
+    color: "#334155",
+    fontWeight: 700,
+    fontSize: "14px",
+  },
+  input: {
+    padding: "11px 12px",
+    borderRadius: "8px",
+    border: "1px solid #cbd5e1",
+    color: "#0f172a",
+    outline: "none",
+    font: "inherit",
+  },
+  button: {
+    padding: "13px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#2563eb",
+    color: "white",
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+  preview: {
+    fontSize: "12px",
+    color: "#15803d",
+    margin: 0,
+  },
+  error: {
+    color: "#dc2626",
+    fontSize: "13px",
+    fontWeight: 700,
+    margin: 0,
+  },
+};

@@ -9,28 +9,33 @@ import {
   faBox,
   faCartShopping,
   faTruckFast,
-  faRightFromBracket,
-  faChevronDown,
-  faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AssistantSidebar = () => {
   const navigate = useNavigate();
 
   const [activeItem, setActiveItem] = useState("dashboard");
-  const [userDropdown, setUserDropdown] = useState(false);
+  const [userMenu, setUserMenu] = useState(false);
+  const [productMenu, setProductMenu] = useState(false);
+  const [orderMenu, setOrderMenu] = useState(false);
 
   return (
     <>
       <style>{`
         .sidebar {
-          width: 260px;
+          width: 250px;
           min-height: 100vh;
           background: #5BBF9A;
           color: white;
           font-family: sans-serif;
+          position: fixed;           /* ← Fixed Position */
+          top: 0;
+          left: 0;
+          overflow-y: auto;          /* Scroll if content is too long */
+          z-index: 1000;
         }
 
+        /* LOGO */
         .logo-section {
           display: flex;
           justify-content: center;
@@ -54,7 +59,7 @@ const AssistantSidebar = () => {
         .menu li {
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          gap: 10px;
           padding: 12px 18px;
           cursor: pointer;
           margin: 4px 10px;
@@ -64,35 +69,38 @@ const AssistantSidebar = () => {
           font-size: 14px;
         }
 
-        .menu-left {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
         .menu li:hover {
           background: #E53935;
           transform: translateX(4px);
         }
 
-        .active {
-          // background: #E53935;
-          font-weight: 500;
+
+        .dropdown-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
         }
 
         .submenu {
-          margin-left: 25px;
-          margin-top: 2px;
+          list-style: none;
+          padding-left: 20px;
+          margin-top: 4px;
         }
 
         .submenu li {
-          font-size: 13px;
           padding: 10px 14px;
-          background: rgba(255,255,255,0.08);
+          font-size: 13px;
+          margin: 2px 0;
+          border-radius: 6px;
+          color: white;
+          transition: 0.2s;
         }
 
         .submenu li:hover {
+          width: 190px;
           background: #E53935;
+          color: white;
         }
       `}</style>
 
@@ -102,8 +110,8 @@ const AssistantSidebar = () => {
           <img src={logo} alt="logo" />
         </div>
 
+        {/* Menu */}
         <ul className="menu">
-
           {/* Dashboard */}
           <li
             className={activeItem === "dashboard" ? "active" : ""}
@@ -112,124 +120,67 @@ const AssistantSidebar = () => {
               navigate("/assistant/dashboard");
             }}
           >
-            <div className="menu-left">
-              <FontAwesomeIcon icon={faGauge} />
-              Dashboard
-            </div>
+            <FontAwesomeIcon icon={faGauge} />
+            Dashboard
           </li>
 
-          {/* User Management Dropdown */}
-          <li
-            className={activeItem.includes("user") ? "active" : ""}
-            onClick={() => setUserDropdown(!userDropdown)}
-          >
-            <div className="menu-left">
+          {/* User Management */}
+          <li onClick={() => setUserMenu(!userMenu)}>
+            <div className="dropdown-title">
               <FontAwesomeIcon icon={faUser} />
-              User Management
+              <span>User Management</span>
             </div>
-
-            <FontAwesomeIcon
-              icon={userDropdown ? faChevronUp : faChevronDown}
-            />
           </li>
 
-          {/* Dropdown Items */}
-          {userDropdown && (
+          {userMenu && (
             <ul className="submenu">
-
-              <li
-                onClick={() => {
-                  setActiveItem("user-warehouse");
-                  navigate("/assistant/warehouse/staff");
-                }}
-              >
-                Warehouse Staff
-              </li>
-
-              <li
-                onClick={() => {
-                  setActiveItem("user-seller");
-                  navigate("/assistant/seller");
-                }}
-              >
-                Seller
-              </li>
-
-              <li
-                onClick={() => {
-                  setActiveItem("user-buyer");
-                  navigate("/assistant/buyer");
-                }}
-              >
-                Buyer
-              </li>
-
-              <li
-                onClick={() => {
-                  setActiveItem("user-delivery");
-                  navigate("/assistant/delivery-man");
-                }}
-              >
-                Delivery Man
-              </li>
-
+              <li onClick={() => { setActiveItem("user-warehouse"); navigate("/assistant/warehouse/staff"); }}>Warehouse Staff</li>
+              <li onClick={() => { setActiveItem("user-seller"); navigate("/assistant/seller"); }}>Seller</li>
+              <li onClick={() => { setActiveItem("user-buyer"); navigate("/assistant/buyer"); }}>Buyer</li>
+              <li onClick={() => { setActiveItem("user-delivery"); navigate("/assistant/delivery-man"); }}>Delivery Man</li>
             </ul>
           )}
 
           {/* Product Management */}
-          <li
-            className={activeItem === "product" ? "active" : ""}
-            onClick={() => {
-              setActiveItem("product");
-              navigate("/assistant/product");
-            }}
-          >
-            <div className="menu-left">
+          <li onClick={() => setProductMenu(!productMenu)}>
+            <div className="dropdown-title">
               <FontAwesomeIcon icon={faBox} />
-              Product Management
+              <span>Product Management</span>
             </div>
           </li>
 
+          {productMenu && (
+            <ul className="submenu">
+              <li onClick={() => { setActiveItem("category"); navigate("/assistant/category"); }}>Category</li>
+              <li onClick={() => { setActiveItem("product"); navigate("/assistant/product"); }}>Product</li>
+            </ul>
+          )}
+
           {/* Order Management */}
-          <li
-            className={activeItem === "order" ? "active" : ""}
-            onClick={() => {
-              setActiveItem("order");
-              navigate("/assistant/order");
-            }}
-          >
-            <div className="menu-left">
+          <li onClick={() => setOrderMenu(!orderMenu)}>
+            <div className="dropdown-title">
               <FontAwesomeIcon icon={faCartShopping} />
-              Order Management
+              <span>Order Management</span>
             </div>
           </li>
+
+          {orderMenu && (
+            <ul className="submenu">
+              <li onClick={() => { setActiveItem("order"); navigate("/assistant/order"); }}>Order</li>
+            </ul>
+          )}
 
           {/* Emergency Fast Delivery */}
           <li
             className={activeItem === "emergency" ? "active" : ""}
             onClick={() => {
               setActiveItem("emergency");
-              navigate("/assistant/emergency/orders");
+              navigate("/assistant/emergency-orders");
             }}
           >
-            <div className="menu-left">
-              <FontAwesomeIcon icon={faTruckFast} />
-              Emergency Fast Delivery
-            </div>
+            <FontAwesomeIcon icon={faTruckFast} />
+            Emergency Fast Delivery
           </li>
-
-          {/* Logout */}
-          <li
-            onClick={() => {
-              navigate("/login");
-            }}
-          >
-            <div className="menu-left">
-              <FontAwesomeIcon icon={faRightFromBracket} />
-              Logout
-            </div>
-          </li>
-
         </ul>
       </div>
     </>

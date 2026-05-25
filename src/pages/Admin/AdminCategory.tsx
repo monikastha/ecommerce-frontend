@@ -56,12 +56,38 @@ const AdminCategory: React.FC = () => {
   return (
     <>
       <style>{`
-        .wrapper { display: flex; min-height: 100vh; }
-        .main {
-          flex: 1;
-          background: #f5f7fa;
-        }
-        .container { padding: 30px; }
+          * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .wrapper {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .sidebar {
+    width: 260px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    background: #1e293b;
+    z-index: 100;
+  }
+
+  .main {
+    margin-left: 260px;
+    flex: 1;
+    background: #f5f7fa;
+    min-height: 100vh;
+  }
+
+  .container { 
+    padding: 30px; 
+  }
 
         .header {
           display: flex; justify-content: space-between; align-items: center;

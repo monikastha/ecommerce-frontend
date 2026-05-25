@@ -25,12 +25,7 @@ const WarehouseStaff: React.FC = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this warehouse staff record?"
-      )
-    )
-      return;
+    if (!window.confirm("Are you sure you want to delete this warehouse staff record?")) return;
 
     try {
       await axios.delete(`http://127.0.0.1:8000/api/staff/${id}/`);
@@ -51,103 +46,27 @@ const WarehouseStaff: React.FC = () => {
     .sort((a, b) => a.id - b.id);
 
   return (
-    <div className="wrapper">
-      <AssistantSidebar />
-
-      <div className="main">
-        <AssistantNavbar />
-
-        <div className="container">
-          <div className="headerBox">
-            <div>
-              <h2 className="title">Warehouse Staff</h2>
-              <p className="subtitle">
-                Manage all warehouse staff in the system
-              </p>
-            </div>
-
-            <div className="searchBox">
-              <FaSearch className="searchIcon" />
-
-              <input
-                type="text"
-                placeholder="Search staff..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="tableBox">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Address</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredStaff.map((s) => (
-                  <tr key={s.id}>
-                    <td>{s.id}</td>
-                    <td>{s.name}</td>
-                    <td>{s.username}</td>
-                    <td>{s.email}</td>
-                    <td>{s.phone || "N/A"}</td>
-                    <td>{s.address || "N/A"}</td>
-
-                    <td className="actions">
-                      <button
-                        className="iconBtn edit"
-                        onClick={() =>
-                          navigate(`/assistant/staff/update/${s.id}`)
-                        }
-                      >
-                        <FaEdit />
-                      </button>
-
-                      <button
-                        className="iconBtn delete"
-                        onClick={() => handleDelete(s.id)}
-                      >
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {filteredStaff.length === 0 && (
-              <div className="emptyState">
-                No warehouse staff available
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <>
       <style>{`
-        .wrapper {
-          display: flex;
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
         }
 
-        .main {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
+        .dashboard-container {
           background: #f4f6f8;
           min-height: 100vh;
         }
 
+        .main-content {
+          margin-left: 250px;
+          width: calc(100% - 250px);
+          min-height: 100vh;
+        }
+
         .container {
-          padding: 20px;
+          padding: 20px 30px;
         }
 
         .headerBox {
@@ -155,22 +74,22 @@ const WarehouseStaff: React.FC = () => {
           justify-content: space-between;
           align-items: center;
           background: white;
-          padding: 18px 22px;
+          padding: 18px 24px;
           border-radius: 12px;
-          margin-bottom: 16px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+          margin-bottom: 20px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
 
         .title {
-          margin: 0;
-          font-size: 22px;
+          font-size: 24px;
           font-weight: 600;
+          color: #1f2937;
         }
 
         .subtitle {
-          margin-top: 4px;
-          font-size: 13px;
+          font-size: 14px;
           color: #6b7280;
+          margin-top: 4px;
         }
 
         .searchBox {
@@ -179,16 +98,17 @@ const WarehouseStaff: React.FC = () => {
           background: #f9fafb;
           border: 1px solid #e5e7eb;
           border-radius: 8px;
-          padding: 8px 12px;
-          width: 240px;
+          padding: 8px 14px;
+          width: 260px;
         }
 
         .searchBox input {
           border: none;
           outline: none;
           background: transparent;
-          margin-left: 8px;
+          margin-left: 10px;
           width: 100%;
+          font-size: 15px;
         }
 
         .searchIcon {
@@ -197,9 +117,9 @@ const WarehouseStaff: React.FC = () => {
 
         .tableBox {
           background: white;
-          padding: 18px;
+          padding: 20px;
           border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
 
         .table {
@@ -209,13 +129,15 @@ const WarehouseStaff: React.FC = () => {
 
         .table th,
         .table td {
-          padding: 14px;
+          padding: 15px 12px;
           text-align: left;
           border-bottom: 1px solid #e5e7eb;
         }
 
         .table th {
           background: #f9fafb;
+          font-weight: 500;
+          color: #374151;
         }
 
         .actions {
@@ -224,33 +146,112 @@ const WarehouseStaff: React.FC = () => {
         }
 
         .iconBtn {
-          width: 34px;
-          height: 34px;
+          width: 36px;
+          height: 36px;
           border: none;
           border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
+          transition: 0.2s;
         }
 
         .iconBtn.edit {
-          background: #2563eb;
+          background: #3b82f6;
           color: white;
         }
 
         .iconBtn.delete {
-          background: #dc2626;
+          background: #ef4444;
           color: white;
         }
 
+        .iconBtn:hover {
+          transform: scale(1.05);
+        }
+
         .emptyState {
-          padding: 20px;
+          padding: 40px;
           text-align: center;
           color: #6b7280;
+          font-size: 15px;
         }
       `}</style>
-    </div>
+
+      <div className="dashboard-container">
+        <AssistantSidebar />
+
+        <div className="main-content">
+          <AssistantNavbar />
+
+          <div className="container">
+            <div className="headerBox">
+              <div>
+                <h2 className="title">Warehouse Staff</h2>
+                <p className="subtitle">Manage all warehouse staff in the system</p>
+              </div>
+
+              <div className="searchBox">
+                <FaSearch className="searchIcon" />
+                <input
+                  type="text"
+                  placeholder="Search staff..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="tableBox">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStaff.map((s) => (
+                    <tr key={s.id}>
+                      <td>{s.id}</td>
+                      <td>{s.name}</td>
+                      <td>{s.username}</td>
+                      <td>{s.email}</td>
+                      <td>{s.phone || "N/A"}</td>
+                      <td>{s.address || "N/A"}</td>
+                      <td className="actions">
+                        <button
+                          className="iconBtn edit"
+                          onClick={() => navigate(`/assistant/warehouse/staff/update/${s.id}`)}
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="iconBtn delete"
+                          onClick={() => handleDelete(s.id)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {filteredStaff.length === 0 && (
+                <div className="emptyState">No warehouse staff available</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

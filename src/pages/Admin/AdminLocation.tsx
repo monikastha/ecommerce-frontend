@@ -52,6 +52,9 @@ const AdminLocation: React.FC = () => {
   return (
     <>
       <style>{`
+         body {
+  font-family: "Poppins", sans-serif;
+}
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
         body { background:#f4f6f8; }
         .wrapper { display:flex; min-height:100vh; }
