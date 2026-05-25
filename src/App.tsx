@@ -53,8 +53,7 @@ import AdminAddDelivery from "./pages/Admin/AdminAddDelivery";
 import AdminUpdateDelivery from "./pages/Admin/AdminUpdateDelivery";
 import AdminCategory from "./pages/Admin/AdminCategory";
 import AdminAddCategory from "./pages/Admin/AdminAddCategory";
-import AdminAddSubCategory from "./pages/Admin/AdminAddSubCategory";
-import AdminUpdateSubCategory from "./pages/Admin/AdminUpdateSubCategory";
+import AdminUpdateCategory from "./pages/Admin/AdminUpdateCategory";
 import AdminProduct from "./pages/Admin/AdminProduct";
 import AdminOrder from "./pages/Admin/AdminOrder";
 import AdminPromotion from "./pages/Admin/AdminPromotion";
@@ -69,6 +68,7 @@ import AssistantDashboard from "./pages/Assistant/AssistantDashboard";
 import AssistantCategory from "./pages/Assistant/AssistantCategory";
 import AssistantAddCategory from "./pages/Assistant/AssistantAddCategory";
 import AssistantWarehouseStaff from "./pages/Assistant/AssistantWarehouseStaff";
+import AssistantUpdateWarehouseStaff from "./pages/Assistant/AssistantUpdateWarehouseStaff";
 import AssistantProductManagement from "./pages/Assistant/AssistantProductManagement";
 import AssistantOrder from "./pages/Assistant/AssistantOrder";
 import AssistantSeller from "./pages/Assistant/AssistantSeller";
@@ -139,8 +139,7 @@ const App = () => {
 
           <Route path="/admin/category" element={<AdminCategory />} />
           <Route path="/admin/category/add" element={<AdminAddCategory />} />
-          <Route path="/admin/subcategory/add" element={<AdminAddSubCategory />} />
-          <Route path="/admin/subcategory/update/:id" element={<AdminUpdateSubCategory />} />
+          <Route path="/admin/category/update/:id" element={<AdminUpdateCategory />} />
 
           <Route path="/admin/product" element={<AdminProduct />} />
           <Route path="/admin/order" element={<AdminOrder />} />
@@ -163,7 +162,7 @@ const App = () => {
           <Route path="/assistant/category/update/:id" element={<AssistantUpdateCategory />} />
 
           <Route path="/assistant/warehouse/staff" element={<AssistantWarehouseStaff />} />
-
+          <Route path="/assistant/warehouse/staff/update/:id" element={<AssistantUpdateWarehouseStaff />} />
           <Route path="/assistant/product" element={<AssistantProductManagement />} />
 
           <Route path="/assistant/order" element={<AssistantOrder />} />
