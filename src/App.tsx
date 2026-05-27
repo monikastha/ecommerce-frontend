@@ -1,7 +1,8 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 // ====================== AUTHENTICATION & COMMON PAGES ======================
-import BuyerHome from "./pages/Buyer/home/LandingPage";
+import LandingPage from "./pages/Buyer/home/LandingPage";
+import BuyerHome from "./pages/Buyer/home/BuyerHome";
 import BuyerSignUp from "./pages/authentication/BuyerSignUp";
 import LoginForAll from "./pages/authentication/LoginForAll";
 import AuthLayout from "./pages/layouts/AuthLayout";
@@ -25,7 +26,7 @@ import Medicine from "./pages/Buyer/home/Medicine";
 import StudyMaterials from "./pages/Buyer/home/StudyMaterials";
 import Checkout from "./pages/Buyer/home/Checkout";
 import Payment from "./pages/Buyer/home/Payment";
-import Home from "./pages/Buyer/home/LandingPage";
+import Home from "./pages/Buyer/home/BuyerHome";
 import OrderTracking from "./pages/Buyer/home/OrderTracking";
 // ====================== DELIVERY MAN PAGES ======================
 import DeliverymanDashboard from "./pages/DeliveryMan/DeliverymanDashboard";
@@ -98,7 +99,7 @@ const App = () => {
       <Routes>
 
         {/* ==================== PUBLIC ROUTES ==================== */}
-        <Route path="/" element={<BuyerHome  />} />
+        <Route path="/" element={<LandingPage  />} />
         <Route path="/buyer/signup" element={<BuyerSignUp />} />
         <Route path="/signupway" element={<SignupWay />} />
         <Route path="/seller/register" element={<SellerRegister />} />
@@ -125,8 +126,12 @@ const App = () => {
         <Route path="/studymaterials" element={<StudyMaterials />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment" element={<Payment />} />
-        <Route path="/home" element={<Home/>} />
         <Route path="/ordertracking" element={<OrderTracking />} />
+
+        <Route element={<ProtectedRoute allowedRoles={["buyer"]} />}>
+          <Route path="/home" element={<Home/>} />
+          <Route path="/buyer/home" element={<BuyerHome />} />
+        </Route>
 
     
 

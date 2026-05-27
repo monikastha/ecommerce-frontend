@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
 import cartoonImg from "../../assets/cartoon1.png";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 export default function BuyerSignUp() {
   const [formData, setFormData] = useState({
     username: "",
@@ -60,7 +62,7 @@ export default function BuyerSignUp() {
     return newErrors;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -70,10 +72,33 @@ export default function BuyerSignUp() {
     setErrors({});
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${API_BASE}/api/buyer/register/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ form: data.error || data.detail || "Registration failed." });
+        return;
+      }
+
+      localStorage.setItem("user_id", String(data.buyer?.user_id || ""));
+      localStorage.setItem("buyer_id", String(data.buyer?.id || ""));
+      localStorage.setItem("username", data.buyer?.username || formData.username);
+      localStorage.setItem("role", "buyer");
+
+      navigate("/buyer/home");
+    } catch {
+      setErrors({ form: "Network error. Please check your connection." });
+    } finally {
       setLoading(false);
-      navigate("/confirmcode");
-    }, 1000);
+    }
   };
 
   return (
@@ -110,34 +135,37 @@ export default function BuyerSignUp() {
           flex: 1;
           display: flex;
           align-items: center;
-          justify-content: center;
-          padding: 40px 32px;
-          gap: 70px;
+          justify-content: space-between;
+          width: min(1120px, 100%);
+          margin: 0 auto;
+          padding: 32px 48px 48px;
+          gap: 56px;
         }
 
-        /* Girl Image - Left Side (Vertically Centered) */
         .image-side {
-          flex: 0 0 360px;
+          flex: 1 1 440px;
           display: flex;
-          align-items: center;     /* Vertical center */
-          justify-content: center;
-          height: 100%;            /* Important for full height centering */
+          align-items: center;
+          justify-content: flex-start;
+          min-width: 280px;
+          order: 1;
         }
 
         .cartoon {
-          width: 310px;
+          width: min(380px, 100%);
           height: auto;
-          max-height: 520px;
+          max-height: 560px;
           object-fit: contain;
           filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.18));
         }
 
-        /* Signup Form - Right Side */
         .card {
           background: rgba(255, 255, 255, 0.93);
           border-radius: 24px;
           padding: 42px 48px;
           width: 460px;
+          flex: 0 0 460px;
+          order: 2;
           box-shadow: 0 12px 50px rgba(30, 100, 160, 0.16);
         }
 
@@ -251,6 +279,33 @@ export default function BuyerSignUp() {
         .nav-separator {
           color: #7f8c8d;
         }
+
+        @media (max-width: 900px) {
+          .main {
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 20px 20px 36px;
+            gap: 24px;
+          }
+
+          .image-side {
+            flex: none;
+            min-width: 0;
+            justify-content: center;
+            width: 100%;
+          }
+
+          .cartoon {
+            width: min(260px, 72vw);
+            max-height: 300px;
+          }
+
+          .card {
+            width: min(460px, 100%);
+            flex: none;
+            padding: 32px 24px;
+          }
+        }
       `}</style>
 
       <div className="page">
@@ -343,6 +398,7 @@ export default function BuyerSignUp() {
             <button className="next-btn" onClick={handleNext} disabled={loading}>
               {loading ? "Creating Account..." : "Next"}
             </button>
+            {errors.form && <div className="error-msg">{errors.form}</div>}
 
             <p className="signin-text">
               Already have an account? <Link to="/login">Login</Link>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import BuyerNavbar from "../../../components/BuyerNavbar";
+import BuyerNavbar2 from "../../../components/BuyerNavbar2";
 import BuyerFooter from "../../../components/BuyerFooter";
 
 import shoesImg from "../../../assets/shoes4.jpg";
@@ -209,7 +209,7 @@ export default function SajiloMart() {
         fontFamily: "'Segoe UI',system-ui,sans-serif",
       }}
     >
-      <BuyerNavbar cartQty={cartQty} />
+      <BuyerNavbar2 cartQty={cartQty} />
 
       {/* ══════════════════════════════════════
           HERO

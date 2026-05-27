@@ -9,7 +9,7 @@ import signup from "../assets/signupRemove.png";
 const NAV_ITEMS = [
   { label: "Home", emoji: homeLogo, path: "/" },
   { label: "Login", emoji: login, path: "/login" },
-  { label: "SignUp", emoji: signup, path: "/signup" },
+  { label: "SignUp", emoji: signup, path: "/buyer/signup" },
 ];
 
 const CAT_TABS = [

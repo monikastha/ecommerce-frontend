@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
 
 type Role = {
@@ -82,7 +82,7 @@ export default function LoginForAll() {
       const roleRoutes: { [key: string]: string } = {
         admin: "/admin/dashboard",
         assistant: "/assistant/dashboard",
-        buyer: "/buyer/dashboard",
+        buyer: "/buyer/home",
         seller: "/seller/dashboard",
         delivery: "/delivery/dashboard",
         warehousestaff: "/warehouse/dashboard",

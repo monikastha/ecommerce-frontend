@@ -21,7 +21,8 @@ import cartoon2 from "../../../assets/cartoon2.png";
 
 
 /* ─────────────────────────────────────────────────────────────
-   DESIGN TOKENS  — change these ONE place to retheme the whole site
+   DE
+    TOKENS  — change these ONE place to retheme the whole site
 ───────────────────────────────────────────────────────────── */
 const TOKEN = {
   // brand
