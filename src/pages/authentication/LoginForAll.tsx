@@ -95,6 +95,7 @@ export default function LoginForAll() {
       } else {
         setError("Invalid role received from server");
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setError("Network error. Please check your connection.");
     } finally {

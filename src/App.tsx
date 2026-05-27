@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 // ====================== AUTHENTICATION & COMMON PAGES ======================
-import BuyerHome from "./pages/Buyer/home/BuyerHome";
+import BuyerHome from "./pages/Buyer/home/LandingPage";
 import BuyerSignUp from "./pages/authentication/BuyerSignUp";
 import LoginForAll from "./pages/authentication/LoginForAll";
 import AuthLayout from "./pages/layouts/AuthLayout";
@@ -23,7 +23,10 @@ import Shoes from "./pages/Buyer/home/Shoes";
 import Accessories from "./pages/Buyer/home/Accessories";
 import Medicine from "./pages/Buyer/home/Medicine";
 import StudyMaterials from "./pages/Buyer/home/StudyMaterials";
-
+import Checkout from "./pages/Buyer/home/Checkout";
+import Payment from "./pages/Buyer/home/Payment";
+import Home from "./pages/Buyer/home/LandingPage";
+import OrderTracking from "./pages/Buyer/home/OrderTracking";
 // ====================== DELIVERY MAN PAGES ======================
 import DeliverymanDashboard from "./pages/DeliveryMan/DeliverymanDashboard";
 import DeliverymanOrder from "./pages/DeliveryMan/DeliverymanOrder";
@@ -95,9 +98,7 @@ const App = () => {
       <Routes>
 
         {/* ==================== PUBLIC ROUTES ==================== */}
-        <Route path="/" element={<BuyerHome />} />
-        <Route path="/home" element={<BuyerHome />} />
-
+        <Route path="/" element={<BuyerHome  />} />
         <Route path="/buyer/signup" element={<BuyerSignUp />} />
         <Route path="/signupway" element={<SignupWay />} />
         <Route path="/seller/register" element={<SellerRegister />} />
@@ -122,6 +123,12 @@ const App = () => {
         <Route path="/accessories" element={<Accessories />} />
         <Route path="/medicine" element={<Medicine />} />
         <Route path="/studymaterials" element={<StudyMaterials />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/home" element={<Home/>} />
+        <Route path="/ordertracking" element={<OrderTracking />} />
+
+    
 
         {/* ==================== ADMIN ROUTES ==================== */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
