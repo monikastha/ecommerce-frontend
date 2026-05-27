@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
 
 type Role = {
@@ -317,6 +317,26 @@ export default function LoginForAll() {
           color: #2563eb;
           font-weight: bold;
           text-decoration: none;
+        }
+        .auth-links {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+          margin: 12px 0 20px;
+          font-size: 14px;
+          color: #1e40af;
+        }
+        .nav-link {
+          color: #2563eb;
+          font-weight: 700;
+          text-decoration: none;
+        }
+        .nav-link:hover {
+          text-decoration: underline;
+        }
+        .nav-separator {
+          color: #94a3b8;
         }
       `}</style>
     </div>

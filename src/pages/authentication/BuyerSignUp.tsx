@@ -1,51 +1,69 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import logoImg from "../../assets/logo.png";
 import cartoonImg from "../../assets/cartoon1.png";
 
 export default function BuyerSignUp() {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!fullName.trim()) newErrors.fullName = "Full name is required.";
-    if (!email.trim()) newErrors.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    if (!formData.username.trim()) newErrors.username = "Username is required.";
+    else if (formData.username.length < 3)
+      newErrors.username = "Username must be at least 3 characters.";
+
+    if (!formData.fullName.trim()) newErrors.fullName = "Full name is required.";
+    if (!formData.email.trim()) newErrors.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       newErrors.email = "Enter a valid email.";
 
-    if (!address.trim()) newErrors.address = "Address is required.";
+    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required.";
+    else if (!/^\+?[0-9\s]{10,15}$/.test(formData.phoneNumber))
+      newErrors.phoneNumber = "Enter a valid phone number.";
 
-    if (!password) newErrors.password = "Password is required.";
-    else if (password.length < 8)
+    if (!formData.address.trim()) newErrors.address = "Address is required.";
+
+    if (!formData.password) newErrors.password = "Password is required.";
+    else if (formData.password.length < 8)
       newErrors.password = "Password must be at least 8 characters.";
 
-    if (!confirmPassword)
+    if (!formData.confirmPassword)
       newErrors.confirmPassword = "Please confirm your password.";
-    else if (password !== confirmPassword)
+    else if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
 
     return newErrors;
   };
 
   const handleNext = () => {
-    const v = validate();
-
-    if (Object.keys(v).length > 0) {
-      setErrors(v);
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
@@ -55,7 +73,7 @@ export default function BuyerSignUp() {
     setTimeout(() => {
       setLoading(false);
       navigate("/confirmcode");
-    }, 800);
+    }, 1000);
   };
 
   return (
@@ -84,82 +102,73 @@ export default function BuyerSignUp() {
           gap: 14px;
         }
 
-        .logo {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-
-        .brand-text {
-          font-size: 22px;
-          font-weight: 900;
-          color: #1a3a6b;
-        }
-
-        .brand-sub {
-          font-size: 13px;
-          font-weight: 700;
-          color: #2e86c1;
-        }
+        .logo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+        .brand-text { font-size: 22px; font-weight: 900; color: #1a3a6b; }
+        .brand-sub { font-size: 13px; font-weight: 700; color: #2e86c1; }
 
         .main {
           flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 0 32px 48px;
+          padding: 40px 32px;
+          gap: 70px;
         }
 
+        /* Girl Image - Left Side (Vertically Centered) */
         .image-side {
-          flex: 0 0 320px;
+          flex: 0 0 360px;
           display: flex;
-          align-items: center;
+          align-items: center;     /* Vertical center */
           justify-content: center;
-          height: 460px;
+          height: 100%;            /* Important for full height centering */
         }
 
         .cartoon {
-          width: 280px;
-          height: 380px;
+          width: 310px;
+          height: auto;
+          max-height: 520px;
           object-fit: contain;
+          filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.18));
         }
 
+        /* Signup Form - Right Side */
         .card {
-          background: rgba(255, 255, 255, 0.88);
+          background: rgba(255, 255, 255, 0.93);
           border-radius: 24px;
-          padding: 40px 44px;
-          width: 440px;
-          box-shadow: 0 8px 40px rgba(30, 100, 160, 0.13);
+          padding: 42px 48px;
+          width: 460px;
+          box-shadow: 0 12px 50px rgba(30, 100, 160, 0.16);
         }
 
         .card-title {
-          font-size: 34px;
+          font-size: 36px;
           font-weight: 900;
           text-align: center;
-          margin-bottom: 26px;
+          margin-bottom: 30px;
+          color: #1a3a6b;
         }
 
-        .field {
-          margin-bottom: 14px;
-        }
+        .field { margin-bottom: 16px; }
 
         .field-label {
-          font-size: 14px;
+          font-size: 14.5px;
           font-weight: 700;
-          margin-bottom: 6px;
+          margin-bottom: 7px;
           display: block;
+          color: #2c3e50;
         }
 
         .input-wrap {
           display: flex;
           align-items: center;
-          background: #ebebeb;
-          border-radius: 8px;
-          padding: 0 14px;
+          background: #f4f4f4;
+          border-radius: 10px;
+          padding: 0 16px;
         }
 
         .input-wrap:focus-within {
+          background: white;
           border: 2px solid #27ae60;
         }
 
@@ -167,53 +176,86 @@ export default function BuyerSignUp() {
           flex: 1;
           border: none;
           background: transparent;
-          padding: 11px 0;
+          padding: 13px 0;
           outline: none;
+          font-size: 15.5px;
         }
 
         .eye-btn {
           background: none;
           border: none;
           cursor: pointer;
+          font-size: 20px;
         }
 
         .error-msg {
-          font-size: 12px;
-          color: red;
+          font-size: 13px;
+          color: #e74c3c;
           margin-top: 4px;
         }
 
         .next-btn {
           width: 100%;
-          padding: 14px;
+          padding: 15px;
           background: #27ae60;
           color: white;
           border: none;
-          border-radius: 10px;
+          border-radius: 12px;
           font-weight: 800;
+          font-size: 16.5px;
           cursor: pointer;
+          margin-top: 12px;
         }
 
         .next-btn:disabled {
-          opacity: 0.7;
+          opacity: 0.75;
+          cursor: not-allowed;
         }
 
         .signin-text {
           text-align: center;
-          margin-top: 16px;
-          font-size: 13px;
+          margin-top: 20px;
+          font-size: 14px;
         }
 
         .signin-text a {
           color: #2980b9;
           font-weight: 800;
+          text-decoration: none;
+        }
+
+        .auth-links {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 20px;
+          font-size: 14px;
+          color: #1a3a6b;
+        }
+
+        .nav-link {
+          background: none;
+          border: none;
+          color: #2980b9;
+          cursor: pointer;
+          font-weight: 800;
+          text-decoration: none;
+          padding: 0;
+        }
+
+        .nav-link:hover {
+          text-decoration: underline;
+        }
+
+        .nav-separator {
+          color: #7f8c8d;
         }
       `}</style>
 
       <div className="page">
         <nav className="navbar">
           <img src={logoImg} alt="Logo" className="logo" />
-
           <div>
             <div className="brand-text">SAJILO MART</div>
             <div className="brand-sub">Shop Anytime Anywhere</div>
@@ -221,17 +263,33 @@ export default function BuyerSignUp() {
         </nav>
 
         <div className="main">
+          {/* Girl Image - Left Side (Perfectly Centered) */}
           <div className="image-side">
-            <img src={cartoonImg} alt="Cartoon" className="cartoon" />
+            <img src={cartoonImg} alt="Cartoon Girl" className="cartoon" />
           </div>
 
+          {/* Signup Form */}
           <div className="card">
-            <h1 className="card-title">Sign Up</h1>
+            <h1 className="card-title">Create Buyer Account</h1>
+
+            <div className="auth-links">
+              <button type="button" className="nav-link" onClick={() => navigate("/")}>Home</button>
+              <span className="nav-separator">|</span>
+              <Link to="/login" className="nav-link">Login</Link>
+            </div>
+
+            <div className="field">
+              <label className="field-label">Username</label>
+              <div className="input-wrap">
+                <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" />
+              </div>
+              {errors.username && <div className="error-msg">{errors.username}</div>}
+            </div>
 
             <div className="field">
               <label className="field-label">Full Name</label>
               <div className="input-wrap">
-                <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="John Doe" />
               </div>
               {errors.fullName && <div className="error-msg">{errors.fullName}</div>}
             </div>
@@ -239,15 +297,23 @@ export default function BuyerSignUp() {
             <div className="field">
               <label className="field-label">Email</label>
               <div className="input-wrap">
-                <input value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="example@email.com" />
               </div>
               {errors.email && <div className="error-msg">{errors.email}</div>}
             </div>
 
             <div className="field">
+              <label className="field-label">Phone Number</label>
+              <div className="input-wrap">
+                <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+977 98xxxxxxxx" />
+              </div>
+              {errors.phoneNumber && <div className="error-msg">{errors.phoneNumber}</div>}
+            </div>
+
+            <div className="field">
               <label className="field-label">Address</label>
               <div className="input-wrap">
-                <input value={address} onChange={(e) => setAddress(e.target.value)} />
+                <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Pokhara, Nepal" />
               </div>
               {errors.address && <div className="error-msg">{errors.address}</div>}
             </div>
@@ -255,13 +321,9 @@ export default function BuyerSignUp() {
             <div className="field">
               <label className="field-label">Password</label>
               <div className="input-wrap">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} />
                 <button className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
-                  👁
+                  {showPassword ? "🙈" : "👁"}
                 </button>
               </div>
               {errors.password && <div className="error-msg">{errors.password}</div>}
@@ -270,29 +332,20 @@ export default function BuyerSignUp() {
             <div className="field">
               <label className="field-label">Confirm Password</label>
               <div className="input-wrap">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                <button
-                  className="eye-btn"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  👁
+                <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
+                <button className="eye-btn" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  {showConfirmPassword ? "🙈" : "👁"}
                 </button>
               </div>
-              {errors.confirmPassword && (
-                <div className="error-msg">{errors.confirmPassword}</div>
-              )}
+              {errors.confirmPassword && <div className="error-msg">{errors.confirmPassword}</div>}
             </div>
 
             <button className="next-btn" onClick={handleNext} disabled={loading}>
-              {loading ? "Loading..." : "Next"}
+              {loading ? "Creating Account..." : "Next"}
             </button>
 
             <p className="signin-text">
-              Already have account? <a href="/login">Login</a>
+              Already have an account? <Link to="/login">Login</Link>
             </p>
           </div>
         </div>
