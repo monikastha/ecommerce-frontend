@@ -7,45 +7,33 @@ import login from "../assets/login.png";
 import signup from "../assets/signupRemove.png";
 
 const NAV_ITEMS = [
-  { label: "Home", emoji: homeLogo, path: "/" },
-  { label: "Login", emoji: login, path: "/login" },
-  { label: "SignUp", emoji: signup, path: "/buyer/signup" },
-];
-
-const CAT_TABS = [
-  { label: "All", path: "/allproducts" },
-  { label: "Fashion", path: "/fashion" },
-  { label: "Electronics", path: "/electronics" },
-  { label: "Home Goods", path: "/homegoods" },
-  { label: "Cosmetics", path: "/cosmetics" },
-  { label: "Medicine", path: "/medicine" },
-  { label: "Study Materials", path: "/studymaterials" },
-  { label: "Shoes", path: "/shoes" },
-  { label: "Accessories", path: "/accessories" },
-  { label: "Others", path: "/allproducts" },
+  { label: "Home", icon: homeLogo, path: "/" },
+  { label: "Login", icon: login, path: "/login" },
+  { label: "Sign Up", icon: signup, path: "/buyer/signup" },
 ];
 
 type BuyerNavbarProps = {
-  cartQty: number;
+  cartQty?: number;
   activeCat?: string;
   onCatChange?: (category: string) => void;
+  categories?: string[];
 };
 
 export default function BuyerNavbar({ 
-  activeCat: propActiveCat, 
-  onCatChange 
+  activeCat: propActiveCat = "All", 
+  onCatChange,
+  categories = [],
 }: BuyerNavbarProps) {
   
   const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState("Home");
-  const [activeCat, setActiveCat] = useState(propActiveCat || "All");
+  const [activeCat, setActiveCat] = useState(propActiveCat);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Sync with parent component when prop changes
+  const categoryTabs = ["All", ...new Set(categories)];
+
   useEffect(() => {
-    if (propActiveCat) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setActiveCat(propActiveCat);
-    }
+    setActiveCat(propActiveCat);
   }, [propActiveCat]);
 
   const handleNavigation = (label: string, path: string) => {
@@ -53,81 +41,94 @@ export default function BuyerNavbar({
     navigate(path);
   };
 
-  const handleCategory = (label: string, path: string) => {
+  const handleCategory = (label: string) => {
     setActiveCat(label);
+    onCatChange?.(label);
     
-    // Call parent handler if provided
-    if (onCatChange) {
-      onCatChange(label);
-    }
-    
+    const path = label === "All" 
+      ? "/allproducts" 
+      : `/allproducts?category=${encodeURIComponent(label)}`;
     navigate(path);
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/allproducts?search=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
+
   return (
-    <header className="bg-white/95 backdrop-blur border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
-        {/* ROW 1 - Logo + Search + Nav */}
-        <div className="flex items-center gap-3 py-2">
-          {/* LOGO */}
-          <button
+        {/* Top Bar */}
+        <div className="flex items-center justify-between py-4">
+          
+          {/* Logo */}
+          <div 
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 shrink-0 bg-transparent border-none cursor-pointer"
+            className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
           >
-            <div className="w-10 h-10 rounded-full overflow-hidden shadow-md ring-2 ring-green-400/30 bg-white flex items-center justify-center">
-              <img src={logoImg} className="w-10 h-10 object-contain" alt="logo" />
+            <div className="w-11 h-11 bg-white rounded-2xl overflow-hidden border border-emerald-200 shadow flex items-center justify-center">
+              <img src={logoImg} alt="Sajilo Mart" className="w-10 h-10 object-contain" />
             </div>
-            <div className="text-left leading-none">
-              <p className="text-[15px] font-black text-blue-700">Sajilo Mart</p>
-              <p className="text-[9px] text-gray-400 italic">Shop Anytime, Anywhere</p>
+            <div>
+              <p className="text-xl font-black text-emerald-700 tracking-tight">Sajilo Mart</p>
+              <p className="text-[10px] text-gray-500 -mt-1">Shop Anytime, Anywhere</p>
             </div>
-          </button>
-
-          {/* SEARCH */}
-          <div className="flex flex-1 items-center rounded-full border-2 border-violet-200 h-9 bg-gray-50 max-w-xl mx-auto">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="flex-1 px-4 text-sm outline-none bg-transparent"
-            />
-            <button className="bg-violet-600 text-white w-10 h-9 rounded-r-full">
-              🔍
-            </button>
           </div>
 
-          {/* NAV ITEMS */}
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-6">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-5 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-violet-500 text-sm placeholder:text-gray-400"
+              />
+              <button 
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-violet-600 text-white p-2.5 rounded-xl hover:bg-violet-700 transition-colors"
+              >
+                🔍
+              </button>
+            </div>
+          </form>
+
+          {/* Navigation Items */}
           <nav className="flex items-center gap-1">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.label}
                 onClick={() => handleNavigation(item.label, item.path)}
-                className={`flex flex-col items-center px-3 py-1 text-[10px] rounded-lg relative
-                  ${activeNav === item.label
-                    ? "text-violet-700 bg-violet-50 font-bold"
-                    : "text-gray-500 hover:text-violet-600 hover:bg-violet-50"
-                  }`}
+                className={`flex flex-col items-center px-4 py-2 text-xs rounded-2xl transition-all
+                  ${activeNav === item.label 
+                    ? "text-violet-700 bg-violet-50 font-semibold" 
+                    : "text-gray-600 hover:text-violet-600 hover:bg-violet-50"}`}
               >
-                <img src={item.emoji} className="w-5 h-5 mb-0.5" alt={item.label} />
+                <img src={item.icon} className="w-6 h-6 mb-1" alt={item.label} />
                 {item.label}
               </button>
             ))}
           </nav>
         </div>
 
-        {/* CATEGORIES TABS */}
-        <div className="flex gap-2 overflow-x-auto pb-3 hide-scroll">
-          {CAT_TABS.map((c) => (
+        {/* Category Tabs */}
+        <div className="flex gap-2 pb-4 overflow-x-auto hide-scroll">
+          {categoryTabs.map((label) => (
             <button
-              key={c.label}
-              onClick={() => handleCategory(c.label, c.path)}
-              className={`px-5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all
-                ${activeCat === c.label
-                  ? "bg-violet-600 text-white border-violet-600"
-                  : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+              key={label}
+              onClick={() => handleCategory(label)}
+              className={`px-6 py-2 text-sm font-medium rounded-2xl whitespace-nowrap transition-all border
+                ${activeCat === label 
+                  ? "bg-violet-600 text-white border-violet-600" 
+                  : "bg-white text-gray-600 border-gray-200 hover:border-violet-300 hover:text-violet-700"
                 }`}
             >
-              {c.label}
+              {label}
             </button>
           ))}
         </div>

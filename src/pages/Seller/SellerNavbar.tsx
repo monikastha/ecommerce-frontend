@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
+import RoleProfileModal from "../../components/RoleProfileModal";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -12,10 +12,9 @@ import {
 
 const SellerNavbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-  const navigate = useNavigate();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -31,7 +30,7 @@ const SellerNavbar = () => {
   };
 
   const handleProfile = () => {
-    navigate("/seller/profile");
+    setModalOpen(true);
     setProfileOpen(false);
   };
 
@@ -232,6 +231,8 @@ const SellerNavbar = () => {
           </div>
         </div>
       </div>
+
+      <RoleProfileModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   );
 };

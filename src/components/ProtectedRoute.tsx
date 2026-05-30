@@ -5,9 +5,10 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   const role = localStorage.getItem("role");
 
-  if (!role || !allowedRoles.includes(role)) {
+  if (!isLoggedIn || !role || !allowedRoles.includes(role)) {
     return <Navigate to="/login" replace />;
   }
 

@@ -1,8 +1,7 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 // ====================== AUTHENTICATION & COMMON PAGES ======================
 import LandingPage from "./pages/Buyer/home/LandingPage";
-import BuyerHome from "./pages/Buyer/home/BuyerHome";
 import BuyerSignUp from "./pages/authentication/BuyerSignUp";
 import LoginForAll from "./pages/authentication/LoginForAll";
 import AuthLayout from "./pages/layouts/AuthLayout";
@@ -16,17 +15,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ProductPage from "./pages/Buyer/home/ProductPage";
 import ViewAllProducts from "./pages/Buyer/home/ViewAllProduct";
 import ViewAllCategories from "./pages/Buyer/home/ViewAllCategories";
-import Fashion from "./pages/Buyer/home/Fashion";
-import Electronics from "./pages/Buyer/home/Electronics";
-import HomeGoods from "./pages/Buyer/home/HomeGoods";
-import Cosmetics from "./pages/Buyer/home/Cosmetics";
-import Shoes from "./pages/Buyer/home/Shoes";
-import Accessories from "./pages/Buyer/home/Accessories";
-import Medicine from "./pages/Buyer/home/Medicine";
-import StudyMaterials from "./pages/Buyer/home/StudyMaterials";
 import Checkout from "./pages/Buyer/home/Checkout";
 import Payment from "./pages/Buyer/home/Payment";
-import Home from "./pages/Buyer/home/BuyerHome";
+import Cart from "./pages/Buyer/home/Cart";
 import OrderTracking from "./pages/Buyer/home/OrderTracking";
 // ====================== DELIVERY MAN PAGES ======================
 import DeliverymanDashboard from "./pages/DeliveryMan/DeliverymanDashboard";
@@ -65,7 +56,8 @@ import AdminAddPromotion from "./pages/Admin/AdminAddPromotion";
 import AdminUpdatePromotion from "./pages/Admin/AdminUpdatePromotion";
 import AdminLocation from "./pages/Admin/AdminLocation";
 import AdminAddLocation from "./pages/Admin/AdminAddLocation";
-// import AdminEarnings from "./pages/Admin/AdminEarnigns";
+import AdminUpdateLocation from "./pages/Admin/AdminUpdateLocation";
+import AdminEarnings from "./pages/Admin/AdminEarnings";
 
 // ====================== ASSISTANT PAGES ======================
 import AssistantDashboard from "./pages/Assistant/AssistantDashboard";
@@ -75,6 +67,7 @@ import AssistantWarehouseStaff from "./pages/Assistant/AssistantWarehouseStaff";
 import AssistantUpdateWarehouseStaff from "./pages/Assistant/AssistantUpdateWarehouseStaff";
 import AssistantProductManagement from "./pages/Assistant/AssistantProductManagement";
 import AssistantOrder from "./pages/Assistant/AssistantOrder";
+import AssistantEmergencyOrders from "./pages/Assistant/AssistantEmergencyOrders";
 import AssistantSeller from "./pages/Assistant/AssistantSeller";
 import AssistantDeliveryMan from "./pages/Assistant/AssistantDeliveryMan";
 import AssistantUpdateDeliveryMan from "./pages/Assistant/AssistantUpdateDeliveryMan";
@@ -105,6 +98,18 @@ const App = () => {
         <Route path="/seller/register" element={<SellerRegister />} />
         <Route path="/confirmcode" element={<ConfirmCode />} />
         <Route path="/emailverified" element={<EmailVerifiedSuccess />} />
+        <Route path="/product" element={<ProductPage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
+        <Route path="/allproducts" element={<ViewAllProducts />} />
+        <Route path="/allcategories" element={<ViewAllCategories />} />
+        <Route path="/fashion" element={<Navigate to="/allproducts" replace />} />
+        <Route path="/electronics" element={<Navigate to="/allproducts" replace />} />
+        <Route path="/homegoods" element={<Navigate to="/allproducts" replace />} />
+        <Route path="/cosmetics" element={<Navigate to="/allproducts" replace />} />
+        <Route path="/shoes" element={<Navigate to="/allproducts" replace />} />
+        <Route path="/accessories" element={<Navigate to="/allproducts" replace />} />
+        <Route path="/medicine" element={<Navigate to="/allproducts" replace />} />
+        <Route path="/studymaterials" element={<Navigate to="/allproducts" replace />} />
 
         {/* Login Route */}
         <Route element={<AuthLayout />}>
@@ -112,25 +117,12 @@ const App = () => {
         </Route>
 
         {/* ==================== BUYER ROUTES ==================== */}
-        <Route path="/product" element={<ProductPage />} />
-        <Route path="/allproducts" element={<ViewAllProducts />} />
-        <Route path="/allcategories" element={<ViewAllCategories />} />
-
-        <Route path="/fashion" element={<Fashion />} />
-        <Route path="/electronics" element={<Electronics />} />
-        <Route path="/homegoods" element={<HomeGoods />} />
-        <Route path="/cosmetics" element={<Cosmetics />} />
-        <Route path="/shoes" element={<Shoes />} />
-        <Route path="/accessories" element={<Accessories />} />
-        <Route path="/medicine" element={<Medicine />} />
-        <Route path="/studymaterials" element={<StudyMaterials />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/payment" element={<Payment />} />
-        <Route path="/ordertracking" element={<OrderTracking />} />
-
         <Route element={<ProtectedRoute allowedRoles={["buyer"]} />}>
-          <Route path="/home" element={<Home/>} />
-          <Route path="/buyer/home" element={<BuyerHome />} />
+  
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/ordertracking" element={<OrderTracking />} />
         </Route>
 
     
@@ -162,8 +154,9 @@ const App = () => {
 
           <Route path="/admin/location" element={<AdminLocation />} />
           <Route path="/admin/location/add" element={<AdminAddLocation />} />
+          <Route path="/admin/location/update/:id" element={<AdminUpdateLocation />} />
 
-          {/* <Route path="/admin/earnings" element={<AdminEarnings />} /> */}
+          <Route path="/admin/earnings" element={<AdminEarnings />} />
         </Route>
 
         {/* ==================== ASSISTANT ROUTES ==================== */}
@@ -176,8 +169,10 @@ const App = () => {
           <Route path="/assistant/warehouse/staff" element={<AssistantWarehouseStaff />} />
           <Route path="/assistant/warehouse/staff/update/:id" element={<AssistantUpdateWarehouseStaff />} />
           <Route path="/assistant/product" element={<AssistantProductManagement />} />
-
+        
+      
           <Route path="/assistant/order" element={<AssistantOrder />} />
+          <Route path="/assistant/emergency-orders" element={<AssistantEmergencyOrders />} />
 
           <Route path="/assistant/seller" element={<AssistantSeller />} />
 

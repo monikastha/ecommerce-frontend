@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaUser, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
+import { FaUser, FaEdit, FaTrash } from "react-icons/fa";
 
 const API_BASE = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/api/deliveryman/delivery`;
 

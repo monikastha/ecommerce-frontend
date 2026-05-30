@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import BuyerNavbar from "../../../components/BuyerNavbar";
 import BuyerFooter from "../../../components/BuyerFooter";
 
@@ -6,7 +6,6 @@ import greenKurta from "../../../assets/greenKurta.jpg";
 
 export default function OrderTracking() {
   const { orderId } = useParams<{ orderId: string }>();
-  const navigate = useNavigate();
 
   const timeline = [
     { status: "Order Confirmed", date: "April 5, 2026", completed: true },

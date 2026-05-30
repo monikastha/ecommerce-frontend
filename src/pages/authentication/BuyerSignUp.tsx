@@ -88,12 +88,7 @@ export default function BuyerSignUp() {
         return;
       }
 
-      localStorage.setItem("user_id", String(data.buyer?.user_id || ""));
-      localStorage.setItem("buyer_id", String(data.buyer?.id || ""));
-      localStorage.setItem("username", data.buyer?.username || formData.username);
-      localStorage.setItem("role", "buyer");
-
-      navigate("/buyer/home");
+      navigate("/login");
     } catch {
       setErrors({ form: "Network error. Please check your connection." });
     } finally {

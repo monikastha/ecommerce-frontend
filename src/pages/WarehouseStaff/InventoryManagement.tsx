@@ -1,244 +1,277 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { FaEdit, FaMinus, FaPlus, FaTrash } from "react-icons/fa";
 import WarehouseStaffSidebar from "./WarehouseStaffSidebar";
 import WarehouseStaffNavbar from "./WarehouseStaffNavbar";
-import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
-import axios from "axios";
+
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const STOCK_API = `${API_ORIGIN}/api/warehouse/stock/`;
+const PRODUCT_API = `${API_ORIGIN}/api/products/`;
+const LOCATION_API = `${API_ORIGIN}/api/locations/`;
 
 type Product = {
-  id: number | string;
-  product_name: string;
-  category_name?: string;
-  productcategory?: number;
-  quantity: number;
-  availability_status: string;
-};
-
-type Category = {
   id: number;
   name: string;
+  category_name?: string;
+  price: string;
 };
 
-const InventoryManagement = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+type Location = {
+  id: number;
+  name: string;
+  province: string;
+  city: string;
+  status: string;
+};
 
+type StockItem = {
+  id: number;
+  product: number;
+  product_name: string;
+  category_name?: string;
+  location: number;
+  location_name: string;
+  location_city: string;
+  quantity: number;
+  availability_status: "in_stock" | "low_stock" | "out_of_stock";
+};
+
+const statusLabel = (status: StockItem["availability_status"]) => {
+  if (status === "out_of_stock") return "Out of Stock";
+  if (status === "low_stock") return "Low Stock";
+  return "In Stock";
+};
+
+const statusColor = (status: StockItem["availability_status"]) => {
+  if (status === "out_of_stock") return "#ef4444";
+  if (status === "low_stock") return "#f97316";
+  return "#22c55e";
+};
+
+export default function InventoryManagement() {
+  const [stocks, setStocks] = useState<StockItem[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({
-    name: "",
-    category: "",
-    stock: "",
+    product: "",
+    location: "",
+    quantity: "",
   });
 
-  const [editingId, setEditingId] = useState<number | string | null>(null);
+  const activeLocations = useMemo(
+    () =>
+      locations.filter((location) => {
+        const status = String(location.status || "").trim().toLowerCase();
+        return !status || status === "active";
+      }),
+    [locations]
+  );
 
-  const API_BASE = "http://localhost:8000/api/warehouse/stock/";
-  const CATEGORY_API = "http://localhost:8000/api/productcategory/categories/";
+  const selectedProduct = useMemo(
+    () => products.find((product) => String(product.id) === form.product),
+    [form.product, products]
+  );
 
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(API_BASE);
-      setProducts(response.data);
-    } catch (error) {
-      console.error("Error fetching products:", error);
+  const fetchInventory = async () => {
+    const [stockRes, productRes, locationRes] = await Promise.allSettled([
+      axios.get(STOCK_API),
+      axios.get(PRODUCT_API),
+      axios.get(LOCATION_API),
+    ]);
+
+    if (stockRes.status === "fulfilled") {
+      setStocks(Array.isArray(stockRes.value.data) ? stockRes.value.data : []);
+    } else {
+      console.error("Failed to load stock data", stockRes.reason);
+      setStocks([]);
     }
-  };
 
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(CATEGORY_API);
-      setCategories(response.data);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
+    if (productRes.status === "fulfilled") {
+      setProducts(Array.isArray(productRes.value.data) ? productRes.value.data : []);
+    } else {
+      console.error("Failed to load product data", productRes.reason);
+      setProducts([]);
+    }
+
+    if (locationRes.status === "fulfilled") {
+      setLocations(Array.isArray(locationRes.value.data) ? locationRes.value.data : []);
+    } else {
+      console.error("Failed to load location data", locationRes.reason);
+      setLocations([]);
     }
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      await Promise.all([fetchProducts(), fetchCategories()]);
-      setLoading(false);
+    const load = async () => {
+      setLoading(true);
+      try {
+        await fetchInventory();
+      } catch (error) {
+        console.error(error);
+        alert("Some inventory data failed to load. Check backend server and migrations.");
+      } finally {
+        setLoading(false);
+      }
     };
-    loadData();
+    load();
   }, []);
 
-  const getStatus = (stock: number) => {
-    if (stock <= 0) return "Out of Stock";
-    if (stock < 15) return "Low Stock";
-    return "In Stock";
-  };
-
-  const getStatusColor = (status: string) => {
-    if (status === "Out of Stock") return "#ef4444";
-    if (status === "Low Stock") return "#f97316";
-    return "#22c55e";
-  };
-
   const resetForm = () => {
-    setForm({ name: "", category: "", stock: "" });
+    setForm({ product: "", location: "", quantity: "" });
     setEditingId(null);
   };
 
   const handleSubmit = async () => {
-    if (!form.name.trim() || !form.category || !form.stock) {
-      alert("Please fill all fields");
+    const quantity = Number(form.quantity);
+    if (!form.product || !form.location || Number.isNaN(quantity) || quantity < 0) {
+      alert("Select product, location, and enter a valid stock quantity.");
       return;
     }
 
-    const stockNum = Number(form.stock);
-    const payload = {
-      product_name: form.name.trim(),
-      quantity: stockNum,
-      productcategory: Number(form.category),
-      availability_status: getStatus(stockNum),
-    };
+    setSaving(true);
+    try {
+      const payload = {
+        product: Number(form.product),
+        location: Number(form.location),
+        quantity,
+      };
+
+      if (editingId) {
+        await axios.put(`${STOCK_API}${editingId}/`, payload);
+      } else {
+        await axios.post(STOCK_API, payload);
+      }
+
+      await fetchInventory();
+      resetForm();
+      alert("Inventory saved successfully.");
+    } catch (error: any) {
+      console.error(error.response?.data || error);
+      alert("Failed to save inventory.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (item: StockItem) => {
+    setEditingId(item.id);
+    setForm({
+      product: String(item.product),
+      location: String(item.location),
+      quantity: String(item.quantity),
+    });
+  };
+
+  const handleReduce = async (item: StockItem) => {
+    const value = window.prompt(`Reduce stock for ${item.product_name} by:`, "1");
+    if (!value) return;
+    const quantity = Number(value);
+    if (Number.isNaN(quantity) || quantity < 1) {
+      alert("Enter a valid quantity to reduce.");
+      return;
+    }
 
     try {
-      if (editingId) {
-        await axios.put(`${API_BASE}${editingId}/`, payload);
-      } else {
-        await axios.post(API_BASE, payload);
-      }
-      fetchProducts();
-      resetForm();
-      alert("Product saved successfully!");
-    } catch (error: any) {
-      console.error(error.response?.data);
-      alert("Failed to save product");
+      await axios.post(`${STOCK_API}${item.id}/reduce/`, { quantity });
+      await fetchInventory();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to reduce stock.");
     }
   };
 
-  const handleEdit = (product: Product) => {
-    setForm({
-      name: product.product_name,
-      category: String(product.productcategory || ""),
-      stock: product.quantity.toString(),
-    });
-    setEditingId(product.id);
-  };
-
-  const handleDelete = async (id: number | string) => {
-    if (window.confirm("Delete this product?")) {
-      try {
-        await axios.delete(`${API_BASE}${id}/`);
-        fetchProducts();
-      } catch (error) {
-        alert("Failed to delete");
-      }
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this inventory record?")) return;
+    try {
+      await axios.delete(`${STOCK_API}${id}/`);
+      await fetchInventory();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete inventory record.");
     }
   };
 
-  if (loading) return <div style={{ padding: "50px", textAlign: "center" }}>Loading Inventory...</div>;
+  if (loading) {
+    return <div style={{ padding: 50, textAlign: "center" }}>Loading Inventory...</div>;
+  }
 
   return (
     <>
       <style>{`
         .layout { display:flex; min-height:100vh; background:#f1f5f9; }
-        .main { flex:1; display:flex; flex-direction:column; }
+        .main { flex:1; display:flex; flex-direction:column; min-width:0; }
         .content { padding:20px; flex:1; }
-
-        .header { margin-bottom:24px; }
-        .main-content { display: flex; gap: 24px; height: calc(100vh - 160px); }
-
-        .table-section { flex: 7; }
-        .form-section { flex: 3; min-width: 380px; }
-
-        .form-card {
-          background: white;
-          padding: 24px;
-          border-radius: 12px;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-          height: 100%;
-        }
-
-        .form { display: grid; gap: 16px; }
-        .form label { font-size: 13px; color: #475569; margin-bottom: 6px; font-weight: 500; }
-        .form input, .form select {
-          padding: 10px 12px;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          width: 100%;
-        }
-
-        table {
-          width: 100%;
-          background: white;
-          border-collapse: collapse;
-          border-radius: 12px;
-          overflow: hidden;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-        th, td { padding: 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; font-weight: 600; color: #64748b; }
-
-        .badge {
-          padding: 6px 12px;
-          border-radius: 9999px;
-          color: white;
-          font-size: 13px;
-          font-weight: 500;
-        }
-
-        .actions button {
-          padding: 8px;
-          border-radius: 6px;
-          margin-right: 6px;
-        }
-
-        /* Smaller Add/Update Buttons */
-        .submit-btn {
-          padding: 10px 16px !important;
-          font-size: 14px !important;
-          border-radius: 8px;
-        }
+        .header { margin-bottom:20px; }
+        .main-content { display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:24px; align-items:start; }
+        .panel { background:white; border-radius:12px; box-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1); overflow:hidden; }
+        .form-card { background:white; padding:24px; border-radius:12px; box-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .form { display:grid; gap:16px; }
+        .form label { display:block; font-size:13px; color:#475569; margin-bottom:6px; font-weight:600; }
+        .form input, .form select { padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; width:100%; outline:none; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:14px 16px; text-align:left; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+        th { background:#f8fafc; font-weight:700; color:#64748b; font-size:13px; }
+        .badge { padding:6px 12px; border-radius:9999px; color:white; font-size:12px; font-weight:700; display:inline-flex; }
+        .actions { display:flex; gap:7px; }
+        .actions button { width:34px; height:34px; border:0; border-radius:7px; color:white; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+        .submit-btn { border:0; color:white; width:100%; padding:11px 16px; border-radius:8px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; }
       `}</style>
 
       <div className="layout">
         <WarehouseStaffSidebar />
         <div className="main">
           <WarehouseStaffNavbar />
-
           <div className="content">
             <div className="header">
               <h2>Inventory Management</h2>
+              <p style={{ color: "#64748b", marginTop: 4 }}>
+                Store stock by seller product and admin-created delivery location.
+              </p>
             </div>
 
             <div className="main-content">
-              {/* Table */}
-              <div className="table-section">
+              <div className="panel">
                 <table>
                   <thead>
                     <tr>
-                      <th>ID</th>
-                      <th>Product Name</th>
+                      <th>Product</th>
                       <th>Category</th>
+                      <th>Location</th>
                       <th>Stock</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {products.length === 0 ? (
+                    {stocks.length === 0 ? (
                       <tr>
-                        <td colSpan={6} style={{ textAlign: "center", padding: "60px", color: "#64748b" }}>
-                          No products yet. Add your first product from the right panel.
+                        <td colSpan={6} style={{ textAlign: "center", padding: 50, color: "#64748b" }}>
+                          No inventory yet. Add product stock from the right panel.
                         </td>
                       </tr>
                     ) : (
-                      products.map((p) => (
-                        <tr key={p.id}>
-                          <td>{p.id}</td>
-                          <td><strong>{p.product_name}</strong></td>
-                          <td>{p.category_name || "N/A"}</td>
-                          <td><strong>{p.quantity}</strong></td>
+                      stocks.map((item) => (
+                        <tr key={item.id}>
+                          <td><strong>{item.product_name}</strong></td>
+                          <td>{item.category_name || "N/A"}</td>
+                          <td>{item.location_name} <span style={{ color: "#64748b" }}>({item.location_city})</span></td>
+                          <td><strong>{item.quantity}</strong></td>
                           <td>
-                            <span className="badge" style={{ background: getStatusColor(p.availability_status) }}>
-                              {p.availability_status}
+                            <span className="badge" style={{ background: statusColor(item.availability_status) }}>
+                              {statusLabel(item.availability_status)}
                             </span>
                           </td>
                           <td className="actions">
-                            <button onClick={() => handleEdit(p)} style={{ background: "#3b82f6", color: "white" }}>
+                            <button onClick={() => handleEdit(item)} style={{ background: "#2563eb" }} title="Update stock">
                               <FaEdit />
                             </button>
-                            <button onClick={() => handleDelete(p.id)} style={{ background: "#ef4444", color: "white" }}>
+                            <button onClick={() => handleReduce(item)} style={{ background: "#f97316" }} title="Reduce stock">
+                              <FaMinus />
+                            </button>
+                            <button onClick={() => handleDelete(item.id)} style={{ background: "#ef4444" }} title="Delete">
                               <FaTrash />
                             </button>
                           </td>
@@ -249,82 +282,83 @@ const InventoryManagement = () => {
                 </table>
               </div>
 
-              {/* Form */}
-              <div className="form-section">
-                <div className="form-card">
-                  <h3>{editingId ? "Edit Product" : "Add New Product"}</h3>
-
-                  <div className="form">
-                    <div>
-                      <label>Product Name *</label>
-                      <input 
-                        value={form.name} 
-                        onChange={(e) => setForm({ ...form, name: e.target.value })} 
-                        placeholder="Enter product name" 
-                      />
-                    </div>
-
-                    <div>
-                      <label>Category *</label>
-                      <select 
-                        value={form.category} 
-                        onChange={(e) => setForm({ ...form, category: e.target.value })}
-                      >
-                        <option value="">Select Category</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label>Stock Quantity *</label>
-                      <input 
-                        type="number" 
-                        value={form.stock} 
-                        onChange={(e) => setForm({ ...form, stock: e.target.value })} 
-                        placeholder="Quantity in stock" 
-                      />
-                    </div>
-
-                    <div style={{ marginTop: "20px" }}>
-                      <button 
-                        onClick={handleSubmit} 
-                        className="submit-btn"
-                        style={{ 
-                          background: "#2563eb", 
-                          color: "white", 
-                          width: "100%", 
-                          padding: "10px 16px",
-                          fontSize: "14px",
-                          borderRadius: "8px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px"
-                        }}
-                      >
-                        <FaPlus /> {editingId ? "Update Product" : "Add Product"}
-                      </button>
-
-                      {editingId && (
-                        <button 
-                          onClick={resetForm} 
-                          style={{ 
-                            background: "#64748b", 
-                            color: "white", 
-                            width: "100%", 
-                            marginTop: "10px", 
-                            padding: "10px 16px",
-                            fontSize: "14px",
-                            borderRadius: "8px" 
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
+              <div className="form-card">
+                <h3>{editingId ? "Update Inventory" : "Add Inventory"}</h3>
+                <div className="form" style={{ marginTop: 18 }}>
+                  <div>
+                    <label>Seller Product *</label>
+                    <select
+                      value={form.product}
+                      onChange={(e) => setForm({ ...form, product: e.target.value })}
+                    >
+                      <option value="">Select Product</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
+                  <div>
+                    <label>Category</label>
+                    <input
+                      value={selectedProduct?.category_name || ""}
+                      readOnly
+                      placeholder="Category appears after selecting product"
+                    />
+                  </div>
+
+                  <div>
+                    <label>Delivery Location *</label>
+                    <select
+                      value={form.location}
+                      onChange={(e) => setForm({ ...form, location: e.target.value })}
+                    >
+                      <option value="">Select Location</option>
+                      {locations.length === 0 && (
+                        <option value="" disabled>No locations loaded</option>
+                      )}
+                      {locations.length > 0 && activeLocations.length === 0 && (
+                        <option value="" disabled>No active locations available</option>
+                      )}
+                      {activeLocations.map((location) => (
+                        <option key={location.id} value={location.id}>
+                          {location.name} - {location.city} ({location.province})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Stock Quantity *</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={form.quantity}
+                      onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                      placeholder="Quantity in this location"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleSubmit}
+                    disabled={saving}
+                    className="submit-btn"
+                    style={{ background: saving ? "#93c5fd" : "#2563eb" }}
+                  >
+                    <FaPlus /> {saving ? "Saving..." : editingId ? "Update Stock" : "Save Stock"}
+                  </button>
+
+                  {editingId && (
+                    <button
+                      onClick={resetForm}
+                      className="submit-btn"
+                      style={{ background: "#64748b" }}
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -333,6 +367,4 @@ const InventoryManagement = () => {
       </div>
     </>
   );
-};
-
-export default InventoryManagement;
+}

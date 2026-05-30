@@ -94,6 +94,8 @@ const AdminProduct: React.FC = () => {
         .title{ font-size:22px; font-weight:700; color:#0f172a; }
         .subtitle{ font-size:13px; color:#6b7280; margin-top:4px; }
         .search{ width:240px; padding:10px 12px; border-radius:10px; border:1px solid #d1d5db; outline:none; font-size:13px; }
+        .headerActions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .addBtn{ display:flex; align-items:center; gap:7px; border:none; border-radius:10px; padding:10px 14px; background:#2563eb; color:white; font-weight:700; cursor:pointer; }
         .tableBox{ background:#fff; padding:15px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,0.05); overflow-x:auto; }
         table{ width:100%; border-collapse:collapse; min-width:900px; }
         th{ text-align:left; padding:14px; font-size:13px; background:#f8fafc; color:#475569; }
@@ -126,7 +128,9 @@ const AdminProduct: React.FC = () => {
                   <p className="subtitle">Approve, reject, and review seller products</p>
                 </div>
               </div>
-              <input type="text" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="search" />
+              <div className="headerActions">
+                <input type="text" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="search" />
+              </div>
             </div>
 
             <div className="tableBox">

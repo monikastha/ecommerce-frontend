@@ -1,148 +1,389 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import BuyerNavbar from "../../../components/BuyerNavbar";
+import { useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import BuyerFooter from "../../../components/BuyerFooter";
+import BuyerNavbar from "../../../components/BuyerNavbar2";
+import {
+  clearBuyerCart,
+  getBuyerCart,
+  getBuyerCartCount,
+} from "../../../utils/buyerCart";
+import type { BuyerCartItem } from "../../../utils/buyerCart";
 
-import greenKurta from "../../../assets/greenKurta.jpg";
+type CheckoutState = {
+  items?: BuyerCartItem[];
+  buyNow?: boolean;
+};
+
+type DeliveryType = "normal" | "emergency";
+
+type ApiLocation = {
+  id: number;
+  name: string;
+  province: string;
+  city: string;
+  status: string;
+  normal_delivery_charge?: string | number;
+  emergency_delivery_charge?: string | number;
+};
+
+const paymentMethods = [
+  { value: "cash_on_delivery", label: "Cash on Delivery" },
+  { value: "esewa", label: "eSewa" },
+  { value: "khalti", label: "Khalti" },
+  { value: "card", label: "Debit/Credit Card" },
+];
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+const currency = (value: number) => `Rs. ${value.toLocaleString()}`;
 
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const cartItem = location.state?.items?.[0] || {
-    name: "Green Floral Cotton Printed Knee Length Straight Kurti",
-    price: 1250,
-    img: greenKurta,
-  };
-
+  const state = (location.state || {}) as CheckoutState;
+  const [items] = useState<BuyerCartItem[]>(() => state.items?.length ? state.items : getBuyerCart());
+  const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [formData, setFormData] = useState({
     email: "",
+    phone: "",
     address: "",
+    city: "",
+    deliveryLocation: String(items[0]?.locationId || localStorage.getItem("buyer_delivery_location") || ""),
+    deliveryType: "normal" as DeliveryType,
     paymentType: "cash_on_delivery",
   });
-
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  // eslint-disable-next-line react-hooks/purity
-  const [orderId] = useState(`ORD-${Date.now().toString().slice(-8)}`);
+  const [successOrder, setSuccessOrder] = useState<string | null>(null);
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  const [deliveryFeeError, setDeliveryFeeError] = useState("");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const subtotal = useMemo(
+    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [items]
+  );
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const res = await fetch(`${API_ORIGIN}/api/locations/`);
+        const data = await res.json();
+        setLocations(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    loadLocations();
+  }, []);
+
+  const activeLocations = useMemo(
+    () =>
+      locations.filter((loc) => {
+        const status = String(loc.status || "").trim().toLowerCase();
+        return !status || status === "active";
+      }),
+    [locations]
+  );
+
+  const selectedLocation = useMemo(
+    () => locations.find((loc) => String(loc.id) === formData.deliveryLocation),
+    [formData.deliveryLocation, locations]
+  );
+
+  const total = subtotal + deliveryFee;
+
+  useEffect(() => {
+    const calculateDeliveryFee = async () => {
+      if (!formData.deliveryLocation || !subtotal) {
+        setDeliveryFee(0);
+        setDeliveryFeeError("");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_ORIGIN}/api/delivery-charge/calculate/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: Number(formData.deliveryLocation),
+            delivery_type: formData.deliveryType,
+            product_total: subtotal,
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Delivery charge is not available for this location.");
+        }
+
+        setDeliveryFee(Number(data.delivery_charge || 0));
+        setDeliveryFeeError("");
+      } catch (error) {
+        setDeliveryFee(0);
+        setDeliveryFeeError(error instanceof Error ? error.message : "Delivery charge is not available.");
+      }
+    };
+
+    calculateDeliveryFee();
+  }, [formData.deliveryLocation, formData.deliveryType, subtotal]);
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmitPayment = () => {
-    if (!formData.email || !formData.address) {
-      alert("Please fill in Email and Delivery Location");
+  const handlePlaceOrder = async () => {
+    if (!items.length) {
+      alert("Your cart is empty.");
+      navigate("/allproducts");
+      return;
+    }
+
+    if (!formData.email || !formData.phone || !formData.address || !formData.city || !formData.deliveryLocation) {
+      alert("Please complete your contact and delivery information.");
+      return;
+    }
+
+    if (deliveryFeeError) {
+      alert(deliveryFeeError);
       return;
     }
 
     setIsProcessing(true);
+    try {
+      await Promise.all(
+        items.map((item) =>
+          fetch(`${API_ORIGIN}/api/warehouse/stock/reduce-by-location/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              product: item.id,
+              location: Number(formData.deliveryLocation),
+              quantity: item.quantity,
+            }),
+          }).then(async (res) => {
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(data.error || "Out of Stock in Your Area");
+            }
+          })
+        )
+      );
 
-    setTimeout(() => {
+      const orderId = `ORD-${Date.now().toString().slice(-8)}`;
+      const orders = JSON.parse(localStorage.getItem("buyer_orders") || "[]");
+      localStorage.setItem(
+        "buyer_orders",
+        JSON.stringify([
+          {
+            id: orderId,
+            items,
+            total,
+            deliveryFee,
+            deliveryType: formData.deliveryType,
+            deliveryLocation: selectedLocation
+              ? `${selectedLocation.name}, ${selectedLocation.city}`
+              : formData.deliveryLocation,
+            paymentType: formData.paymentType,
+            address: `${formData.address}, ${formData.city}`,
+            status: formData.paymentType === "cash_on_delivery" ? "confirmed" : "payment_pending",
+            createdAt: new Date().toISOString(),
+          },
+          ...orders,
+        ])
+      );
+      if (!state.buyNow) clearBuyerCart();
       setIsProcessing(false);
-      setShowSuccess(true);
-    }, 1500);
-  };
-
-  const handleSuccessClose = () => {
-    setShowSuccess(false);
-    // Redirect to Order Tracking Page with order ID
-    navigate(`/buyer/order-tracking/${orderId}`);
+      setSuccessOrder(orderId);
+    } catch (error: any) {
+      alert(error.message || "Out of Stock in Your Area");
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f9fafb" }}>
-      <BuyerNavbar cartQty={1} />
+    <div className="min-h-screen bg-slate-50">
+      <BuyerNavbar cartQty={getBuyerCartCount()} />
 
-      <div style={{ maxWidth: 1200, margin: "30px auto", padding: "0 20px" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 30 }}>
-          Buyer Proceed to Checkout
-        </h1>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-black text-slate-900">Checkout</h1>
+          <p className="text-sm text-slate-500">Confirm delivery details and choose a payment method.</p>
+        </div>
 
-        <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
-          {/* Left Side - Product */}
-          <div style={{ flex: 1, minWidth: 400 }}>
-            <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
-              <img src={cartItem.img} alt={cartItem.name} style={{ width: "100%", height: "auto", borderRadius: 12 }} />
-            </div>
-            <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>{cartItem.name}</h2>
-            <p style={{ color: "#10b981", marginBottom: 8 }}>Brand: Rangita | More Women from Rangita</p>
-            <p style={{ fontSize: 22, fontWeight: 700, color: "#ef4444" }}>Rs {cartItem.price}</p>
-            <p style={{ color: "#6b7280" }}>Color: Olive Green</p>
-          </div>
-
-          {/* Right Side - Shipping Form */}
-          <div style={{ flex: 1, minWidth: 400 }}>
-            <div style={{ background: "#f0fdf4", borderRadius: 12, padding: 24, border: "1px solid #86efac" }}>
-              <h3 style={{ marginBottom: 20, fontSize: 18, fontWeight: 600 }}>Shipping Information</h3>
-
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>Email</label>
-                <input type="email" name="email" placeholder="Enter your email here" value={formData.email} onChange={handleInputChange}
-                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid #d1d5db" }} />
+        {items.length === 0 ? (
+          <section className="bg-white border border-slate-200 rounded-lg p-10 text-center">
+            <h2 className="text-lg font-black text-slate-900">No items to checkout</h2>
+            <button
+              onClick={() => navigate("/allproducts")}
+              className="mt-5 px-6 py-3 rounded-lg bg-violet-600 text-white font-bold"
+            >
+              Browse Products
+            </button>
+          </section>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+            <section className="bg-white border border-slate-200 rounded-lg p-5">
+              <h2 className="text-lg font-black text-slate-900 mb-5">Delivery Information</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">Email</span>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500"
+                    placeholder="buyer@example.com"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">Phone</span>
+                  <input
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500"
+                    placeholder="98XXXXXXXX"
+                  />
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className="text-sm font-bold text-slate-700">Delivery Address</span>
+                  <input
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500"
+                    placeholder="Street, ward, landmark"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">City</span>
+                  <input
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500"
+                    placeholder="Kathmandu"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">Delivery Location</span>
+                  <select
+                    name="deliveryLocation"
+                    value={formData.deliveryLocation}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500 bg-white"
+                  >
+                    <option value="">Select Location</option>
+                    {activeLocations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.province} - {loc.city} ({loc.name})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">Delivery Type</span>
+                  <select
+                    name="deliveryType"
+                    value={formData.deliveryType}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500 bg-white"
+                  >
+                    <option value="normal">Normal Delivery</option>
+                    <option value="emergency">Emergency Fast Delivery</option>
+                  </select>
+                  {deliveryFeeError && (
+                    <p className="mt-2 text-xs font-bold text-red-600">{deliveryFeeError}</p>
+                  )}
+                </label>
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">Payment Method</span>
+                  <select
+                    name="paymentType"
+                    value={formData.paymentType}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500 bg-white"
+                  >
+                    {paymentMethods.map((method) => (
+                      <option key={method.value} value={method.value}>
+                        {method.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>Delivery Location</label>
-                <input type="text" name="address" placeholder="Enter your address" value={formData.address} onChange={handleInputChange}
-                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid #d1d5db" }} />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>Payment Type</label>
-                <select name="paymentType" value={formData.paymentType} onChange={handleInputChange}
-                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid #d1d5db" }}>
-                  <option value="cash_on_delivery">Cash on Delivery</option>
-                  <option value="esewa">Esewa</option>
-                  <option value="khalti">Khalti</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: 20, padding: "16px", background: "white", borderRadius: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 18, fontWeight: 600 }}>
-                  <span>Total Payment</span>
-                  <span style={{ color: "#ef4444" }}>Rs {cartItem.price}</span>
+              <div className="mt-7">
+                <h2 className="text-lg font-black text-slate-900 mb-3">Items</h2>
+                <div className="space-y-3">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex gap-3 rounded-lg border border-slate-200 p-3">
+                      <img src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover bg-slate-100" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-slate-900 truncate">{item.name}</p>
+                        <p className="text-sm text-slate-500">{item.category || "Product"}</p>
+                        {item.locationName && (
+                          <p className="text-xs font-bold text-violet-700">
+                            Delivery area: {item.locationName}
+                          </p>
+                        )}
+                        <p className="text-sm font-bold text-slate-700">
+                          {item.quantity} x {currency(item.price)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
+            </section>
 
-              <button onClick={handleSubmitPayment} disabled={isProcessing}
-                style={{
-                  width: "100%", padding: "16px", background: isProcessing ? "#86efac" : "#22c55e",
-                  color: "white", border: "none", borderRadius: 8, fontSize: 17, fontWeight: 600,
-                  cursor: isProcessing ? "not-allowed" : "pointer",
-                }}>
-                {isProcessing ? "Processing..." : "Submit Payment"}
+            <aside className="bg-white border border-slate-200 rounded-lg p-5 h-fit">
+              <h2 className="text-lg font-black text-slate-900">Payment Summary</h2>
+              <div className="space-y-3 mt-5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Subtotal</span>
+                  <span className="font-bold">{currency(subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">
+                    Delivery ({formData.deliveryType === "emergency" ? "Emergency" : "Normal"})
+                  </span>
+                  <span className="font-bold">{currency(deliveryFee)}</span>
+                </div>
+                <div className="flex justify-between border-t border-slate-200 pt-3 text-base">
+                  <span className="font-black">Total Payment</span>
+                  <span className="font-black text-rose-600">{currency(total)}</span>
+                </div>
+              </div>
+              <button
+                onClick={handlePlaceOrder}
+                disabled={isProcessing}
+                className="mt-6 w-full py-3 rounded-lg bg-green-600 text-white font-black hover:bg-green-700 disabled:bg-green-300"
+              >
+                {isProcessing ? "Processing..." : "Place Order"}
               </button>
-            </div>
+            </aside>
           </div>
-        </div>
-      </div>
+        )}
+      </main>
 
-      {/* Success Popup */}
-      {showSuccess && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-          background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center",
-          justifyContent: "center", zIndex: 1000,
-        }}>
-          <div style={{
-            background: "white", borderRadius: 16, padding: "40px 30px", textAlign: "center",
-            maxWidth: 420, boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
-          }}>
-            <div style={{ fontSize: 70, marginBottom: 20 }}>🎉</div>
-            <h2 style={{ fontSize: 26, marginBottom: 12, color: "#10b981" }}>Order Placed Successfully!</h2>
-            <p style={{ color: "#374151", marginBottom: 8 }}>Order ID: <strong>{orderId}</strong></p>
-            <p style={{ color: "#6b7280", marginBottom: 30 }}>
-              Thank you for shopping at Sajilo Mart.<br />Your order has been confirmed.
+      {successOrder && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] px-4">
+          <div className="bg-white rounded-lg p-8 text-center max-w-md w-full shadow-2xl">
+            <div className="text-5xl mb-4">OK</div>
+            <h2 className="text-2xl font-black text-green-700">Order Placed Successfully</h2>
+            <p className="text-slate-600 mt-2">
+              Order ID: <strong>{successOrder}</strong>
+            </p>
+            <p className="text-sm text-slate-500 mt-2">
+              {formData.paymentType === "cash_on_delivery"
+                ? "Pay when your order arrives."
+                : "Your digital payment is marked as pending for confirmation."}
             </p>
             <button
-              onClick={handleSuccessClose}
-              style={{
-                padding: "14px 50px", background: "#10b981", color: "white",
-                border: "none", borderRadius: 10, fontSize: 17, fontWeight: 600, cursor: "pointer",
-              }}
+              onClick={() => navigate("/ordertracking")}
+              className="mt-6 px-6 py-3 rounded-lg bg-green-600 text-white font-black"
             >
-              Track My Order
+              Track Order
             </button>
           </div>
         </div>

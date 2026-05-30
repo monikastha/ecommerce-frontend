@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
 
 type Role = {
@@ -19,6 +19,7 @@ const ROLES: Role[] = [
 
 export default function LoginForAll() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [selectedRole, setSelectedRole] = useState("");
   const [username, setUsername] = useState("");
@@ -71,18 +72,32 @@ export default function LoginForAll() {
       // Store user info
       localStorage.setItem("user_id", String(data.user_id || ""));
       localStorage.setItem("username", data.username);
+      localStorage.setItem("name", data.name || data.username || "");
+      localStorage.setItem("email", data.email || "");
+      localStorage.setItem("profile_image", data.profile_image || "");
       localStorage.setItem("role", data.role);
+      localStorage.setItem("isLoggedIn", "true");
       if (data.seller_id) {
         localStorage.setItem("seller_id", String(data.seller_id));
       } else {
         localStorage.removeItem("seller_id");
+      }
+      if (data.staff_id) {
+        localStorage.setItem("staff_id", String(data.staff_id));
+      } else {
+        localStorage.removeItem("staff_id");
+      }
+      if (data.delivery_id) {
+        localStorage.setItem("delivery_id", String(data.delivery_id));
+      } else {
+        localStorage.removeItem("delivery_id");
       }
 
       // Role-based navigation
       const roleRoutes: { [key: string]: string } = {
         admin: "/admin/dashboard",
         assistant: "/assistant/dashboard",
-        buyer: "/buyer/home",
+        buyer: (location.state as { from?: string } | null)?.from || "/allproducts",
         seller: "/seller/dashboard",
         delivery: "/delivery/dashboard",
         warehousestaff: "/warehouse/dashboard",

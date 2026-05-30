@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { FaShoppingCart, FaSearch } from "react-icons/fa";
 
 import SellerNavbar from "./SellerNavbar";
@@ -16,7 +16,7 @@ interface Order {
 }
 
 export default function SellerOrders() {
-  const [orders, setOrders] = useState<Order[]>([]); // Empty for now
+  const [orders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "completed">("all");
 

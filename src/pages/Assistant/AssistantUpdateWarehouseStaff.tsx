@@ -61,8 +61,8 @@ const AssistantUpdateWarehouseStaff: React.FC = () => {
 
     try {
       setSubmitting(true);
-      const payload = { ...formData, role: "warehousestaff" };
-      if (!payload.password) delete payload.password; // Don't send empty password
+      const payload: Partial<typeof formData> = { ...formData, role: "warehousestaff" };
+      if (!payload.password) delete payload.password;
 
       await axios.put(`http://127.0.0.1:8000/api/staff/${id}/`, payload);
 
