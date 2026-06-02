@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaBoxOpen, FaCheck, FaTimes, FaEyeSlash, FaUpload } from "react-icons/fa";
+import { FaBoxOpen, FaCheck, FaTimes, FaEyeSlash, FaUpload, FaFlag, FaTrash } from "react-icons/fa";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -17,7 +17,7 @@ type Product = {
   quantity: number;
   description?: string;
   image?: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "flagged";
   is_published: boolean;
 };
 
@@ -73,6 +73,27 @@ const AssistantProductManagement: React.FC = () => {
       fetchProducts();
     } catch (error: any) {
       alert(error?.response?.data?.error || `Failed to update product`);
+    }
+  };
+
+  const flagProduct = async (id: number) => {
+    if (!window.confirm("Flag this product as inappropriate?")) return;
+    try {
+      const reason = window.prompt("Reason for flagging (optional)") || "";
+      await axios.post(`${API_ORIGIN}/api/products/${id}/flag/`, { reason });
+      fetchProducts();
+    } catch (error: any) {
+      alert(error?.response?.data?.error || "Failed to flag product");
+    }
+  };
+
+  const removeProduct = async (id: number) => {
+    if (!window.confirm("Remove this inappropriate product permanently?")) return;
+    try {
+      await axios.delete(`${API_ORIGIN}/api/products/${id}/remove/`);
+      fetchProducts();
+    } catch (error: any) {
+      alert(error?.response?.data?.error || "Failed to remove product");
     }
   };
 
@@ -171,6 +192,7 @@ const AssistantProductManagement: React.FC = () => {
         .approved { background: #d1fae5; color: #10b981; }
         .pending { background: #fef3c7; color: #b45309; }
         .rejected { background: #fee2e2; color: #991b1b; }
+        .flagged { background: #ffedd5; color: #9a3412; }
 
         /* Medium Action Buttons */
         .action-btn {
@@ -191,6 +213,12 @@ const AssistantProductManagement: React.FC = () => {
 
         .reject-btn { background: #ef4444; color: white; }
         .reject-btn:hover { background: #dc2626; }
+
+        .flag-btn { background: #f97316; color: white; }
+        .flag-btn:hover { background: #ea580c; }
+
+        .remove-btn { background: #7f1d1d; color: white; }
+        .remove-btn:hover { background: #651616; }
 
         .unpublish-btn { 
           background: #334155; 
@@ -294,6 +322,14 @@ const AssistantProductManagement: React.FC = () => {
                               </button>
                             </>
                           )}
+                          {product.status !== "flagged" && (
+                            <button className="action-btn flag-btn" onClick={() => flagProduct(product.id)}>
+                              <FaFlag /> Flag
+                            </button>
+                          )}
+                          <button className="action-btn remove-btn" onClick={() => removeProduct(product.id)}>
+                            <FaTrash /> Remove
+                          </button>
                           {product.status === "approved" && (
                             product.is_published ? (
                               <button 

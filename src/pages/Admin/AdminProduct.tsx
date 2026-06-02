@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-import { FaBoxOpen } from "react-icons/fa";
+import { FaBoxOpen, FaFlag, FaTrash } from "react-icons/fa";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -17,7 +17,7 @@ type Product = {
   quantity: number;
   description?: string;
   image?: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "flagged";
   is_published: boolean;
 };
 
@@ -65,6 +65,27 @@ const AdminProduct: React.FC = () => {
     }
   };
 
+  const flagProduct = async (id: number) => {
+    if (!window.confirm("Flag this product as inappropriate?")) return;
+    try {
+      const reason = window.prompt("Reason for flagging (optional)") || "";
+      await axios.post(`${API_ORIGIN}/api/products/${id}/flag/`, { reason });
+      fetchProducts();
+    } catch (error: any) {
+      alert(error?.response?.data?.error || "Failed to flag product");
+    }
+  };
+
+  const removeProduct = async (id: number) => {
+    if (!window.confirm("Remove this inappropriate product permanently?")) return;
+    try {
+      await axios.delete(`${API_ORIGIN}/api/products/${id}/remove/`);
+      fetchProducts();
+    } catch (error: any) {
+      alert(error?.response?.data?.error || "Failed to remove product");
+    }
+  };
+
   const filteredProducts = useMemo(
     () =>
       products.filter((product) => {
@@ -106,10 +127,13 @@ const AdminProduct: React.FC = () => {
         .pending{ background:#fef3c7; color:#b45309; }
         .approved{ background:#dcfce7; color:#166534; }
         .rejected{ background:#fee2e2; color:#991b1b; }
+        .flagged{ background:#ffedd5; color:#9a3412; }
         .productImg{ width:52px; height:52px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0; }
         .actionBtn{ border:none; border-radius:7px; color:white; padding:7px 10px; margin-right:6px; cursor:pointer; font-weight:600; font-size:12px; }
         .approve{ background:#16a34a; }
         .reject{ background:#dc2626; }
+        .flag{ background:#f97316; }
+        .remove{ background:#7f1d1d; }
         .publish{ background:#2563eb; }
         .unpublish{ background:#64748b; }
         .approvedLabel{ display:inline-block; padding:7px 10px; margin-right:6px; border-radius:7px; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; }
@@ -145,6 +169,7 @@ const AdminProduct: React.FC = () => {
                     <th>Stock</th>
                     <th>Image</th>
                     <th>Description</th>
+                    <th>Status</th>
                     <th>Published</th>
                     <th>Actions</th>
                   </tr>
@@ -171,6 +196,9 @@ const AdminProduct: React.FC = () => {
                         <td>{product.quantity}</td>
                         <td>{product.image ? <img src={imageUrl(product.image)} alt={product.name} className="productImg" /> : "-"}</td>
                         <td style={{ maxWidth: "260px", whiteSpace: "normal" }}>{product.description || "-"}</td>
+                        <td>
+                          <span className={`status ${product.status}`}>{product.status.toUpperCase()}</span>
+                        </td>
                         <td>{product.is_published ? "published" : "unpublished"}</td>
                         <td>
                           {product.status === "approved" ? (
@@ -181,10 +209,16 @@ const AdminProduct: React.FC = () => {
                               <button className="actionBtn reject" onClick={() => updateStatus(product.id, "reject")}>Reject</button>
                             </>
                           )}
-                          {product.is_published ? (
-                            <button className="actionBtn unpublish" onClick={() => updatePublication(product.id, false)}>Unpublish</button>
-                          ) : (
-                            <button className="actionBtn publish" onClick={() => updatePublication(product.id, true)}>Publish</button>
+                          {product.status !== "flagged" && (
+                            <button className="actionBtn flag" onClick={() => flagProduct(product.id)}><FaFlag /> Flag</button>
+                          )}
+                          <button className="actionBtn remove" onClick={() => removeProduct(product.id)}><FaTrash /> Remove</button>
+                          {product.status === "approved" && (
+                            product.is_published ? (
+                              <button className="actionBtn unpublish" onClick={() => updatePublication(product.id, false)}>Unpublish</button>
+                            ) : (
+                              <button className="actionBtn publish" onClick={() => updatePublication(product.id, true)}>Publish</button>
+                            )
                           )}
                         </td>
                       </tr>
