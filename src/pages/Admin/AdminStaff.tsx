@@ -9,6 +9,8 @@ const AdminStaff: React.FC = () => {
   const navigate = useNavigate();
   const [staff, setStaff] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const fetchStaff = async () => {
     try {
@@ -44,6 +46,19 @@ const AdminStaff: React.FC = () => {
         s.email?.toLowerCase().includes(search.toLowerCase()) ||
         s.role?.toLowerCase().includes(search.toLowerCase())
     );
+  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / itemsPerPage));
+  const paginatedStaff = filteredStaff.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   const totalStaff = staff.length;
 
@@ -81,7 +96,7 @@ const AdminStaff: React.FC = () => {
   }
 
   .main {
-    margin-left: 260px;
+    margin-left: 0px;
     flex: 1;
     background: #f5f7fa;
     min-height: 100vh;
@@ -231,6 +246,41 @@ const AdminStaff: React.FC = () => {
           background:#dc2626;
           color:white;
         }
+
+        .pagination {
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          padding:14px 0 0;
+        }
+
+        .pagination-info {
+          color:#64748b;
+          font-size:11px;
+        }
+
+        .pagination-actions {
+          display:flex;
+          gap:10px;
+        }
+
+        .pagination button {
+          padding:6px 12px;
+          border:none;
+          border-radius:0;
+          background:#1598ad;
+          color:white;
+          font-size:11px;
+          font-weight:600;
+          cursor:pointer;
+        }
+
+        .pagination button:disabled {
+          background:#cbd5e1;
+          color:#64748b;
+          cursor:not-allowed;
+        }
       `}</style>
 
       <div className="wrapper">
@@ -310,7 +360,7 @@ const AdminStaff: React.FC = () => {
               </thead>
 
               <tbody>
-                {filteredStaff.map((s) => (
+                {paginatedStaff.map((s) => (
                   <tr key={s.id}>
                     <td>{s.id}</td>
                     <td>{s.name}</td>
@@ -343,6 +393,19 @@ const AdminStaff: React.FC = () => {
                 ))}
               </tbody>
             </table>
+            {filteredStaff.length > 0 && (
+              <div className="pagination">
+                <span className="pagination-info">Showing page {currentPage} out of {totalPages} pages</span>
+                <div className="pagination-actions">
+                  <button type="button" onClick={() => setCurrentPage((page) => page - 1)} disabled={currentPage === 1}>
+                    Previous
+                  </button>
+                  <button type="button" onClick={() => setCurrentPage((page) => page + 1)} disabled={currentPage === totalPages}>
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

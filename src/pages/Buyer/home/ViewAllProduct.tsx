@@ -31,21 +31,24 @@ type ApiCategory = {
   image?: string;
 };
 
-type ApiLocation = {
-  id: number;
-  name: string;
-  city: string;
-  province: string;
-  status: string;
-};
-
 type ApiStock = {
   id: number;
   product: number;
-  location: number;
-  location_name: string;
   quantity: number;
   availability_status: "in_stock" | "low_stock" | "out_of_stock";
+  available_to_buyers: boolean;
+};
+
+type ApiPromotion = {
+  id: number;
+  name: string;
+  d_type: "percentage" | "fixed";
+  d_value: number | string | null;
+  applies_to: "all" | "category";
+  categories: number[];
+  start_date: string;
+  end_date: string;
+  status: string;
 };
 
 const TOKEN = {
@@ -74,6 +77,48 @@ const productCategoryName = (product: ApiProduct) => {
   return "Uncategorized";
 };
 
+const productCategoryId = (product: ApiProduct) => {
+  if (typeof product.category === "number") return product.category;
+  if (product.category && typeof product.category === "object" && product.category.id) return product.category.id;
+  return null;
+};
+
+const isPromotionActive = (promotion: ApiPromotion) => {
+  const now = Date.now();
+  return (
+    promotion.status === "active" &&
+    new Date(promotion.start_date).getTime() <= now &&
+    new Date(promotion.end_date).getTime() >= now
+  );
+};
+
+const promotionForProduct = (product: ApiProduct, promotions: ApiPromotion[]) => {
+  const categoryId = productCategoryId(product);
+  const priceAfterPromotion = (promotion: ApiPromotion) => {
+    const basePrice = priceNumber(product.price);
+    const value = priceNumber(promotion.d_value || 0);
+    return promotion.d_type === "percentage"
+      ? Math.max(0, basePrice - (basePrice * value) / 100)
+      : Math.max(0, basePrice - value);
+  };
+
+  return promotions
+    .filter(isPromotionActive)
+    .filter((promotion) =>
+      promotion.applies_to === "all" ||
+      (categoryId !== null && promotion.categories?.includes(categoryId))
+    )
+    .sort((a, b) => priceAfterPromotion(a) - priceAfterPromotion(b))[0];
+};
+
+const discountedPrice = (price: string | number, promotion?: ApiPromotion) => {
+  const basePrice = priceNumber(price);
+  if (!promotion) return basePrice;
+  const value = priceNumber(promotion.d_value || 0);
+  if (promotion.d_type === "percentage") return Math.max(0, basePrice - (basePrice * value) / 100);
+  return Math.max(0, basePrice - value);
+};
+
 const ProductSkeleton = () => (
   <div className="bg-white border border-slate-200 rounded-lg overflow-hidden animate-pulse">
     <div className="h-44 bg-slate-100" />
@@ -91,16 +136,13 @@ export default function ViewAllProducts() {
   const [params, setParams] = useSearchParams();
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
-  const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [stocks, setStocks] = useState<ApiStock[]>([]);
+  const [promotions, setPromotions] = useState<ApiPromotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cartQty, setCartQty] = useState(getBuyerCartCount());
   const [addedId, setAddedId] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(12);
-  const [selectedLocation, setSelectedLocation] = useState(
-    localStorage.getItem("buyer_delivery_location") || ""
-  );
 
   const selectedCategory = params.get("category") || "All";
   const searchQuery = params.get("search") || "";
@@ -116,26 +158,26 @@ export default function ViewAllProducts() {
       setLoading(true);
       setError("");
       try {
-        const [productRes, categoryRes, locationRes, stockRes] = await Promise.all([
+        const [productRes, categoryRes, stockRes, promotionRes] = await Promise.all([
           fetch(`${API_ORIGIN}/api/products/?status=approved&is_published=true`),
           fetch(`${API_ORIGIN}/api/productcategory/categories/`),
-          fetch(`${API_ORIGIN}/api/locations/`),
           fetch(`${API_ORIGIN}/api/warehouse/stock/?available=true`),
+          fetch(`${API_ORIGIN}/api/admin/promotions/`),
         ]);
 
-        if (!productRes.ok || !categoryRes.ok || !locationRes.ok || !stockRes.ok) throw new Error("Unable to load store");
+        if (!productRes.ok || !categoryRes.ok || !stockRes.ok || !promotionRes.ok) throw new Error("Unable to load store");
 
-        const [productData, categoryData, locationData, stockData] = await Promise.all([
+        const [productData, categoryData, stockData, promotionData] = await Promise.all([
           productRes.json(),
           categoryRes.json(),
-          locationRes.json(),
           stockRes.json(),
+          promotionRes.json(),
         ]);
 
         setProducts(Array.isArray(productData) ? productData : []);
         setCategories(Array.isArray(categoryData) ? categoryData : []);
-        setLocations(Array.isArray(locationData) ? locationData : []);
         setStocks(Array.isArray(stockData) ? stockData : []);
+        setPromotions(Array.isArray(promotionData) ? promotionData : []);
       } catch (err) {
         console.error(err);
         setError("Could not load products right now. Please try again.");
@@ -156,35 +198,22 @@ export default function ViewAllProducts() {
     [categories]
   );
 
-  const activeLocations = useMemo(
-    () =>
-      locations.filter((loc) => {
-        const status = String(loc.status || "").trim().toLowerCase();
-        return !status || status === "active";
-      }),
-    [locations]
-  );
-
   const stockByProduct = useMemo(() => {
     const map = new Map<number, ApiStock>();
-    if (!selectedLocation) return map;
 
     stocks
-      .filter((stock) => String(stock.location) === selectedLocation && stock.quantity > 0)
+      .filter((stock) => {
+        return stock.quantity > 0 && stock.available_to_buyers;
+      })
       .forEach((stock) => map.set(stock.product, stock));
 
     return map;
-  }, [selectedLocation, stocks]);
-
-  const selectedLocationName = useMemo(() => {
-    const location = locations.find((loc) => String(loc.id) === selectedLocation);
-    return location ? `${location.name} - ${location.city}` : "";
-  }, [locations, selectedLocation]);
+  }, [stocks]);
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return products.filter((product) => {
-      if (selectedLocation && !stockByProduct.has(product.id)) return false;
+      if (!stockByProduct.has(product.id)) return false;
 
       const categoryName = productCategoryName(product);
       const categoryMatch = selectedCategory === "All" || normalizeText(categoryName) === normalizeText(selectedCategory);
@@ -196,7 +225,7 @@ export default function ViewAllProducts() {
 
       return categoryMatch && searchMatch && product.is_published && product.status === "approved";
     });
-  }, [products, searchQuery, selectedCategory, selectedLocation, stockByProduct]);
+  }, [products, searchQuery, selectedCategory, stockByProduct]);
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
 
@@ -219,31 +248,23 @@ export default function ViewAllProducts() {
     return false;
   };
 
-  const requireDeliveryLocation = () => {
-    if (selectedLocation) return true;
-    alert("Please select your delivery location first.");
-    return false;
-  };
-
   const addToCart = (product: ApiProduct) => {
     if (!requireBuyerLogin()) return;
-    if (!requireDeliveryLocation()) return;
-    const locationStock = stockByProduct.get(product.id);
-    if (!locationStock) {
-      alert("Out of Stock in Your Area.");
+    const productStock = stockByProduct.get(product.id);
+    if (!productStock) {
+      alert("Out of Stock.");
       return;
     }
     const category = productCategoryName(product);
+    const promotion = promotionForProduct(product, promotions);
     addBuyerCartItem({
       id: product.id,
       name: product.name,
-      price: priceNumber(product.price),
+      price: discountedPrice(product.price, promotion),
       image: imageUrl(product.image),
       category,
       description: product.description,
-      stock: locationStock.quantity,
-      locationId: Number(selectedLocation),
-      locationName: selectedLocationName,
+      stock: productStock.quantity,
     });
     setCartQty(getBuyerCartCount());
     setAddedId(product.id);
@@ -252,26 +273,24 @@ export default function ViewAllProducts() {
 
   const buyNow = (product: ApiProduct) => {
     if (!requireBuyerLogin()) return;
-    if (!requireDeliveryLocation()) return;
-    const locationStock = stockByProduct.get(product.id);
-    if (!locationStock) {
-      alert("Out of Stock in Your Area.");
+    const productStock = stockByProduct.get(product.id);
+    if (!productStock) {
+      alert("Out of Stock.");
       return;
     }
     const category = productCategoryName(product);
+    const promotion = promotionForProduct(product, promotions);
     navigate("/checkout", {
       state: {
         items: [{
           id: product.id,
           name: product.name,
           quantity: 1,
-          price: priceNumber(product.price),
+          price: discountedPrice(product.price, promotion),
           image: imageUrl(product.image),
           category,
           description: product.description,
-          stock: locationStock.quantity,
-          locationId: Number(selectedLocation),
-          locationName: selectedLocationName,
+          stock: productStock.quantity,
         }],
         buyNow: true,
       }
@@ -345,27 +364,9 @@ export default function ViewAllProducts() {
               <p className="text-sm text-slate-500 mt-1">
                 {loading
                   ? "Loading catalog..."
-                  : selectedLocation
-                    ? `${filteredProducts.length} products available in ${selectedLocationName}`
-                    : `${filteredProducts.length} products found`}
+                  : `${filteredProducts.length} products found`}
               </p>
             </div>
-            <select
-              value={selectedLocation}
-              onChange={(event) => {
-                setSelectedLocation(event.target.value);
-                if (event.target.value) localStorage.setItem("buyer_delivery_location", event.target.value);
-                else localStorage.removeItem("buyer_delivery_location");
-              }}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-violet-500"
-            >
-              <option value="">Select delivery location</option>
-              {activeLocations.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name} - {loc.city}
-                </option>
-              ))}
-            </select>
             {searchQuery && (
               <button
                 onClick={() => updateSearchParams({ search: "" })}
@@ -385,17 +386,18 @@ export default function ViewAllProducts() {
           ) : visibleProducts.length === 0 ? (
             <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center">
               <h3 className="text-xl font-black">
-                {selectedLocation ? "Out of Stock in Your Area" : "No matching products"}
+                No matching products
               </h3>
               <p className="text-slate-500 mt-2">
-                {selectedLocation
-                  ? "Try another delivery location or check again later."
-                  : "Try another category or search term."}
+                Try another category or search term.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {visibleProducts.map((product) => (
+              {visibleProducts.map((product) => {
+                const promotion = promotionForProduct(product, promotions);
+                const finalPrice = discountedPrice(product.price, promotion);
+                return (
                 <article key={product.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
                   <button onClick={() => navigate(`/product/${product.id}`, { state: product })} className="block w-full h-48 bg-slate-100 overflow-hidden">
                     {product.image ? (
@@ -409,11 +411,23 @@ export default function ViewAllProducts() {
                     <p className="text-xs font-bold text-violet-600 uppercase">{productCategoryName(product)}</p>
                     <h3 className="mt-2 font-bold text-lg line-clamp-2">{product.name}</h3>
                     <p className="text-sm text-slate-500 line-clamp-2 mt-2">{product.description || "High quality product"}</p>
+                    {promotion && (
+                      <span className="inline-flex mt-3 rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-600">
+                        {promotion.name}
+                      </span>
+                    )}
                     
                     <div className="flex justify-between items-center mt-4">
-                      <span className="font-bold text-xl text-rose-600">{currency(product.price)}</span>
+                      <span className="font-bold text-xl text-rose-600">
+                        {currency(finalPrice)}
+                        {promotion && (
+                          <span className="block text-xs font-bold text-slate-400 line-through">
+                            {currency(product.price)}
+                          </span>
+                        )}
+                      </span>
                       <span className="text-xs bg-slate-100 px-3 py-1 rounded-full">
-                        {selectedLocation ? `${stockByProduct.get(product.id)?.quantity || 0} in your area` : "Select area for stock"}
+                        {`${stockByProduct.get(product.id)?.quantity || 0} available`}
                       </span>
                     </div>
 
@@ -425,7 +439,7 @@ export default function ViewAllProducts() {
                     </div>
                   </div>
                 </article>
-              ))}
+              )})}
             </div>
           )}
         </section>

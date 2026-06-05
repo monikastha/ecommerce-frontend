@@ -19,9 +19,11 @@ interface Buyer {
 const AdminBuyer: React.FC = () => {
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const itemsPerPage = 5;
 
   const fetchBuyers = async () => {
     try {
@@ -51,7 +53,7 @@ const AdminBuyer: React.FC = () => {
     try {
       await axios.delete(`${API_BASE}/users/${buyer.user_id}/`);
       alert("Buyer deleted successfully.");
-      fetchBuyers(); // Refresh list
+      fetchBuyers();
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to delete buyer. Please try again.");
       console.error(err);
@@ -71,28 +73,40 @@ const AdminBuyer: React.FC = () => {
     );
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredBuyers.length / itemsPerPage));
+  const paginatedBuyers = filteredBuyers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
   return (
     <>
       <style>{`
-        .wrapper { display: flex; min-height: 100vh; background: #f1f5f9; }
-        .main { flex: 1; min-width: 0; }
-        .container {
-          width: 100%;
-          min-height: calc(100vh - 72px);
-          padding: 36px 42px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        .wrapper { display: flex; min-height: 100vh; }
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .container { padding: 30px; }
 
         .headerBox {
           display: flex;
           justify-content: space-between;
           align-items: center;
           background: #ffffff;
-          padding: 28px 30px;
+          padding: 22px 24px;
           border-radius: 16px;
           box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-          margin-bottom: 28px;
+          margin-bottom: 25px;
           flex-wrap: wrap;
-          gap: 18px;
+          gap: 15px;
         }
 
         .title-section { display: flex; align-items: center; gap: 14px; }
@@ -107,73 +121,110 @@ const AdminBuyer: React.FC = () => {
           font-size: 22px;
         }
 
-        .title { font-size: 26px; font-weight: 700; color: #0f172a; }
-        .subtitle { font-size: 14px; color: #64748b; margin-top: 5px; }
+        .title { font-size: 24px; font-weight: 700; color: #0f172a; }
+        .subtitle { font-size: 13px; color: #64748b; margin-top: 3px; }
 
         .search {
-          width: 360px;
-          padding: 13px 16px;
+          width: 320px;
+          padding: 10px 14px;
           border-radius: 10px;
           border: 1px solid #d1d5db;
           outline: none;
           font-size: 14px;
-          transition: all 0.2s;
         }
-
         .search:focus {
           border-color: #7c3aed;
           box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
         }
 
-        .tableBox {
-          background: #fff;
-          border-radius: 16px;
-          overflow-x: auto;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        /* Table - Same as AdminStaff */
+        table {
+          width:100%;
+          border-collapse:collapse;
+          background:white;
+          border-radius:10px;
+          overflow:hidden;
+          box-shadow:0 2px 8px rgba(0,0,0,0.06);
         }
 
-        table { width: 100%; min-width: 1040px; border-collapse: collapse; }
+        th, td {
+          padding:12px;
+          color:#475569;
+          border-bottom:1px solid #e5e7eb;
+          text-align:left;
+          font-size:14px;
+        }
+
         th {
-          padding: 18px;
-          text-align: left;
-          background: #f8fafc;
-          font-weight: 600;
-          color: #475569;
-          font-size: 14px;
+          background:#f8fafc;
+          font-weight:600;
         }
-        td {
-          padding: 18px;
-          border-top: 1px solid #f1f5f9;
-          color: #334155;
-          font-size: 15px;
+
+        tr:hover { 
+          background: #f8fafc; 
         }
-        tr:hover { background: #f9fafb; }
 
         .delete-btn {
-          color: #ef4444;
-          background: none;
+          width: 34px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #dc2626;
+          color: white;
           border: none;
-          cursor: pointer;
-          padding: 6px 10px;
           border-radius: 8px;
-          transition: 0.2s;
+          cursor: pointer;
         }
         .delete-btn:hover {
-          background: #fee2e2;
+          background: #b91c1c;
         }
-        .delete-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        .empty {
-          text-align: center;
-          padding: 60px 20px;
-          color: #94a3b8;
-          font-size: 15px;
+        .delete-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
-        @media (max-width: 900px) {
-          .container { padding: 24px 18px; }
-          .search { width: 100%; }
-          .headerBox { padding: 22px; }
+        .empty { 
+          text-align: center; 
+          padding: 60px 20px; 
+          color: #94a3b8; 
+          font-size: 14px; 
+        }
+
+        /* Pagination - Same as AdminStaff */
+        .pagination {
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          padding:14px 0 0;
+        }
+
+        .pagination-info {
+          color:#64748b;
+          font-size:11px;
+        }
+
+        .pagination-actions {
+          display:flex;
+          gap:10px;
+        }
+
+        .pagination button {
+          padding:6px 12px;
+          border:none;
+          border-radius:0;
+          background:#1598ad;
+          color:white;
+          font-size:11px;
+          font-weight:600;
+          cursor:pointer;
+        }
+
+        .pagination button:disabled {
+          background:#cbd5e1;
+          color:#64748b;
+          cursor:not-allowed;
         }
       `}</style>
 
@@ -204,57 +255,80 @@ const AdminBuyer: React.FC = () => {
               />
             </div>
 
-            {/* Table */}
-            <div className="tableBox">
-              <table>
-                <thead>
+            {/* Table - Direct like AdminStaff */}
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Address</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
                   <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Address</th>
-                    <th>Actions</th>
+                    <td colSpan={7} className="empty">Loading buyers...</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan={7} className="empty">Loading buyers...</td>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={7} className="empty" style={{ color: "red" }}>{error}</td>
+                  </tr>
+                ) : filteredBuyers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="empty">No buyers found</td>
+                  </tr>
+                ) : (
+                  paginatedBuyers.map((buyer) => (
+                    <tr key={buyer.id}>
+                      <td>{buyer.id}</td>
+                      <td>{buyer.username}</td>
+                      <td>{buyer.name}</td>
+                      <td>{buyer.email}</td>
+                      <td>{buyer.phone_number}</td>
+                      <td>{buyer.address || "N/A"}</td>
+                      <td>
+                        <button
+                          className="delete-btn"
+                          onClick={() => handleDeleteBuyer(buyer)}
+                          disabled={deletingId === buyer.user_id}
+                        >
+                          <FaTrash />
+                        </button>
+                      </td>
                     </tr>
-                  ) : error ? (
-                    <tr>
-                      <td colSpan={7} className="empty text-red-600">{error}</td>
-                    </tr>
-                  ) : filteredBuyers.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="empty">No buyers found</td>
-                    </tr>
-                  ) : (
-                    filteredBuyers.map((buyer) => (
-                      <tr key={buyer.id}>
-                        <td>{buyer.id}</td>
-                        <td>{buyer.username}</td>
-                        <td>{buyer.name}</td>
-                        <td>{buyer.email}</td>
-                        <td>{buyer.phone_number}</td>
-                        <td>{buyer.address || "N/A"}</td>
-                        <td>
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteBuyer(buyer)}
-                            disabled={deletingId === buyer.user_id}
-                          >
-                            <FaTrash />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            {filteredBuyers.length > 0 && (
+              <div className="pagination">
+                <span className="pagination-info">
+                  Showing page {currentPage} out of {totalPages} pages
+                </span>
+                <div className="pagination-actions">
+                  <button 
+                    type="button" 
+                    onClick={() => setCurrentPage((page) => page - 1)} 
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setCurrentPage((page) => page + 1)} 
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

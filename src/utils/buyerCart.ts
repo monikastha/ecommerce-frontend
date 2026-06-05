@@ -48,6 +48,9 @@ export const addBuyerCartItem = (item: Omit<BuyerCartItem, "quantity">, quantity
     existing.image = item.image || existing.image;
     existing.description = item.description || existing.description;
     existing.stock = item.stock || existing.stock;
+    existing.price = item.price;
+    existing.locationId = item.locationId || existing.locationId;
+    existing.locationName = item.locationName || existing.locationName;
   } else {
     cart.push({ ...item, quantity: item.stock ? Math.min(item.stock, nextQuantity) : nextQuantity });
   }

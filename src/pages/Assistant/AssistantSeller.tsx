@@ -24,10 +24,12 @@ type Seller = {
 const Seller: React.FC = () => {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const itemsPerPage = 5;
 
   const getFullUrl = (path: string | null) => {
     if (!path) return "";
@@ -89,6 +91,19 @@ const Seller: React.FC = () => {
     (seller.phone || "").includes(search) ||
     (seller.email || "").toLowerCase().includes(search.toLowerCase())
   );
+  const totalPages = Math.max(1, Math.ceil(filteredSellers.length / itemsPerPage));
+  const paginatedSellers = filteredSellers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   return (
     <>
@@ -250,6 +265,42 @@ const Seller: React.FC = () => {
           font-size: 15px;
         }
 
+        .pagination {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 16px;
+          border-top: 1px solid #f1f5f9;
+        }
+
+        .pagination-info {
+          color: #64748b;
+          font-size: 11px;
+        }
+
+        .pagination-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .pagination button {
+          padding: 6px 12px;
+          border: none;
+          border-radius: 0;
+          background: #1598ad;
+          color: white;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .pagination button:disabled {
+          background: #cbd5e1;
+          color: #64748b;
+          cursor: not-allowed;
+        }
+
         /* Zoom Modal */
         .zoom-modal {
           position: fixed;
@@ -316,7 +367,7 @@ const Seller: React.FC = () => {
                   ) : filteredSellers.length === 0 ? (
                     <tr><td colSpan={10} className="empty">No sellers found</td></tr>
                   ) : (
-                    filteredSellers.map((seller) => (
+                    paginatedSellers.map((seller) => (
                       <tr key={seller.id}>
                         <td><strong>{seller.id}</strong></td>
 
@@ -392,6 +443,19 @@ const Seller: React.FC = () => {
                   )}
                 </tbody>
               </table>
+              {!loading && !error && filteredSellers.length > 0 && (
+                <div className="pagination">
+                  <span className="pagination-info">Showing page {currentPage} out of {totalPages} pages</span>
+                  <div className="pagination-actions">
+                    <button type="button" onClick={() => setCurrentPage((page) => page - 1)} disabled={currentPage === 1}>
+                      Previous
+                    </button>
+                    <button type="button" onClick={() => setCurrentPage((page) => page + 1)} disabled={currentPage === totalPages}>
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

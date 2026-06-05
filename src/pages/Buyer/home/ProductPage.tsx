@@ -35,9 +35,20 @@ type ApiLocation = {
 type ApiStock = {
   id: number;
   product: number;
-  location: number;
-  location_name: string;
   quantity: number;
+  available_to_buyers: boolean;
+};
+
+type ApiPromotion = {
+  id: number;
+  name: string;
+  d_type: "percentage" | "fixed";
+  d_value: number | string | null;
+  applies_to: "all" | "category";
+  categories: number[];
+  start_date: string;
+  end_date: string;
+  status: string;
 };
 
 type Review = {
@@ -68,6 +79,49 @@ const productCategoryName = (product?: Product | null) => {
   return "Product";
 };
 
+const productCategoryId = (product?: Product | null) => {
+  if (!product) return null;
+  if (typeof product.category === "number") return product.category;
+  if (product.category && typeof product.category === "object" && product.category.id) return product.category.id;
+  return null;
+};
+
+const isPromotionActive = (promotion: ApiPromotion) => {
+  const now = Date.now();
+  return (
+    promotion.status === "active" &&
+    new Date(promotion.start_date).getTime() <= now &&
+    new Date(promotion.end_date).getTime() >= now
+  );
+};
+
+const promotionForProduct = (product: Product | null, promotions: ApiPromotion[]) => {
+  const categoryId = productCategoryId(product);
+  const priceAfterPromotion = (promotion: ApiPromotion) => {
+    const basePrice = priceNumber(product?.price || 0);
+    const value = priceNumber(promotion.d_value || 0);
+    return promotion.d_type === "percentage"
+      ? Math.max(0, basePrice - (basePrice * value) / 100)
+      : Math.max(0, basePrice - value);
+  };
+
+  return promotions
+    .filter(isPromotionActive)
+    .filter((promotion) =>
+      promotion.applies_to === "all" ||
+      (categoryId !== null && promotion.categories?.includes(categoryId))
+    )
+    .sort((a, b) => priceAfterPromotion(a) - priceAfterPromotion(b))[0];
+};
+
+const discountedPrice = (price: string | number, promotion?: ApiPromotion) => {
+  const basePrice = priceNumber(price);
+  if (!promotion) return basePrice;
+  const value = priceNumber(promotion.d_value || 0);
+  if (promotion.d_type === "percentage") return Math.max(0, basePrice - (basePrice * value) / 100);
+  return Math.max(0, basePrice - value);
+};
+
 export default function ProductPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,6 +133,7 @@ export default function ProductPage() {
   const [added, setAdded] = useState(false);
   const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [stocks, setStocks] = useState<ApiStock[]>([]);
+  const [promotions, setPromotions] = useState<ApiPromotion[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewForm, setReviewForm] = useState({ rating: 5, review_message: "" });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
@@ -116,16 +171,19 @@ export default function ProductPage() {
   useEffect(() => {
     const loadAvailability = async () => {
       try {
-        const [locationRes, stockRes] = await Promise.all([
+        const [locationRes, stockRes, promotionRes] = await Promise.all([
           fetch(`${API_ORIGIN}/api/locations/`),
           fetch(`${API_ORIGIN}/api/warehouse/stock/?available=true${id ? `&product=${id}` : ""}`),
+          fetch(`${API_ORIGIN}/api/admin/promotions/`),
         ]);
-        const [locationData, stockData] = await Promise.all([
+        const [locationData, stockData, promotionData] = await Promise.all([
           locationRes.json(),
           stockRes.json(),
+          promotionRes.json(),
         ]);
         setLocations(Array.isArray(locationData) ? locationData : []);
         setStocks(Array.isArray(stockData) ? stockData : []);
+        setPromotions(Array.isArray(promotionData) ? promotionData : []);
       } catch (error) {
         console.error(error);
       }
@@ -156,12 +214,15 @@ export default function ProductPage() {
     const loc = locations.find((item) => String(item.id) === selectedLocation);
     return loc ? `${loc.name} - ${loc.city}` : "";
   })();
-  const locationStock = stocks.find(
+  const productStock = stocks.find(
     (stock) =>
-      String(stock.location) === selectedLocation &&
+      stock.quantity > 0 &&
+      stock.available_to_buyers &&
       (!product || stock.product === product.id)
   );
-  const availableQuantity = locationStock?.quantity || 0;
+  const availableQuantity = productStock?.quantity || 0;
+  const activePromotion = promotionForProduct(product, promotions);
+  const finalPrice = product ? discountedPrice(product.price, activePromotion) : 0;
   const hasPurchasedProduct = (() => {
     if (!product) return false;
     try {
@@ -191,8 +252,8 @@ export default function ProductPage() {
     if (!product) return;
     if (!requireBuyerLogin()) return;
     if (!requireDeliveryLocation()) return;
-    if (!locationStock) {
-      alert("Out of Stock in Your Area.");
+    if (!productStock) {
+      alert("Out of Stock.");
       return;
     }
     const category = productCategoryName(product);
@@ -200,11 +261,11 @@ export default function ProductPage() {
       {
         id: product.id,
         name: product.name,
-        price: priceNumber(product.price),
+        price: finalPrice,
         image: imageUrl(product.image),
         category,
         description: product.description,
-        stock: locationStock.quantity,
+        stock: productStock.quantity,
         locationId: Number(selectedLocation),
         locationName: selectedLocationName,
       },
@@ -219,8 +280,8 @@ export default function ProductPage() {
     if (!product) return;
     if (!requireBuyerLogin()) return;
     if (!requireDeliveryLocation()) return;
-    if (!locationStock) {
-      alert("Out of Stock in Your Area.");
+    if (!productStock) {
+      alert("Out of Stock.");
       return;
     }
     const category = productCategoryName(product);
@@ -231,12 +292,12 @@ export default function ProductPage() {
           {
             id: product.id,
             name: product.name,
-            price: priceNumber(product.price),
+            price: finalPrice,
             image: imageUrl(product.image),
             category,
             description: product.description,
             quantity: qty,
-            stock: locationStock.quantity,
+            stock: productStock.quantity,
             locationId: Number(selectedLocation),
             locationName: selectedLocationName,
           },
@@ -335,15 +396,25 @@ export default function ProductPage() {
                 {product.code && (
                   <p className="text-sm text-slate-500 mt-2">Code: {product.code}</p>
                 )}
-                <p className="text-3xl font-black text-rose-600 mt-5">
-                  {currency(product.price)}
-                </p>
+                <div className="mt-5">
+                  {activePromotion && (
+                    <span className="inline-flex rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-600">
+                      {activePromotion.name}
+                    </span>
+                  )}
+                  <p className="text-3xl font-black text-rose-600 mt-2">
+                    {currency(finalPrice)}
+                  </p>
+                  {activePromotion && (
+                    <p className="text-sm font-bold text-slate-400 line-through">
+                      {currency(product.price)}
+                    </p>
+                  )}
+                </div>
                 <p className="text-sm text-slate-500 mt-2">
-                  {selectedLocation
-                    ? availableQuantity > 0
-                      ? `${availableQuantity} items available in ${selectedLocationName}`
-                      : "Out of Stock in Your Area"
-                    : "Select delivery location to check stock"}
+                  {availableQuantity > 0
+                    ? `${availableQuantity} items available`
+                    : "Out of Stock"}
                 </p>
 
                 <label className="block mt-5">
@@ -393,17 +464,17 @@ export default function ProductPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7">
-                  <button
-                    onClick={buyNow}
-                    disabled={selectedLocation ? availableQuantity === 0 : false}
-                    className="py-3 rounded-lg bg-green-600 text-white font-black hover:bg-green-700 disabled:bg-slate-300"
-                  >
+                    <button
+                      onClick={buyNow}
+                    disabled={availableQuantity === 0}
+                      className="py-3 rounded-lg bg-green-600 text-white font-black hover:bg-green-700 disabled:bg-slate-300"
+                    >
                     Buy Now
                   </button>
-                  <button
-                    onClick={addToCart}
-                    disabled={selectedLocation ? availableQuantity === 0 : false}
-                    className={`py-3 rounded-lg text-white font-black disabled:bg-slate-300 ${
+                    <button
+                      onClick={addToCart}
+                    disabled={availableQuantity === 0}
+                      className={`py-3 rounded-lg text-white font-black disabled:bg-slate-300 ${
                       added ? "bg-green-600" : "bg-violet-600 hover:bg-violet-700"
                     }`}
                   >

@@ -19,8 +19,10 @@ type Deliveryman = {
 const DeliveryMan: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [deliverymen, setDeliverymen] = useState<Deliveryman[]>([]);
   const [loading, setLoading] = useState(true);
+  const itemsPerPage = 5;
 
   const fetchDeliverymen = async () => {
     try {
@@ -57,6 +59,19 @@ const DeliveryMan: React.FC = () => {
       item.email.toLowerCase().includes(query)
     );
   });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const paginatedDeliverymen = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   return (
     <>
@@ -202,6 +217,42 @@ const DeliveryMan: React.FC = () => {
           color: #94a3b8;
           font-size: 15px;
         }
+
+        .pagination {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 16px;
+          border-top: 1px solid #f1f5f9;
+        }
+
+        .pagination-info {
+          color: #64748b;
+          font-size: 11px;
+        }
+
+        .pagination-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .pagination button {
+          padding: 6px 12px;
+          border: none;
+          border-radius: 0;
+          background: #1598ad;
+          color: white;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .pagination button:disabled {
+          background: #cbd5e1;
+          color: #64748b;
+          cursor: not-allowed;
+        }
       `}</style>
 
       <div className="dashboard-container">
@@ -250,7 +301,7 @@ const DeliveryMan: React.FC = () => {
                   ) : filtered.length === 0 ? (
                     <tr><td colSpan={7} className="empty">No delivery man available</td></tr>
                   ) : (
-                    filtered.map((item) => (
+                    paginatedDeliverymen.map((item) => (
                       <tr key={item.id}>
                         <td><strong>{item.id}</strong></td>
                         <td>{item.name}</td>
@@ -277,6 +328,19 @@ const DeliveryMan: React.FC = () => {
                   )}
                 </tbody>
               </table>
+              {!loading && filtered.length > 0 && (
+                <div className="pagination">
+                  <span className="pagination-info">Showing page {currentPage} out of {totalPages} pages</span>
+                  <div className="pagination-actions">
+                    <button type="button" onClick={() => setCurrentPage((page) => page - 1)} disabled={currentPage === 1}>
+                      Previous
+                    </button>
+                    <button type="button" onClick={() => setCurrentPage((page) => page + 1)} disabled={currentPage === totalPages}>
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

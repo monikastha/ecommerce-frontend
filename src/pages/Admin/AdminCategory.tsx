@@ -12,11 +12,12 @@ const AdminCategory: React.FC = () => {
 
   const [categories, setCategories] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const itemsPerPage = 5;
 
-  // Fetch Categories
   const fetchCategories = async () => {
     setLoading(true);
     setError("");
@@ -43,6 +44,25 @@ const AdminCategory: React.FC = () => {
   const openZoom = (imagePath: string) => setZoomImage(getFullUrl(imagePath));
   const closeZoom = () => setZoomImage(null);
 
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(search.toLowerCase()) ||
+    (cat.description || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / itemsPerPage));
+  const paginatedCategories = filteredCategories.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
   const deleteCategory = async (id: number, name: string) => {
     if (!window.confirm(`Delete category "${name}"?`)) return;
     try {
@@ -56,98 +76,172 @@ const AdminCategory: React.FC = () => {
   return (
     <>
       <style>{`
-          * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-  .wrapper {
-    display: flex;
-    min-height: 100vh;
-    font-family: 'Poppins', sans-serif;
-  }
+        .wrapper { display: flex; min-height: 100vh; }
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .container { padding: 30px; }
 
-  .sidebar {
-    width: 260px;
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    background: #1e293b;
-    z-index: 100;
-  }
-
-  .main {
-    margin-left: 260px;
-    flex: 1;
-    background: #f5f7fa;
-    min-height: 100vh;
-  }
-
-  .container { 
-    padding: 30px; 
-  }
-
-        .header {
-          display: flex; justify-content: space-between; align-items: center;
-          margin-bottom: 25px; padding: 15px 20px;
-          background: white; border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        .headerBox {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #ffffff;
+          padding: 22px 24px;
+          border-radius: 16px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+          margin-bottom: 25px;
+          flex-wrap: wrap;
+          gap: 15px;
         }
 
-        .titleBox { display: flex; align-items: center; gap: 12px; }
+        .title-section { display: flex; align-items: center; gap: 14px; }
         .header-icon {
-          width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
-          border-radius: 14px; background: linear-gradient(135deg, #2563eb, #3b82f6);
-          color: white; font-size: 22px;
+          width: 52px; height: 52px;
+          background: linear-gradient(135deg, #2563eb, #3b82f6);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          font-size: 22px;
         }
-        .titleBox h1 { font-size: 24px; font-weight: 700; margin: 0; color: #0f172a; }
-        .titleBox h3 { font-size: 13px; color: #64748b; margin: 4px 0 0 0; }
+
+        .title { font-size: 24px; font-weight: 700; color: #0f172a; }
+        .subtitle { font-size: 13px; color: #64748b; margin-top: 3px; }
 
         .search-container {
-          display: flex; align-items: center; gap: 8px;
-          background: white; padding: 8px 12px; border-radius: 10px;
-          border: 1px solid #e2e8f0; max-width: 320px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: #f8fafc;
+          padding: 10px 14px;
+          border-radius: 10px;
+          border: 1px solid #d1d5db;
+          width: 320px;
         }
         .searchInput {
-          border: none; outline: none; width: 260px; font-size: 14px;
+          border: none;
+          outline: none;
+          background: transparent;
+          width: 100%;
+          font-size: 14px;
         }
 
         .addBtn {
-          background: linear-gradient(135deg, #16a34a, #22c55e); color: white;
-          border: none; padding: 10px 16px; border-radius: 10px;
-          cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px;
+          background: linear-gradient(135deg, #16a34a, #22c55e);
+          color: white;
+          border: none;
+          padding: 10px 16px;
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 6px;
         }
 
+        /* Table - Same as AdminStaff */
         table {
-          width: 100%; border-collapse: collapse; background: white;
-          border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
+
         th, td {
-          padding: 14px; font-size: 14px; color: #475569;
-          border-bottom: 1px solid #e5e7eb; text-align: left;
+          padding: 12px;
+          color: #475569;
+          border-bottom: 1px solid #e5e7eb;
+          text-align: left;
+          font-size: 14px;
         }
-        th { background: #f8fafc; font-weight: 600; }
 
-        .actions { display: flex; gap: 8px; }
+        th {
+          background: #f8fafc;
+          font-weight: 600;
+        }
+
+        tr:hover {
+          background: #f8fafc;
+        }
+
         .iconBtn {
-          width: 34px; height: 34px; border: none; border-radius: 8px;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; font-size: 15px; color: white;
+          width: 34px;
+          height: 34px;
+          border: none;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
         }
-        .iconBtn.edit { background: #2563eb; }
-        .iconBtn.delete { background: #dc2626; }
+        .iconBtn.edit { background: #2563eb; color: white; }
+        .iconBtn.delete { background: #dc2626; color: white; }
 
-        img.table-img {
-          width: 55px; height: 55px; object-fit: cover;
-          border-radius: 8px; border: 2px solid #e2e8f0; cursor: zoom-in;
+        .table-img {
+          width: 55px;
+          height: 55px;
+          object-fit: cover;
+          border-radius: 8px;
+          border: 2px solid #e2e8f0;
+          cursor: zoom-in;
         }
 
+        .empty {
+          text-align: center;
+          padding: 60px 20px;
+          color: #94a3b8;
+          font-size: 14px;
+        }
+
+        /* Pagination */
+        .pagination {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 0 0;
+        }
+
+        .pagination-info {
+          color: #64748b;
+          font-size: 11px;
+        }
+
+        .pagination-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .pagination button {
+          padding: 6px 12px;
+          border: none;
+          border-radius: 0;
+          background: #1598ad;
+          color: white;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .pagination button:disabled {
+          background: #cbd5e1;
+          color: #64748b;
+          cursor: not-allowed;
+        }
+
+        /* Zoom Modal */
         .zoom-modal {
-          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.9); display: flex;
-          align-items: center; justify-content: center; z-index: 1000;
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
         }
       `}</style>
 
@@ -160,37 +254,39 @@ const AdminCategory: React.FC = () => {
           <AdminNavbar />
 
           <div className="container">
-            <div className="header">
-              <div className="titleBox">
+            {/* Header */}
+            <div className="headerBox">
+              <div className="title-section">
                 <div className="header-icon">
                   <FaFolder />
                 </div>
                 <div>
-                  <h1>Category Management</h1>
-                  <h3>Manage your product categories</h3>
+                  <h2 className="title">Category Management</h2>
+                  <p className="subtitle">Manage your product categories</p>
                 </div>
               </div>
 
-              <button className="addBtn" onClick={() => navigate("/admin/category/add")}>
-                <FaPlus /> Add New Category
-              </button>
+              <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                <div className="search-container">
+                  <FaSearch style={{ color: "#94a3b8" }} />
+                  <input
+                    type="text"
+                    className="searchInput"
+                    placeholder="Search categories..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+
+                <button className="addBtn" onClick={() => navigate("/admin/category/add")}>
+                  <FaPlus /> Add New Category
+                </button>
+              </div>
             </div>
 
             {error && <p style={{ color: "red", textAlign: "center", margin: "10px 0" }}>{error}</p>}
 
-            {/* Search Bar */}
-            <div className="search-container" style={{ marginBottom: "20px" }}>
-              <FaSearch style={{ color: "#94a3b8" }} />
-              <input
-                type="text"
-                className="searchInput"
-                placeholder="Search categories..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            {/* Categories Table */}
+            {/* Table - Now consistent with AdminStaff */}
             <table>
               <thead>
                 <tr>
@@ -204,20 +300,16 @@ const AdminCategory: React.FC = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: "center", padding: "80px" }}>
-                      Loading categories...
-                    </td>
+                    <td colSpan={5} className="empty">Loading categories...</td>
                   </tr>
-                ) : categories.length === 0 ? (
+                ) : filteredCategories.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: "center", padding: "80px" }}>
-                      No categories found
-                    </td>
+                    <td colSpan={5} className="empty">No categories found</td>
                   </tr>
                 ) : (
-                  categories.map((cat, index) => (
+                  paginatedCategories.map((cat, index) => (
                     <tr key={cat.id}>
-                      <td>{index + 1}</td>
+                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                       <td><strong>{cat.name}</strong></td>
                       <td>
                         {cat.description 
@@ -237,7 +329,7 @@ const AdminCategory: React.FC = () => {
                           "No Image"
                         )}
                       </td>
-                      <td className="actions">
+                      <td className="actions" style={{ display: "flex", gap: "8px" }}>
                         <button 
                           className="iconBtn edit" 
                           onClick={() => navigate(`/admin/category/update/${cat.id}`)}
@@ -256,6 +348,31 @@ const AdminCategory: React.FC = () => {
                 )}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            {filteredCategories.length > 0 && (
+              <div className="pagination">
+                <span className="pagination-info">
+                  Showing page {currentPage} out of {totalPages} pages
+                </span>
+                <div className="pagination-actions">
+                  <button 
+                    type="button" 
+                    onClick={() => setCurrentPage((page) => page - 1)} 
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setCurrentPage((page) => page + 1)} 
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

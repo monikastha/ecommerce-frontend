@@ -6,7 +6,9 @@ import AdminNavbar from "./AdminNavbar";
 const AdminAddPromotion: React.FC = () => {
 
   const navigate = useNavigate();
-const API_BASE = `${import.meta.env.VITE_API_URL}/api/admin/promotions`;
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE = `${API_ORIGIN}/api/admin/promotions`;
+const CATEGORY_API = `${API_ORIGIN}/api/productcategory/categories/`;
   const [formData, setFormData] = useState({
     name: "",
     d_type: "percentage",
@@ -25,7 +27,7 @@ const API_BASE = `${import.meta.env.VITE_API_URL}/api/admin/promotions`;
   
 
   useEffect(() => {
-    fetch(`${API_BASE}`)
+    fetch(CATEGORY_API)
       .then(res => res.json())
       .then(data => setCategories(data));
   }, []);
@@ -82,7 +84,7 @@ const API_BASE = `${import.meta.env.VITE_API_URL}/api/admin/promotions`;
 
     try {
       const res = await fetch(
-        `${API_BASE}`,
+        `${API_BASE}/`,
         {
           method: "POST",
           headers: {

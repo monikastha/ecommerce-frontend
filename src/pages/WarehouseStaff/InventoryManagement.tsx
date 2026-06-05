@@ -7,7 +7,6 @@ import WarehouseStaffNavbar from "./WarehouseStaffNavbar";
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 const STOCK_API = `${API_ORIGIN}/api/warehouse/stock/`;
 const PRODUCT_API = `${API_ORIGIN}/api/products/`;
-const LOCATION_API = `${API_ORIGIN}/api/locations/`;
 
 type Product = {
   id: number;
@@ -16,24 +15,14 @@ type Product = {
   price: string;
 };
 
-type Location = {
-  id: number;
-  name: string;
-  province: string;
-  city: string;
-  status: string;
-};
-
 type StockItem = {
   id: number;
   product: number;
   product_name: string;
   category_name?: string;
-  location: number;
-  location_name: string;
-  location_city: string;
   quantity: number;
   availability_status: "in_stock" | "low_stock" | "out_of_stock";
+  available_to_buyers: boolean;
 };
 
 const statusLabel = (status: StockItem["availability_status"]) => {
@@ -51,24 +40,13 @@ const statusColor = (status: StockItem["availability_status"]) => {
 export default function InventoryManagement() {
   const [stocks, setStocks] = useState<StockItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({
     product: "",
-    location: "",
     quantity: "",
   });
-
-  const activeLocations = useMemo(
-    () =>
-      locations.filter((location) => {
-        const status = String(location.status || "").trim().toLowerCase();
-        return !status || status === "active";
-      }),
-    [locations]
-  );
 
   const selectedProduct = useMemo(
     () => products.find((product) => String(product.id) === form.product),
@@ -76,10 +54,9 @@ export default function InventoryManagement() {
   );
 
   const fetchInventory = async () => {
-    const [stockRes, productRes, locationRes] = await Promise.allSettled([
+    const [stockRes, productRes] = await Promise.allSettled([
       axios.get(STOCK_API),
       axios.get(PRODUCT_API),
-      axios.get(LOCATION_API),
     ]);
 
     if (stockRes.status === "fulfilled") {
@@ -96,12 +73,6 @@ export default function InventoryManagement() {
       setProducts([]);
     }
 
-    if (locationRes.status === "fulfilled") {
-      setLocations(Array.isArray(locationRes.value.data) ? locationRes.value.data : []);
-    } else {
-      console.error("Failed to load location data", locationRes.reason);
-      setLocations([]);
-    }
   };
 
   useEffect(() => {
@@ -120,14 +91,14 @@ export default function InventoryManagement() {
   }, []);
 
   const resetForm = () => {
-    setForm({ product: "", location: "", quantity: "" });
+    setForm({ product: "", quantity: "" });
     setEditingId(null);
   };
 
   const handleSubmit = async () => {
     const quantity = Number(form.quantity);
-    if (!form.product || !form.location || Number.isNaN(quantity) || quantity < 0) {
-      alert("Select product, location, and enter a valid stock quantity.");
+    if (!form.product || Number.isNaN(quantity) || quantity < 0) {
+      alert("Select product and enter a valid stock quantity.");
       return;
     }
 
@@ -135,12 +106,11 @@ export default function InventoryManagement() {
     try {
       const payload = {
         product: Number(form.product),
-        location: Number(form.location),
         quantity,
       };
 
       if (editingId) {
-        await axios.put(`${STOCK_API}${editingId}/`, payload);
+        await axios.patch(`${STOCK_API}${editingId}/`, payload);
       } else {
         await axios.post(STOCK_API, payload);
       }
@@ -160,9 +130,20 @@ export default function InventoryManagement() {
     setEditingId(item.id);
     setForm({
       product: String(item.product),
-      location: String(item.location),
       quantity: String(item.quantity),
     });
+  };
+
+  const handleBuyerAvailabilityChange = async (item: StockItem, checked: boolean) => {
+    try {
+      await axios.patch(`${STOCK_API}${item.id}/`, {
+        available_to_buyers: checked,
+      });
+      await fetchInventory();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update buyer availability.");
+    }
   };
 
   const handleReduce = async (item: StockItem) => {
@@ -228,7 +209,7 @@ export default function InventoryManagement() {
             <div className="header">
               <h2>Inventory Management</h2>
               <p style={{ color: "#64748b", marginTop: 4 }}>
-                Store stock by seller product and admin-created delivery location.
+                Store stock by seller product and control which inventory is available to buyers.
               </p>
             </div>
 
@@ -239,9 +220,9 @@ export default function InventoryManagement() {
                     <tr>
                       <th>Product</th>
                       <th>Category</th>
-                      <th>Location</th>
                       <th>Stock</th>
                       <th>Status</th>
+                      <th>Available to Buyers</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -257,12 +238,20 @@ export default function InventoryManagement() {
                         <tr key={item.id}>
                           <td><strong>{item.product_name}</strong></td>
                           <td>{item.category_name || "N/A"}</td>
-                          <td>{item.location_name} <span style={{ color: "#64748b" }}>({item.location_city})</span></td>
                           <td><strong>{item.quantity}</strong></td>
                           <td>
                             <span className="badge" style={{ background: statusColor(item.availability_status) }}>
                               {statusLabel(item.availability_status)}
                             </span>
+                          </td>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={item.available_to_buyers}
+                              onChange={(event) => handleBuyerAvailabilityChange(item, event.target.checked)}
+                              title={item.available_to_buyers ? "Available to buyers" : "Not available to buyers"}
+                              style={{ width: 18, height: 18, accentColor: "#22c55e", cursor: "pointer" }}
+                            />
                           </td>
                           <td className="actions">
                             <button onClick={() => handleEdit(item)} style={{ background: "#2563eb" }} title="Update stock">
@@ -310,34 +299,13 @@ export default function InventoryManagement() {
                   </div>
 
                   <div>
-                    <label>Delivery Location *</label>
-                    <select
-                      value={form.location}
-                      onChange={(e) => setForm({ ...form, location: e.target.value })}
-                    >
-                      <option value="">Select Location</option>
-                      {locations.length === 0 && (
-                        <option value="" disabled>No locations loaded</option>
-                      )}
-                      {locations.length > 0 && activeLocations.length === 0 && (
-                        <option value="" disabled>No active locations available</option>
-                      )}
-                      {activeLocations.map((location) => (
-                        <option key={location.id} value={location.id}>
-                          {location.name} - {location.city} ({location.province})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
                     <label>Stock Quantity *</label>
                     <input
                       type="number"
                       min={0}
                       value={form.quantity}
                       onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                      placeholder="Quantity in this location"
+                      placeholder="Quantity in stock"
                     />
                   </div>
 

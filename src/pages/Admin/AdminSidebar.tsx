@@ -24,11 +24,20 @@ const AdminSidebar = () => {
     <>
       <style>{`
         .sidebar {
-          width: 250px;
-          min-height: 120vh;
+          position: sticky;
+          top: 0;
+          z-index: 200;
+          width: 260px;
+          height: 100vh;
+          overflow-y: auto;
+          flex-shrink: 0;
           background: #445C6D;
           color: white;
           font-family: sans-serif;
+        }
+
+        .dashboard-container > .main-content {
+          width: calc(100% - 260px);
         }
 
         /* LOGO */

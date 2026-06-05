@@ -24,10 +24,12 @@ interface Seller {
 const AdminSeller: React.FC = () => {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const itemsPerPage = 5;
 
   const getFullUrl = (path: string | null) => {
     if (!path) return "";
@@ -37,7 +39,6 @@ const AdminSeller: React.FC = () => {
   const openZoom = (imagePath: string) => setZoomImage(getFullUrl(imagePath));
   const closeZoom = () => setZoomImage(null);
 
-  // Fetch Sellers
   const fetchSellers = async () => {
     try {
       setLoading(true);
@@ -87,11 +88,24 @@ const AdminSeller: React.FC = () => {
     seller.phone.includes(search)
   );
 
+  const totalPages = Math.max(1, Math.ceil(filteredSellers.length / itemsPerPage));
+  const paginatedSellers = filteredSellers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
   return (
     <>
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #f1f5f9; }
 
         .wrapper { display: flex; min-height: 100vh; }
         .main { flex: 1; display: flex; flex-direction: column; }
@@ -123,24 +137,38 @@ const AdminSeller: React.FC = () => {
           box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
         }
 
-        .tableBox {
-          background: #fff; border-radius: 16px; overflow: hidden;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        /* === Table Styling (Same as AdminStaff) === */
+        table {
+          width:100%;
+          border-collapse:collapse;
+          background:white;
+          border-radius:10px;
+          overflow:hidden;
+          box-shadow:0 2px 8px rgba(0,0,0,0.06);
         }
 
-        table { width: 100%; border-collapse: collapse; }
         th, td {
-          padding: 14px 12px; text-align: left; vertical-align: middle;
+          padding:12px;
+          color:#475569;
+          border-bottom:1px solid #e5e7eb;
+          text-align:left;
+          font-size:14px;
         }
-        th {
-          font-size: 13px; color: #475569; background: #f8fafc; font-weight: 600;
-        }
-        td { font-size: 13.5px; color: #334155; border-top: 1px solid #f1f5f9; }
 
-        tr:hover { background: #f8fafc; }
+        th {
+          background:#f8fafc;
+          font-weight:600;
+        }
+
+        tr:hover {
+          background: #f8fafc;
+        }
 
         .status {
-          padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+          padding: 6px 14px; 
+          border-radius: 20px; 
+          font-size: 12px; 
+          font-weight: 600;
         }
         .pending { background: #fef3c7; color: #d97706; }
         .approved { background: #d1fae5; color: #10b981; }
@@ -163,7 +191,48 @@ const AdminSeller: React.FC = () => {
         .approve-btn { background: #10b981; color: white; }
         .reject-btn { background: #ef4444; color: white; }
 
-        .empty { text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 14px; }
+        .empty { 
+          text-align: center; 
+          padding: 60px 20px; 
+          color: #94a3b8; 
+          font-size: 14px; 
+        }
+
+        /* Pagination - Same as AdminStaff */
+        .pagination {
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          padding:14px 0 0;
+        }
+
+        .pagination-info {
+          color:#64748b;
+          font-size:11px;
+        }
+
+        .pagination-actions {
+          display:flex;
+          gap:10px;
+        }
+
+        .pagination button {
+          padding:6px 12px;
+          border:none;
+          border-radius:0;
+          background:#1598ad;
+          color:white;
+          font-size:11px;
+          font-weight:600;
+          cursor:pointer;
+        }
+
+        .pagination button:disabled {
+          background:#cbd5e1;
+          color:#64748b;
+          cursor:not-allowed;
+        }
 
         /* Zoom Modal */
         .zoom-modal {
@@ -197,107 +266,124 @@ const AdminSeller: React.FC = () => {
               />
             </div>
 
-            <div className="tableBox">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Logo</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Address</th>
-                    <th>Citizenship</th>
-                    <th>Certificate</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan={10} className="empty">Loading sellers...</td></tr>
-                  ) : error ? (
-                    <tr><td colSpan={10} className="empty" style={{ color: "red" }}>{error}</td></tr>
-                  ) : filteredSellers.length === 0 ? (
-                    <tr><td colSpan={10} className="empty">No sellers found</td></tr>
-                  ) : (
-                    filteredSellers.map((seller) => (
-                      <tr key={seller.id}>
-                        <td><strong>{seller.id}</strong></td>
-
-                        {/* Logo - Clickable Image */}
-                        <td>
-                          {seller.logo ? (
-                            <img
-                              src={getFullUrl(seller.logo)}
-                              alt="Logo"
-                              className="table-img"
-                              onClick={() => openZoom(seller.logo!)}
-                            />
-                          ) : (
-                            <FaImage size={28} color="#94a3b8" />
-                          )}
-                        </td>
-
-                        <td><strong>{seller.name}</strong></td>
-                        <td>{seller.email || "-"}</td>
-                        <td>{seller.phone}</td>
-                        <td>{seller.address.substring(0, 35)}...</td>
-                        <td>{seller.citizenship}</td>
-
-                        {/* Business Certificate */}
-                        <td>
-                          {seller.business_certificate ? (
-                            <a
-                              href={getFullUrl(seller.business_certificate)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="cert-link"
+            {/* Table - Now same structure & style as AdminStaff */}
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Logo</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Address</th>
+                  <th>Citizenship</th>
+                  <th>Certificate</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={10} className="empty">Loading sellers...</td></tr>
+                ) : error ? (
+                  <tr><td colSpan={10} className="empty" style={{ color: "red" }}>{error}</td></tr>
+                ) : filteredSellers.length === 0 ? (
+                  <tr><td colSpan={10} className="empty">No sellers found</td></tr>
+                ) : (
+                  paginatedSellers.map((seller) => (
+                    <tr key={seller.id}>
+                      <td><strong>{seller.id}</strong></td>
+                      <td>
+                        {seller.logo ? (
+                          <img
+                            src={getFullUrl(seller.logo)}
+                            alt="Logo"
+                            className="table-img"
+                            onClick={() => openZoom(seller.logo!)}
+                          />
+                        ) : (
+                          <FaImage size={28} color="#94a3b8" />
+                        )}
+                      </td>
+                      <td><strong>{seller.name}</strong></td>
+                      <td>{seller.email || "-"}</td>
+                      <td>{seller.phone}</td>
+                      <td>{seller.address.substring(0, 35)}...</td>
+                      <td>{seller.citizenship}</td>
+                      <td>
+                        {seller.business_certificate ? (
+                          <a
+                            href={getFullUrl(seller.business_certificate)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="cert-link"
+                          >
+                            📄 View Certificate
+                          </a>
+                        ) : (
+                          "No Document"
+                        )}
+                      </td>
+                      <td>
+                        <span className={`status ${seller.status}`}>
+                          {seller.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td>
+                        {seller.status === "pending" && (
+                          <>
+                            <button
+                              className="action-btn approve-btn"
+                              onClick={() => handleApprove(seller.id)}
+                              disabled={actionLoading === seller.id}
                             >
-                              📄 View Certificate
-                            </a>
-                          ) : (
-                            "No Document"
-                          )}
-                        </td>
-
-                        <td>
-                          <span className={`status ${seller.status}`}>
-                            {seller.status.toUpperCase()}
+                              {actionLoading === seller.id ? "..." : "Approve"}
+                            </button>
+                            <button
+                              className="action-btn reject-btn"
+                              onClick={() => handleReject(seller.id)}
+                              disabled={actionLoading === seller.id}
+                            >
+                              {actionLoading === seller.id ? "..." : "Reject"}
+                            </button>
+                          </>
+                        )}
+                        {seller.status !== "pending" && (
+                          <span style={{ color: "#64748b", fontSize: "12.5px", fontWeight: 600 }}>
+                            {seller.status === "approved" ? "✅ Approved" : "❌ Rejected"}
                           </span>
-                        </td>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
 
-                        <td>
-                          {seller.status === "pending" && (
-                            <>
-                              <button
-                                className="action-btn approve-btn"
-                                onClick={() => handleApprove(seller.id)}
-                                disabled={actionLoading === seller.id}
-                              >
-                                {actionLoading === seller.id ? "..." : "Approve"}
-                              </button>
-                              <button
-                                className="action-btn reject-btn"
-                                onClick={() => handleReject(seller.id)}
-                                disabled={actionLoading === seller.id}
-                              >
-                                {actionLoading === seller.id ? "..." : "Reject"}
-                              </button>
-                            </>
-                          )}
-                          {seller.status !== "pending" && (
-                            <span style={{ color: "#64748b", fontSize: "12.5px", fontWeight: 600 }}>
-                              {seller.status === "approved" ? "✅ Approved" : "❌ Rejected"}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            {/* Pagination */}
+            {filteredSellers.length > 0 && (
+              <div className="pagination">
+                <span className="pagination-info">
+                  Showing page {currentPage} out of {totalPages} pages
+                </span>
+                <div className="pagination-actions">
+                  <button 
+                    type="button" 
+                    onClick={() => setCurrentPage((page) => page - 1)} 
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setCurrentPage((page) => page + 1)} 
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -125,8 +125,6 @@ export default function Checkout() {
                   style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid #d1d5db" }}
                 >
                   <option value="cash_on_delivery">Cash on Delivery</option>
-                  <option value="esewa">Esewa</option>
-                  <option value="khalti">Khalti</option>
                 </select>
               </div>
 

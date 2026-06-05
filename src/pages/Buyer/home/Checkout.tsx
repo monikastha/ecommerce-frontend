@@ -9,6 +9,7 @@ import {
   getBuyerCartCount,
 } from "../../../utils/buyerCart";
 import type { BuyerCartItem } from "../../../utils/buyerCart";
+import { reduceStockForItems } from "../../../services/stockService";
 
 type CheckoutState = {
   items?: BuyerCartItem[];
@@ -29,9 +30,6 @@ type ApiLocation = {
 
 const paymentMethods = [
   { value: "cash_on_delivery", label: "Cash on Delivery" },
-  { value: "esewa", label: "eSewa" },
-  { value: "khalti", label: "Khalti" },
-  { value: "card", label: "Debit/Credit Card" },
 ];
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -44,10 +42,12 @@ export default function Checkout() {
   const [items] = useState<BuyerCartItem[]>(() => state.items?.length ? state.items : getBuyerCart());
   const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     phone: "",
     address: "",
     city: "",
+    postal_code: "",
     deliveryLocation: String(items[0]?.locationId || localStorage.getItem("buyer_delivery_location") || ""),
     deliveryType: "normal" as DeliveryType,
     paymentType: "cash_on_delivery",
@@ -136,7 +136,7 @@ export default function Checkout() {
       return;
     }
 
-    if (!formData.email || !formData.phone || !formData.address || !formData.city || !formData.deliveryLocation) {
+    if (!formData.email || !formData.phone || !formData.address || !formData.city || !formData.deliveryLocation || !formData.name || !formData.postal_code) {
       alert("Please complete your contact and delivery information.");
       return;
     }
@@ -148,52 +148,41 @@ export default function Checkout() {
 
     setIsProcessing(true);
     try {
-      await Promise.all(
-        items.map((item) =>
-          fetch(`${API_ORIGIN}/api/warehouse/stock/reduce-by-location/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              product: item.id,
-              location: Number(formData.deliveryLocation),
-              quantity: item.quantity,
-            }),
-          }).then(async (res) => {
-            if (!res.ok) {
-              const data = await res.json().catch(() => ({}));
-              throw new Error(data.error || "Out of Stock in Your Area");
-            }
-          })
-        )
-      );
-
       const orderId = `ORD-${Date.now().toString().slice(-8)}`;
+      
+      // Create order data
+      const orderData = {
+        id: orderId,
+        items,
+        total,
+        deliveryFee,
+        deliveryType: formData.deliveryType,
+        deliveryLocation: selectedLocation
+          ? `${selectedLocation.name}, ${selectedLocation.city}`
+          : formData.deliveryLocation,
+        paymentType: formData.paymentType,
+        customerName: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: `${formData.address}, ${formData.city}`,
+        postal_code: formData.postal_code,
+        status: "confirmed",
+        createdAt: new Date().toISOString(),
+      };
+
+      await reduceStockForItems(items);
+
       const orders = JSON.parse(localStorage.getItem("buyer_orders") || "[]");
       localStorage.setItem(
         "buyer_orders",
-        JSON.stringify([
-          {
-            id: orderId,
-            items,
-            total,
-            deliveryFee,
-            deliveryType: formData.deliveryType,
-            deliveryLocation: selectedLocation
-              ? `${selectedLocation.name}, ${selectedLocation.city}`
-              : formData.deliveryLocation,
-            paymentType: formData.paymentType,
-            address: `${formData.address}, ${formData.city}`,
-            status: formData.paymentType === "cash_on_delivery" ? "confirmed" : "payment_pending",
-            createdAt: new Date().toISOString(),
-          },
-          ...orders,
-        ])
+        JSON.stringify([{ ...orderData, stockReduced: true }, ...orders])
       );
+
       if (!state.buyNow) clearBuyerCart();
       setIsProcessing(false);
       setSuccessOrder(orderId);
     } catch (error: any) {
-      alert(error.message || "Out of Stock in Your Area");
+      alert(error.message || "Order placement failed");
       setIsProcessing(false);
     }
   };
@@ -223,6 +212,18 @@ export default function Checkout() {
             <section className="bg-white border border-slate-200 rounded-lg p-5">
               <h2 className="text-lg font-black text-slate-900 mb-5">Delivery Information</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="block sm:col-span-2">
+                  <span className="text-sm font-bold text-slate-700">👤 Full Name *</span>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500"
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </label>
                 <label className="block">
                   <span className="text-sm font-bold text-slate-700">Email</span>
                   <input
@@ -262,6 +263,17 @@ export default function Checkout() {
                     onChange={handleInputChange}
                     className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500"
                     placeholder="Kathmandu"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">📮 Postal Code *</span>
+                  <input
+                    name="postal_code"
+                    value={formData.postal_code}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-violet-500"
+                    placeholder="e.g., 44600"
+                    required
                   />
                 </label>
                 <label className="block">
@@ -338,6 +350,17 @@ export default function Checkout() {
 
             <aside className="bg-white border border-slate-200 rounded-lg p-5 h-fit">
               <h2 className="text-lg font-black text-slate-900">Payment Summary</h2>
+              
+              {/* Delivery Info Preview */}
+              {formData.name && formData.postal_code && (
+                <div className="mt-4 mb-5 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-slate-600 font-semibold">DELIVERY TO:</p>
+                  <p className="text-sm font-bold text-slate-900 mt-1">👤 {formData.name}</p>
+                  <p className="text-xs text-slate-600 mt-1">📮 Postal Code: {formData.postal_code}</p>
+                  <p className="text-xs text-slate-600">📍 {formData.city}</p>
+                </div>
+              )}
+              
               <div className="space-y-3 mt-5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Subtotal</span>
@@ -357,7 +380,7 @@ export default function Checkout() {
               <button
                 onClick={handlePlaceOrder}
                 disabled={isProcessing}
-                className="mt-6 w-full py-3 rounded-lg bg-green-600 text-white font-black hover:bg-green-700 disabled:bg-green-300"
+                className="mt-6 w-full rounded-lg bg-green-600 py-3 text-white font-black hover:bg-green-700 disabled:opacity-60"
               >
                 {isProcessing ? "Processing..." : "Place Order"}
               </button>
@@ -377,7 +400,7 @@ export default function Checkout() {
             <p className="text-sm text-slate-500 mt-2">
               {formData.paymentType === "cash_on_delivery"
                 ? "Pay when your order arrives."
-                : "Your digital payment is marked as pending for confirmation."}
+                : "Your order has been confirmed."}
             </p>
             <button
               onClick={() => navigate("/ordertracking")}

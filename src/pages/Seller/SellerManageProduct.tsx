@@ -16,7 +16,8 @@ type Product = {
   price: string;
   quantity: number;
   description?: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "flagged";
+  rejection_reason?: string;
   is_published: boolean;
   image?: string;
 };
@@ -219,6 +220,31 @@ export default function SellerProductManagement() {
         .iconBtn.delete { background: #dc2626; }
         .iconBtn:hover { transform: scale(1.08); }
 
+        .review-reason {
+          margin-top: 8px;
+          max-width: 220px;
+          border-left: 3px solid #f97316;
+          background: #fff7ed;
+          color: #9a3412;
+          padding: 8px 10px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          line-height: 1.45;
+        }
+
+        .review-reason.rejected {
+          border-left-color: #dc2626;
+          background: #fef2f2;
+          color: #991b1b;
+        }
+
+        .review-reason strong {
+          display: block;
+          margin-bottom: 2px;
+          color: inherit;
+        }
+
         img.table-img {
           width: 55px; 
           height: 55px; 
@@ -332,12 +358,20 @@ export default function SellerProductManagement() {
                           fontSize: "12px",
                           fontWeight: 600,
                           background: product.status === "approved" ? "#dcfce7" : 
-                                      product.status === "rejected" ? "#fee2e2" : "#fef3c7",
+                                      product.status === "rejected" ? "#fee2e2" :
+                                      product.status === "flagged" ? "#ffedd5" : "#fef3c7",
                           color: product.status === "approved" ? "#166534" : 
-                                 product.status === "rejected" ? "#b91c1c" : "#854d0e"
+                                 product.status === "rejected" ? "#b91c1c" :
+                                 product.status === "flagged" ? "#9a3412" : "#854d0e"
                         }}>
                           {product.status}
                         </span>
+                        {(product.status === "flagged" || product.status === "rejected") && product.rejection_reason && (
+                          <div className={`review-reason ${product.status}`}>
+                            <strong>{product.status === "flagged" ? "Flag reason" : "Reject reason"}</strong>
+                            {product.rejection_reason}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <strong style={{ color: product.is_published ? "#16a34a" : "#64748b" }}>

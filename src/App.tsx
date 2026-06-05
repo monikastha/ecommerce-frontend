@@ -19,6 +19,7 @@ import Checkout from "./pages/Buyer/home/Checkout";
 import Payment from "./pages/Buyer/home/Payment";
 import Cart from "./pages/Buyer/home/Cart";
 import OrderTracking from "./pages/Buyer/home/OrderTracking";
+import BuyerAccount from "./pages/Buyer/home/BuyerAccount";
 // ====================== DELIVERY MAN PAGES ======================
 import DeliverymanDashboard from "./pages/DeliveryMan/DeliverymanDashboard";
 import DeliverymanOrder from "./pages/DeliveryMan/DeliverymanOrder";
@@ -123,6 +124,7 @@ const App = () => {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/ordertracking" element={<OrderTracking />} />
+          <Route path="/account" element={<BuyerAccount />} />
         </Route>
 
     

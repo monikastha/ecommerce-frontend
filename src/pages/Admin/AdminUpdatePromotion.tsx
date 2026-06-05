@@ -3,7 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const PROMOTION_API = `${API}/api/admin/promotions`;
+const CATEGORY_API = `${API}/api/productcategory/categories/`;
 
 const AdminUpdatePromotion: React.FC = () => {
 
@@ -36,7 +38,7 @@ const AdminUpdatePromotion: React.FC = () => {
     try {
 
       const res = await fetch(
-        `${API}/api/admin/promotions/${id}/`
+        `${PROMOTION_API}/${id}/`
       );
 
       const data = await res.json();
@@ -74,7 +76,7 @@ const AdminUpdatePromotion: React.FC = () => {
   const fetchCategories = async()=>{
 
     const res = await fetch(
-      `${API}/api/productcategory/categories/`
+      CATEGORY_API
     );
 
     const data = await res.json();
@@ -156,7 +158,7 @@ const AdminUpdatePromotion: React.FC = () => {
 
       const res=await fetch(
 
-      `${API}/api/admin/promotions/${id}/`,
+      `${PROMOTION_API}/${id}/`,
 
       {
 
@@ -186,6 +188,9 @@ const AdminUpdatePromotion: React.FC = () => {
       "/admin/promotion"
       );
 
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data ? JSON.stringify(data) : "Failed to update promotion");
       }
 
     }
