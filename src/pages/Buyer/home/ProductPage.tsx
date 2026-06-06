@@ -86,6 +86,14 @@ const productCategoryId = (product?: Product | null) => {
   return null;
 };
 
+const descriptionPoints = (description?: string) => {
+  if (!description) return [];
+  return description
+    .split(/\r?\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+};
+
 const isPromotionActive = (promotion: ApiPromotion) => {
   const now = Date.now();
   return (
@@ -439,9 +447,17 @@ export default function ProductPage() {
 
                 <div className="mt-6">
                   <h2 className="text-sm font-black text-slate-900">Key Specifications:</h2>
-                  <p className="text-sm text-slate-600 mt-2 leading-6">
-                    {product.description || "No product description provided."}
-                  </p>
+                  {product.description ? (
+                    <ul className="text-sm text-slate-600 mt-2 leading-6 list-disc list-inside space-y-2">
+                      {descriptionPoints(product.description).map((point, index) => (
+                        <li key={index}>{point}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-slate-600 mt-2 leading-6">
+                      No product description provided.
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-6 flex items-center gap-3">

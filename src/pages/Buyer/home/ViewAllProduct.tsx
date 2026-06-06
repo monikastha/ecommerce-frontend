@@ -213,8 +213,6 @@ export default function ViewAllProducts() {
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return products.filter((product) => {
-      if (!stockByProduct.has(product.id)) return false;
-
       const categoryName = productCategoryName(product);
       const categoryMatch = selectedCategory === "All" || normalizeText(categoryName) === normalizeText(selectedCategory);
       const searchMatch = !query ||
@@ -397,6 +395,8 @@ export default function ViewAllProducts() {
               {visibleProducts.map((product) => {
                 const promotion = promotionForProduct(product, promotions);
                 const finalPrice = discountedPrice(product.price, promotion);
+                const productStock = stockByProduct.get(product.id);
+                const isAvailable = Boolean(productStock);
                 return (
                 <article key={product.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
                   <button onClick={() => navigate(`/product/${product.id}`, { state: product })} className="block w-full h-48 bg-slate-100 overflow-hidden">
@@ -427,13 +427,23 @@ export default function ViewAllProducts() {
                         )}
                       </span>
                       <span className="text-xs bg-slate-100 px-3 py-1 rounded-full">
-                        {`${stockByProduct.get(product.id)?.quantity || 0} available`}
+                        {isAvailable ? `${productStock?.quantity || 0} available` : "Out of Stock"}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mt-6">
-                      <button onClick={() => buyNow(product)} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl">Buy Now</button>
-                      <button onClick={() => addToCart(product)} className={`font-bold py-3 rounded-xl ${addedId === product.id ? "bg-green-600" : "bg-violet-600 hover:bg-violet-700"} text-white`}>
+                      <button
+                        onClick={() => buyNow(product)}
+                        disabled={!isAvailable}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl disabled:bg-slate-300 disabled:cursor-not-allowed"
+                      >
+                        Buy Now
+                      </button>
+                      <button
+                        onClick={() => addToCart(product)}
+                        disabled={!isAvailable}
+                        className={`font-bold py-3 rounded-xl ${addedId === product.id ? "bg-green-600" : "bg-violet-600 hover:bg-violet-700"} text-white disabled:bg-slate-300 disabled:cursor-not-allowed`}
+                      >
                         {addedId === product.id ? "Added ✓" : "Add to Cart"}
                       </button>
                     </div>

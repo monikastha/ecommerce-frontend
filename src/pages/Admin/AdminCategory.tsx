@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-import { FaFolder, FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import { FaFolder, FaEdit, FaEye, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import CategoryViewModal from "../../components/CategoryViewModal";
 
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/productcategory/categories/`;
 
@@ -15,7 +16,7 @@ const AdminCategory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
   const itemsPerPage = 5;
 
   const fetchCategories = async () => {
@@ -36,13 +37,10 @@ const AdminCategory: React.FC = () => {
     fetchCategories();
   }, [search]);
 
-  const getFullUrl = (path: string | null) => {
+  const getFullUrl = (path?: string | null) => {
     if (!path) return "";
     return path.startsWith("http") ? path : `${import.meta.env.VITE_API_URL}${path}`;
   };
-
-  const openZoom = (imagePath: string) => setZoomImage(getFullUrl(imagePath));
-  const closeZoom = () => setZoomImage(null);
 
   const filteredCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -179,6 +177,7 @@ const AdminCategory: React.FC = () => {
           cursor: pointer;
         }
         .iconBtn.edit { background: #2563eb; color: white; }
+        .iconBtn.view { background: #0f766e; color: white; }
         .iconBtn.delete { background: #dc2626; color: white; }
 
         .table-img {
@@ -187,7 +186,6 @@ const AdminCategory: React.FC = () => {
           object-fit: cover;
           border-radius: 8px;
           border: 2px solid #e2e8f0;
-          cursor: zoom-in;
         }
 
         .empty {
@@ -233,16 +231,6 @@ const AdminCategory: React.FC = () => {
           cursor: not-allowed;
         }
 
-        /* Zoom Modal */
-        .zoom-modal {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.9);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
       `}</style>
 
       <div className="wrapper">
@@ -312,8 +300,8 @@ const AdminCategory: React.FC = () => {
                       <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                       <td><strong>{cat.name}</strong></td>
                       <td>
-                        {cat.description 
-                          ? cat.description.substring(0, 70) + (cat.description.length > 70 ? "..." : "") 
+                        {cat.description
+                          ? cat.description.substring(0, 70) + (cat.description.length > 70 ? "..." : "")
                           : "-"
                         }
                       </td>
@@ -323,13 +311,19 @@ const AdminCategory: React.FC = () => {
                             src={getFullUrl(cat.image)}
                             alt={cat.name}
                             className="table-img"
-                            onClick={() => openZoom(cat.image)}
                           />
                         ) : (
                           "No Image"
                         )}
                       </td>
                       <td className="actions" style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          className="iconBtn view"
+                          onClick={() => setSelectedCategory(cat)}
+                          title="View category"
+                        >
+                          <FaEye />
+                        </button>
                         <button 
                           className="iconBtn edit" 
                           onClick={() => navigate(`/admin/category/update/${cat.id}`)}
@@ -377,17 +371,11 @@ const AdminCategory: React.FC = () => {
         </div>
       </div>
 
-      {/* Image Zoom Modal */}
-      {zoomImage && (
-        <div className="zoom-modal" onClick={closeZoom}>
-          <img 
-            src={zoomImage} 
-            alt="Zoomed" 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ maxHeight: "90vh", maxWidth: "90vw", borderRadius: "12px" }} 
-          />
-        </div>
-      )}
+      <CategoryViewModal
+        category={selectedCategory}
+        imageUrl={getFullUrl}
+        onClose={() => setSelectedCategory(null)}
+      />
     </>
   );
 };

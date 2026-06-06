@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaBoxOpen, FaCheck, FaTimes, FaEyeSlash, FaUpload, FaFlag, FaTrash } from "react-icons/fa";
+import { FaBoxOpen, FaCheck, FaTimes, FaEye, FaEyeSlash, FaUpload, FaFlag, FaTrash } from "react-icons/fa";
+import ProductViewModal from "../../components/ProductViewModal";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -25,6 +26,7 @@ const AssistantProductManagement: React.FC = () => {
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -232,6 +234,12 @@ const AssistantProductManagement: React.FC = () => {
         }
         .publish-btn:hover { background: #1d4ed8; }
 
+        .view-btn {
+          background: #0f766e;
+          color: white;
+        }
+        .view-btn:hover { background: #115e59; }
+
         .productImg { 
           width: 50px; 
           height: 50px; 
@@ -279,8 +287,6 @@ const AssistantProductManagement: React.FC = () => {
                     <th>Category</th>
                     <th>Price</th>
                     <th>Stock</th>
-                    <th>Image</th>
-                    <th>Description</th>
                     <th>Status</th>
                     <th>Published</th>
                     <th>Actions</th>
@@ -288,9 +294,9 @@ const AssistantProductManagement: React.FC = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={11} style={{ textAlign: "center", padding: "80px" }}>Loading products...</td></tr>
+                    <tr><td colSpan={9} style={{ textAlign: "center", padding: "80px" }}>Loading products...</td></tr>
                   ) : filtered.length === 0 ? (
-                    <tr><td colSpan={11} style={{ textAlign: "center", padding: "80px" }}>No products found</td></tr>
+                    <tr><td colSpan={9} style={{ textAlign: "center", padding: "80px" }}>No products found</td></tr>
                   ) : (
                     filtered.map((product) => (
                       <tr key={product.id}>
@@ -304,14 +310,14 @@ const AssistantProductManagement: React.FC = () => {
                         <td>Rs. {product.price}</td>
                         <td>{product.quantity}</td>
                         <td>
-                          {product.image && <img src={imageUrl(product.image)} alt="" className="productImg" />}
-                        </td>
-                        <td style={{ maxWidth: "280px" }}>{product.description}</td>
-                        <td>
                           <span className={`status ${product.status}`}>{product.status.toUpperCase()}</span>
                         </td>
                         <td>{product.is_published ? "Yes" : "No"}</td>
                         <td>
+                          <button className="action-btn view-btn" onClick={() => setSelectedProduct(product)}>
+                            <FaEye /> View
+                          </button>
+
                           {product.status !== "approved" && (
                             <>
                               <button className="action-btn approve-btn" onClick={() => updateStatus(product.id, "approve")}>
@@ -355,7 +361,13 @@ const AssistantProductManagement: React.FC = () => {
               </table>
             </div>
           </div>
-        </div>
+      </div>
+
+      <ProductViewModal
+        product={selectedProduct}
+        imageUrl={imageUrl}
+        onClose={() => setSelectedProduct(null)}
+      />
   
     </>
   );

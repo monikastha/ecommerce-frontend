@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaBox, FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import { FaBox, FaEdit, FaEye, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
 import axios from "axios";
 
 import SellerNavbar from "./SellerNavbar";
 import SellerSidebar from "./SellerSidebar";
+import ProductViewModal from "../../components/ProductViewModal";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -27,7 +28,7 @@ export default function SellerProductManagement() {
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState<Product[]>([]); // Empty array
   const [loading, setLoading] = useState(true);
-  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const imageUrl = (path?: string) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
 
@@ -59,9 +60,6 @@ export default function SellerProductManagement() {
       alert("Failed to delete product");
     }
   };
-
-  const openZoom = (image: string) => setZoomImage(image);
-  const closeZoom = () => setZoomImage(null);
 
   const filteredProducts = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -217,6 +215,7 @@ export default function SellerProductManagement() {
           transition: 0.2s;
         }
         .iconBtn.edit { background: #2563eb; }
+        .iconBtn.view { background: #0f766e; }
         .iconBtn.delete { background: #dc2626; }
         .iconBtn:hover { transform: scale(1.08); }
 
@@ -254,15 +253,6 @@ export default function SellerProductManagement() {
           cursor: zoom-in;
         }
 
-        .zoom-modal {
-          position: fixed; 
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.9); 
-          display: flex;
-          align-items: center; 
-          justify-content: center; 
-          z-index: 1000;
-        }
       `}</style>
 
       <div className="wrapper">
@@ -307,27 +297,25 @@ export default function SellerProductManagement() {
               <thead>
                 <tr>
                   <th>S.No</th>
-                  <th>Image</th>
                   <th>Product Name</th>
                   <th>Category</th>
                   <th>Price</th>
                   <th>Stock</th>
                   <th>Status</th>
                   <th>Published</th>
-                  <th>Description</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={10} style={{ textAlign: "center", padding: "80px" }}>
+                    <td colSpan={8} style={{ textAlign: "center", padding: "80px" }}>
                       Loading products...
                     </td>
                   </tr>
                 ) : filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={10} style={{ textAlign: "center", padding: "80px" }}>
+                    <td colSpan={8} style={{ textAlign: "center", padding: "80px" }}>
                       No products found
                     </td>
                   </tr>
@@ -335,18 +323,6 @@ export default function SellerProductManagement() {
                   filteredProducts.map((product, index) => (
                     <tr key={product.id}>
                       <td>{index + 1}</td>
-                      <td>
-                        {product.image ? (
-                          <img
-                            src={imageUrl(product.image)}
-                            alt={product.name}
-                            className="table-img"
-                            onClick={() => openZoom(imageUrl(product.image))}
-                          />
-                        ) : (
-                          "No Image"
-                        )}
-                      </td>
                       <td><strong>{product.name}</strong></td>
                       <td>{product.category_name || "-"}</td>
                       <td>Rs. {product.price}</td>
@@ -366,22 +342,20 @@ export default function SellerProductManagement() {
                         }}>
                           {product.status}
                         </span>
-                        {(product.status === "flagged" || product.status === "rejected") && product.rejection_reason && (
-                          <div className={`review-reason ${product.status}`}>
-                            <strong>{product.status === "flagged" ? "Flag reason" : "Reject reason"}</strong>
-                            {product.rejection_reason}
-                          </div>
-                        )}
                       </td>
                       <td>
                         <strong style={{ color: product.is_published ? "#16a34a" : "#64748b" }}>
                           {product.is_published ? "Yes" : "No"}
                         </strong>
                       </td>
-                      <td style={{ maxWidth: "240px", whiteSpace: "normal" }}>
-                        {product.description || "-"}
-                      </td>
                       <td className="actions">
+                        <button
+                          className="iconBtn view"
+                          onClick={() => setSelectedProduct(product)}
+                          title="View product"
+                        >
+                          <FaEye />
+                        </button>
                         <button 
                           className="iconBtn edit" 
                           onClick={() => navigate(`/seller/product/edit/${product.id}`)}
@@ -404,17 +378,11 @@ export default function SellerProductManagement() {
         </div>
       </div>
 
-      {/* Image Zoom Modal */}
-      {zoomImage && (
-        <div className="zoom-modal" onClick={closeZoom}>
-          <img 
-            src={zoomImage} 
-            alt="Zoomed" 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ maxHeight: "90vh", maxWidth: "90vw", borderRadius: "12px" }} 
-          />
-        </div>
-      )}
+      <ProductViewModal
+        product={selectedProduct}
+        imageUrl={imageUrl}
+        onClose={() => setSelectedProduct(null)}
+      />
     </>
   );
 }

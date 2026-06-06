@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaFolder, FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import { FaFolder, FaEdit, FaEye, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import CategoryViewModal from "../../components/CategoryViewModal";
 
 const API_BASE = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/api/productcategory/categories/`;
 
@@ -20,7 +21,7 @@ const AssistantCategory: React.FC = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -40,13 +41,10 @@ const AssistantCategory: React.FC = () => {
     fetchCategories();
   }, [search]);
 
-  const getFullUrl = (path: string | null) => {
+  const getFullUrl = (path?: string | null) => {
     if (!path) return "";
     return path.startsWith("http") ? path : `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}${path}`;
   };
-
-  const openZoom = (imagePath: string) => setZoomImage(getFullUrl(imagePath));
-  const closeZoom = () => setZoomImage(null);
 
   const deleteCategory = async (id: number, name: string) => {
     if (!window.confirm(`Delete category "${name}"?`)) return;
@@ -200,6 +198,10 @@ const AssistantCategory: React.FC = () => {
           background: #3b82f6; 
         }
 
+        .iconBtn.view {
+          background: #0f766e;
+        }
+
         .iconBtn.delete { 
           background: #ef4444; 
         }
@@ -214,20 +216,6 @@ const AssistantCategory: React.FC = () => {
           object-fit: cover;
           border-radius: 8px; 
           border: 2px solid #e2e8f0; 
-          cursor: zoom-in;
-        }
-
-        .zoom-modal {
-          position: fixed; 
-          top: 0; 
-          left: 0; 
-          right: 0; 
-          bottom: 0;
-          background: rgba(0,0,0,0.9); 
-          display: flex;
-          align-items: center; 
-          justify-content: center; 
-          z-index: 2000;
         }
 
         .empty {
@@ -301,8 +289,8 @@ const AssistantCategory: React.FC = () => {
                       <td><strong>{index + 1}</strong></td>
                       <td><strong>{cat.name}</strong></td>
                       <td>
-                        {cat.description 
-                          ? cat.description.substring(0, 70) + (cat.description.length > 70 ? "..." : "") 
+                        {cat.description
+                          ? cat.description.substring(0, 70) + (cat.description.length > 70 ? "..." : "")
                           : "-"
                         }
                       </td>
@@ -312,13 +300,19 @@ const AssistantCategory: React.FC = () => {
                             src={getFullUrl(cat.image)}
                             alt={cat.name}
                             className="table-img"
-                            onClick={() => openZoom(cat.image!)}
                           />
                         ) : (
                           "No Image"
                         )}
                       </td>
                       <td className="actions">
+                        <button
+                          className="iconBtn view"
+                          onClick={() => setSelectedCategory(cat)}
+                          title="View category"
+                        >
+                          <FaEye />
+                        </button>
                         <button 
                           className="iconBtn edit" 
                           onClick={() => navigate(`/assistant/category/update/${cat.id}`)}
@@ -341,17 +335,11 @@ const AssistantCategory: React.FC = () => {
         </div>
       </div>
 
-      {/* Image Zoom Modal */}
-      {zoomImage && (
-        <div className="zoom-modal" onClick={closeZoom}>
-          <img 
-            src={zoomImage} 
-            alt="Zoomed" 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ maxHeight: "90vh", maxWidth: "90vw", borderRadius: "12px" }} 
-          />
-        </div>
-      )}
+      <CategoryViewModal
+        category={selectedCategory}
+        imageUrl={getFullUrl}
+        onClose={() => setSelectedCategory(null)}
+      />
     </>
   );
 };
