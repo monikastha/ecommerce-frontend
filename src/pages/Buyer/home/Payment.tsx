@@ -1,210 +1,180 @@
-import { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import BuyerNavbar from "../../../components/BuyerNavbar";
+import BuyerNavbar from "../../../components/BuyerNavbar2";   // Updated to match Checkout
 import BuyerFooter from "../../../components/BuyerFooter";
+import { getBuyerCartCount } from "../../../utils/buyerCart";
 
-// Import your image
-import greenKurta from "../../../assets/greenKurta.jpg";
+type OrderItem = {
+  id: string | number;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+};
 
-export default function Checkout() {
+type PaymentState = {
+  orderId: string;
+  amount: number;
+  items: OrderItem[];
+  customerName: string;
+  email: string;
+  phone?: string;
+  address?: string;
+};
+
+export default function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const cartItem = location.state?.items?.[0] || {
-    name: "Green Floral Cotton Printed Knee Length Straight Kurti",
-    price: 1250,
-    img: greenKurta,
-  };
-
-  const [formData, setFormData] = useState({
-    email: "",
-    address: "",
-    paymentType: "cash_on_delivery",
-  });
+  const orderData = location.state as PaymentState;
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmitPayment = () => {
-    if (!formData.email || !formData.address) {
-      alert("Please fill in Email and Delivery Location");
-      return;
+  // Redirect back if no order data
+  useEffect(() => {
+    if (!orderData?.orderId || !orderData?.items?.length) {
+      navigate("/checkout");
     }
+  }, [orderData, navigate]);
+
+  const handleEsewaPayment = async () => {
+    if (!orderData) return;
 
     setIsProcessing(true);
 
-    setTimeout(() => {
+    try {
+      const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+      const res = await fetch(`${API_ORIGIN}/api/initiate-esewa/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: orderData.orderId,
+          amount: orderData.amount,
+          productName: orderData.items.length === 1
+            ? orderData.items[0].name
+            : `${orderData.items.length} items`,
+          customerName: orderData.customerName,
+          email: orderData.email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to initiate eSewa payment");
+      }
+
+      // Submit to eSewa
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = data.paymentUrl || "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
+
+      Object.keys(data.formData).forEach((key) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = data.formData[key];
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+
+    } catch (error: any) {
+      alert(error.message || "Payment initiation failed. Please try again.");
       setIsProcessing(false);
-      setShowSuccess(true);
-    }, 1200);
+    }
   };
 
-  const handleSuccessClose = () => {
-    setShowSuccess(false);
-    navigate("/home"); // Redirect to Buyer Home
-  };
+  if (!orderData) {
+    return <div>Loading payment details...</div>;
+  }
+
+  const totalAmount = orderData.amount;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f9fafb" }}>
-      <BuyerNavbar cartQty={1} />
+    <div className="min-h-screen bg-slate-50">
+      {/* Updated Navbar - Now using BuyerNavbar2 like Checkout */}
+      <BuyerNavbar cartQty={getBuyerCartCount()} />
 
-      <div style={{ maxWidth: 1200, margin: "30px auto", padding: "0 20px" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 30 }}>
-          Buyer Proceed to Checkout
-        </h1>
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-black text-slate-900">Complete Your Payment</h1>
+          <p className="text-slate-600 mt-1">Order ID: <span className="font-mono font-bold">{orderData.orderId}</span></p>
+        </div>
 
-        <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
-          {/* Left Side - Product */}
-          <div style={{ flex: 1, minWidth: 400 }}>
-            <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
-              <img
-                src={cartItem.img}
-                alt={cartItem.name}
-                style={{ width: "100%", height: "auto", borderRadius: 12 }}
-              />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Left - Order Summary */}
+          <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl p-6">
+            <h2 className="text-xl font-bold mb-6">Order Summary</h2>
 
-            <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
-              {cartItem.name}
-            </h2>
-            <p style={{ color: "#10b981", marginBottom: 8 }}>
-              Brand: Rangita | More Women from Rangita
-            </p>
-            <p style={{ fontSize: 22, fontWeight: 700, color: "#ef4444" }}>
-              Rs {cartItem.price}
-            </p>
-            <p style={{ color: "#6b7280" }}>Color: Olive Green</p>
-          </div>
-
-          {/* Right Side - Shipping Form */}
-          <div style={{ flex: 1, minWidth: 400 }}>
-            <div style={{
-              background: "#f0fdf4",
-              borderRadius: 12,
-              padding: 24,
-              border: "1px solid #86efac"
-            }}>
-              <h3 style={{ marginBottom: 20, fontSize: 18, fontWeight: 600 }}>
-                Shipping Information
-              </h3>
-
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email here"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid #d1d5db" }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>Delivery Location</label>
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="Enter your address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid #d1d5db" }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>Payment Type</label>
-                <select
-                  name="paymentType"
-                  value={formData.paymentType}
-                  onChange={handleInputChange}
-                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid #d1d5db" }}
-                >
-                  <option value="cash_on_delivery">Cash on Delivery</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: 20, padding: "16px", background: "white", borderRadius: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 18, fontWeight: 600 }}>
-                  <span>Total Payment</span>
-                  <span style={{ color: "#ef4444" }}>Rs {cartItem.price}</span>
+            <div className="space-y-6">
+              {orderData.items.map((item, index) => (
+                <div key={index} className="flex gap-4 border-b border-slate-100 pb-6 last:border-0 last:pb-0">
+                  <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-slate-900 leading-tight">{item.name}</h3>
+                    <p className="text-sm text-slate-500 mt-1">Qty: {item.quantity}</p>
+                    <p className="text-lg font-bold text-slate-900 mt-2">
+                      Rs. {(item.price * item.quantity).toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              <button
-                onClick={handleSubmitPayment}
-                disabled={isProcessing}
-                style={{
-                  width: "100%",
-                  padding: "16px",
-                  background: isProcessing ? "#86efac" : "#22c55e",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 17,
-                  fontWeight: 600,
-                  cursor: isProcessing ? "not-allowed" : "pointer",
-                }}
-              >
-                {isProcessing ? "Processing..." : "Submit Payment"}
-              </button>
+            {/* Customer Details */}
+            <div className="mt-8 pt-6 border-t border-slate-200">
+              <h3 className="font-bold mb-3">Delivery Details</h3>
+              <p><strong>Name:</strong> {orderData.customerName}</p>
+              <p><strong>Email:</strong> {orderData.email}</p>
+              {orderData.phone && <p><strong>Phone:</strong> {orderData.phone}</p>}
+              {orderData.address && <p><strong>Address:</strong> {orderData.address}</p>}
+            </div>
+          </div>
+
+          {/* Right - Payment Box */}
+          <div className="lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 sticky top-6">
+              <h2 className="text-xl font-bold mb-6">Payment Details</h2>
+
+              <div className="space-y-4">
+                <div className="flex justify-between text-lg">
+                  <span className="text-slate-600">Total Amount</span>
+                  <span className="font-bold text-2xl">Rs. {totalAmount.toLocaleString()}</span>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <button
+                    onClick={handleEsewaPayment}
+                    disabled={isProcessing}
+                    className="w-full bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-gray-400 text-white font-bold py-4 rounded-xl text-lg transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    {isProcessing ? (
+                      "Processing..."
+                    ) : (
+                      <>
+                        Pay with <span className="font-black">eSewa</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <p className="text-center text-xs text-slate-500 mt-4">
+                  Secure payment powered by eSewa
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ==================== BEAUTIFUL SUCCESS POPUP ==================== */}
-      {showSuccess && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          background: "rgba(0,0,0,0.6)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}>
-          <div style={{
-            background: "white",
-            borderRadius: 16,
-            padding: "40px 30px",
-            textAlign: "center",
-            maxWidth: 400,
-            boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-          }}>
-            <div style={{ fontSize: 60, marginBottom: 20 }}>🎉</div>
-            <h2 style={{ fontSize: 24, marginBottom: 12, color: "#10b981" }}>
-              Order Placed Successfully!
-            </h2>
-            <p style={{ color: "#6b7280", marginBottom: 30 }}>
-              Thank you for shopping at Sajilo Mart.<br />
-              Your order has been confirmed.
-            </p>
-            <button
-              onClick={handleSuccessClose}
-              style={{
-                padding: "14px 40px",
-                background: "#10b981",
-                color: "white",
-                border: "none",
-                borderRadius: 10,
-                fontSize: 17,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
+      </main>
 
       <BuyerFooter />
     </div>

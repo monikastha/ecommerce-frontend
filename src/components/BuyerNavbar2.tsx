@@ -7,6 +7,7 @@ import loginIcon from "../assets/login.png";
 import signupIcon from "../assets/signupRemove.png";
 import account from "../assets/account logo.jpg";
 import logout from "../assets/logoutremovebg.png";
+import ProfileAvatar from "./ProfileAvatar";
 
 const GUEST_NAV_ITEMS = [
   { label: "Home", icon: homeLogo, path: "/" },
@@ -27,6 +28,7 @@ type BuyerNavbarProps = {
   categories?: string[];
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  showAllCategory?: boolean;
 };
 
 export default function BuyerNavbar({ 
@@ -35,7 +37,8 @@ export default function BuyerNavbar({
   categories = [],
   searchQuery = "",
   onSearchChange,
-  cartQty = 0 
+  cartQty = 0,
+  showAllCategory = true
 }: BuyerNavbarProps) {
   
   const navigate = useNavigate();
@@ -43,7 +46,7 @@ export default function BuyerNavbar({
   const [activeCat, setActiveCat] = useState(propActiveCat);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const categoryTabs = ["All", ...new Set(categories)];
+  const categoryTabs = showAllCategory ? ["All", ...new Set(categories)] : [...new Set(categories)];
 
   useEffect(() => {
     setActiveCat(propActiveCat);
@@ -108,12 +111,9 @@ export default function BuyerNavbar({
             <div className="relative group">
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search products by name or price..."
                 value={localSearch}
-                onChange={(e) => {
-                  setLocalSearch(e.target.value);
-                  onSearchChange?.(e.target.value);
-                }}
+                onChange={(e) => setLocalSearch(e.target.value)}
                 className="w-full pl-5 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-teal-500 text-sm"
               />
               <button 
@@ -133,7 +133,11 @@ export default function BuyerNavbar({
                 onClick={() => item.label === "Logout" ? handleLogout() : navigate(item.path)}
                 className="flex flex-col items-center px-3 py-1 text-xs text-gray-600 hover:text-teal-700 transition-colors"
               >
-                <img src={item.icon} alt={item.label} className="w-6 h-6 mb-1" />
+                {item.label === "Account" ? (
+                  <ProfileAvatar className="w-6 h-6 mb-1 rounded-full object-cover" />
+                ) : (
+                  <img src={item.icon} alt={item.label} className="w-6 h-6 mb-1" />
+                )}
                 {item.label}
               </button>
             ))}

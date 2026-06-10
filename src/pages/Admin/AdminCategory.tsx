@@ -1,28 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-import { FaFolder, FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import { FaFolder, FaEdit, FaEye, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import CategoryViewModal from "../../components/CategoryViewModal";
 
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/productcategory/categories/`;
+
+type Category = {
+  id: number;
+  name: string;
+  description?: string | null;
+  image?: string | null;
+};
 
 const AdminCategory: React.FC = () => {
   const navigate = useNavigate();
 
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const itemsPerPage = 5;
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (searchTerm = search) => {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(`${API_BASE}?search=${encodeURIComponent(search)}`);
+      const res = await axios.get<Category[]>(`${API_BASE}?search=${encodeURIComponent(searchTerm)}`);
       setCategories(res.data);
     } catch (err) {
       console.error(err);
@@ -33,42 +41,43 @@ const AdminCategory: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, [search]);
+    void axios
+      .get<Category[]>(API_BASE)
+      .then((res) => setCategories(res.data))
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load categories");
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-  const getFullUrl = (path: string | null) => {
+  const getFullUrl = (path?: string | null) => {
     if (!path) return "";
     return path.startsWith("http") ? path : `${import.meta.env.VITE_API_URL}${path}`;
   };
 
-  const openZoom = (imagePath: string) => setZoomImage(getFullUrl(imagePath));
-  const closeZoom = () => setZoomImage(null);
-
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(search.toLowerCase()) ||
-    (cat.description || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredCategories = useMemo(() => {
+    const query = search.toLowerCase();
+    return categories.filter((cat) =>
+      cat.name.toLowerCase().includes(query) ||
+      (cat.description || "").toLowerCase().includes(query)
+    );
+  }, [categories, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredCategories.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedCategories = filteredCategories.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage
   );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [currentPage, totalPages]);
 
   const deleteCategory = async (id: number, name: string) => {
     if (!window.confirm(`Delete category "${name}"?`)) return;
     try {
       await axios.delete(`${API_BASE}${id}/`);
-      fetchCategories();
+      await fetchCategories();
     } catch (err) {
+      console.error(err);
       alert("Failed to delete category");
     }
   };
@@ -179,6 +188,7 @@ const AdminCategory: React.FC = () => {
           cursor: pointer;
         }
         .iconBtn.edit { background: #2563eb; color: white; }
+        .iconBtn.view { background: #0f766e; color: white; }
         .iconBtn.delete { background: #dc2626; color: white; }
 
         .table-img {
@@ -187,7 +197,6 @@ const AdminCategory: React.FC = () => {
           object-fit: cover;
           border-radius: 8px;
           border: 2px solid #e2e8f0;
-          cursor: zoom-in;
         }
 
         .empty {
@@ -233,16 +242,6 @@ const AdminCategory: React.FC = () => {
           cursor: not-allowed;
         }
 
-        /* Zoom Modal */
-        .zoom-modal {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.9);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
       `}</style>
 
       <div className="wrapper">
@@ -274,7 +273,10 @@ const AdminCategory: React.FC = () => {
                     className="searchInput"
                     placeholder="Search categories..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(1);
+                    }}
                   />
                 </div>
 
@@ -309,11 +311,11 @@ const AdminCategory: React.FC = () => {
                 ) : (
                   paginatedCategories.map((cat, index) => (
                     <tr key={cat.id}>
-                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                      <td>{(safeCurrentPage - 1) * itemsPerPage + index + 1}</td>
                       <td><strong>{cat.name}</strong></td>
                       <td>
-                        {cat.description 
-                          ? cat.description.substring(0, 70) + (cat.description.length > 70 ? "..." : "") 
+                        {cat.description
+                          ? cat.description.substring(0, 70) + (cat.description.length > 70 ? "..." : "")
                           : "-"
                         }
                       </td>
@@ -323,13 +325,19 @@ const AdminCategory: React.FC = () => {
                             src={getFullUrl(cat.image)}
                             alt={cat.name}
                             className="table-img"
-                            onClick={() => openZoom(cat.image)}
                           />
                         ) : (
                           "No Image"
                         )}
                       </td>
                       <td className="actions" style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          className="iconBtn view"
+                          onClick={() => setSelectedCategory(cat)}
+                          title="View category"
+                        >
+                          <FaEye />
+                        </button>
                         <button 
                           className="iconBtn edit" 
                           onClick={() => navigate(`/admin/category/update/${cat.id}`)}
@@ -353,20 +361,20 @@ const AdminCategory: React.FC = () => {
             {filteredCategories.length > 0 && (
               <div className="pagination">
                 <span className="pagination-info">
-                  Showing page {currentPage} out of {totalPages} pages
+                  Showing page {safeCurrentPage} out of {totalPages} pages
                 </span>
                 <div className="pagination-actions">
                   <button 
                     type="button" 
                     onClick={() => setCurrentPage((page) => page - 1)} 
-                    disabled={currentPage === 1}
+                    disabled={safeCurrentPage === 1}
                   >
                     Previous
                   </button>
                   <button 
                     type="button" 
                     onClick={() => setCurrentPage((page) => page + 1)} 
-                    disabled={currentPage === totalPages}
+                    disabled={safeCurrentPage === totalPages}
                   >
                     Next
                   </button>
@@ -377,19 +385,14 @@ const AdminCategory: React.FC = () => {
         </div>
       </div>
 
-      {/* Image Zoom Modal */}
-      {zoomImage && (
-        <div className="zoom-modal" onClick={closeZoom}>
-          <img 
-            src={zoomImage} 
-            alt="Zoomed" 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ maxHeight: "90vh", maxWidth: "90vw", borderRadius: "12px" }} 
-          />
-        </div>
-      )}
+      <CategoryViewModal
+        category={selectedCategory}
+        imageUrl={getFullUrl}
+        onClose={() => setSelectedCategory(null)}
+      />
     </>
   );
 };
 
 export default AdminCategory;
+

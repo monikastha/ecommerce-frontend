@@ -648,9 +648,31 @@ border-radius:10px;
 
 display:flex;
 
+align-items:center;
+
 gap:8px;
 
 margin:6px 0;
+
+width:max-content;
+
+cursor:pointer;
+
+}
+
+.checkbox input{
+
+width:18px;
+
+height:18px;
+
+padding:0;
+
+margin:0;
+
+flex:0 0 18px;
+
+accent-color:#16a34a;
 
 }
 

@@ -265,10 +265,10 @@ export default function SellerAddProduct() {
                 </div>
 
                 <div className="form-group">
-                  <label>Description</label>
+                  <label>Key Specifications</label>
                   <textarea
                     name="description"
-                    placeholder="Write detailed description..."
+                    placeholder={"Enter each specification on a new line...\nExample:\n6.5 inch display\n128GB storage\n5000mAh battery"}
                     value={formData.description}
                     onChange={handleChange}
                   />

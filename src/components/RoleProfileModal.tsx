@@ -1,5 +1,5 @@
 import { type ChangeEvent, useEffect, useState } from "react";
-import logo from "../assets/logo.png";
+import { imageUrl, saveProfileToStorage } from "./ProfileAvatar";
 
 type ProfileData = {
   id?: number;
@@ -42,41 +42,16 @@ const roleLabels: Record<string, string> = {
 
 const canChangeOwnPassword = (role: string) => role === "admin" || role === "seller";
 
-function getStoredProfileId(role: string) {
-  if (role === "seller") return localStorage.getItem("seller_id");
-  if (role === "delivery") return localStorage.getItem("delivery_id");
-  if (role === "assistant" || role === "warehousestaff") return localStorage.getItem("staff_id");
+function getStoredProfileId() {
   return localStorage.getItem("user_id");
 }
 
-function getEndpoint(role: string, id: string) {
-  if (role === "seller") return `${API_BASE}/api/seller/${id}/`;
-  if (role === "delivery") return `${API_BASE}/api/deliveryman/delivery/${id}/`;
-  if (role === "assistant" || role === "warehousestaff") return `${API_BASE}/api/staff/${id}/`;
-  return `${API_BASE}/api/users/${id}/`;
-}
-
-async function findProfileId(role: string, userId: string) {
-  if (role === "assistant" || role === "warehousestaff") {
-    const res = await fetch(`${API_BASE}/api/staff/`);
-    const data = await res.json();
-    const profile = data.find((item: ProfileData) => String(item.user) === userId);
-    return profile?.id ? String(profile.id) : "";
-  }
-
-  if (role === "delivery") {
-    const res = await fetch(`${API_BASE}/api/deliveryman/delivery/`);
-    const data = await res.json();
-    const profile = data.find((item: ProfileData) => String(item.user) === userId);
-    return profile?.id ? String(profile.id) : "";
-  }
-
-  return "";
+function getEndpoint(id: string) {
+  return `${API_BASE}/api/profile/${id}/`;
 }
 
 export default function RoleProfileModal({ open, onClose }: RoleProfileModalProps) {
   const role = localStorage.getItem("role") || "";
-  const userId = localStorage.getItem("user_id") || "";
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -95,22 +70,14 @@ export default function RoleProfileModal({ open, onClose }: RoleProfileModalProp
       setError("");
 
       try {
-        let id = getStoredProfileId(role) || "";
-
-        if (!id && userId) {
-          id = await findProfileId(role, userId);
-          if (id) {
-            if (role === "delivery") localStorage.setItem("delivery_id", id);
-            if (role === "assistant" || role === "warehousestaff") localStorage.setItem("staff_id", id);
-          }
-        }
+        let id = getStoredProfileId() || "";
 
         if (!id) {
           throw new Error("Profile record was not found for this account.");
         }
 
         setProfileId(id);
-        const res = await fetch(getEndpoint(role, id));
+        const res = await fetch(getEndpoint(id));
         const data = await res.json();
 
         if (!res.ok) {
@@ -118,8 +85,8 @@ export default function RoleProfileModal({ open, onClose }: RoleProfileModalProp
         }
 
         const nextProfile: ProfileData = {
-          id: data.id,
-          user: data.user,
+          id: data.profile_id || data.id,
+          user: data.user_id || data.user,
           name: data.name || data.user_name || localStorage.getItem("name") || "",
           username: data.username || localStorage.getItem("username") || "",
           email: data.email || localStorage.getItem("email") || "",
@@ -133,7 +100,8 @@ export default function RoleProfileModal({ open, onClose }: RoleProfileModalProp
         setProfile(nextProfile);
         setFormData(nextProfile);
         setSelectedImage(null);
-        setPreviewImage(nextProfile.profile_image ? imageUrl(nextProfile.profile_image) : logo);
+        setPreviewImage(imageUrl(nextProfile.profile_image));
+        saveProfileToStorage(nextProfile);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load profile.");
       } finally {
@@ -142,17 +110,12 @@ export default function RoleProfileModal({ open, onClose }: RoleProfileModalProp
     };
 
     loadProfile();
-  }, [open, role, userId]);
+  }, [open, role]);
 
   if (!open || role === "buyer") return null;
 
   const updateField = (field: keyof ProfileData, value: string) => {
     setFormData((current) => ({ ...current, [field]: value }));
-  };
-
-  const imageUrl = (path?: string) => {
-    if (!path) return logo;
-    return path.startsWith("http") || path.startsWith("data:") ? path : `${API_BASE}${path}`;
   };
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -200,7 +163,7 @@ export default function RoleProfileModal({ open, onClose }: RoleProfileModalProp
         payload.append(role === "seller" ? "logo" : "profile_image", selectedImage);
       }
 
-      const res = await fetch(getEndpoint(role, profileId), {
+      const res = await fetch(getEndpoint(profileId), {
         method: "PATCH",
         body: payload,
       });
@@ -219,10 +182,7 @@ export default function RoleProfileModal({ open, onClose }: RoleProfileModalProp
       setFormData(nextProfile);
       setSelectedImage(null);
       setPreviewImage(imageUrl(nextProfile.profile_image));
-      localStorage.setItem("username", nextProfile.username);
-      localStorage.setItem("name", nextProfile.name);
-      localStorage.setItem("email", nextProfile.email);
-      localStorage.setItem("profile_image", nextProfile.profile_image || "");
+      saveProfileToStorage(nextProfile);
       setIsEditing(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save profile.");

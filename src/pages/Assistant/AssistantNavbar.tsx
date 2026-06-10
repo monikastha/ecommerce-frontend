@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../../assets/logo.png";
+import ProfileAvatar, { useProfileName } from "../../components/ProfileAvatar";
 import RoleProfileModal from "../../components/RoleProfileModal";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -15,6 +15,7 @@ const AssistantNavbar: React.FC<AssistantNavbarProps> = ({ sidebarWidth = 250 })
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const profileName = useProfileName("Assistant");
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -122,7 +123,7 @@ const AssistantNavbar: React.FC<AssistantNavbarProps> = ({ sidebarWidth = 250 })
 
       <div className="navbar" data-sidebar-width={sidebarWidth}>
         <div className="navbar-left">
-          <h2>{getGreeting()}, Assistant</h2>
+          <h2>{getGreeting()}, {profileName}</h2>
           <p>Welcome back to your dashboard</p>
         </div>
 
@@ -130,7 +131,7 @@ const AssistantNavbar: React.FC<AssistantNavbarProps> = ({ sidebarWidth = 250 })
           <FontAwesomeIcon icon={faBell} className="icon" />
 
           <div ref={dropdownRef} style={{ position: "relative" }}>
-            <img className="profile" src={logo} alt="profile" onClick={() => setProfileOpen(!profileOpen)} />
+            <ProfileAvatar className="profile" onClick={() => setProfileOpen(!profileOpen)} />
 
             {profileOpen && (
               <div className="dropdown">

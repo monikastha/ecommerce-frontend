@@ -27,67 +27,45 @@ export default function BuyerSignUp() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-
     if (!formData.username.trim()) newErrors.username = "Username is required.";
-    else if (formData.username.length < 3)
-      newErrors.username = "Username must be at least 3 characters.";
-
+    else if (formData.username.length < 3) newErrors.username = "Username must be at least 3 characters.";
     if (!formData.fullName.trim()) newErrors.fullName = "Full name is required.";
     if (!formData.email.trim()) newErrors.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      newErrors.email = "Enter a valid email.";
-
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Enter a valid email.";
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required.";
-    else if (!/^\+?[0-9\s]{10,15}$/.test(formData.phoneNumber))
-      newErrors.phoneNumber = "Enter a valid phone number.";
-
+    else if (!/^\+?[0-9\s]{10,15}$/.test(formData.phoneNumber)) newErrors.phoneNumber = "Enter a valid phone number.";
     if (!formData.address.trim()) newErrors.address = "Address is required.";
-
     if (!formData.password) newErrors.password = "Password is required.";
-    else if (formData.password.length < 8)
-      newErrors.password = "Password must be at least 8 characters.";
-
-    if (!formData.confirmPassword)
-      newErrors.confirmPassword = "Please confirm your password.";
-    else if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match.";
-
+    else if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters.";
+    if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password.";
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
     return newErrors;
   };
 
-  const handleNext = async () => {
+  const handleSignUp = async () => {
     const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+    if (Object.keys(validationErrors).length > 0) { 
+      setErrors(validationErrors); 
+      return; 
     }
-
     setErrors({});
     setLoading(true);
-
     try {
       const response = await fetch(`${API_BASE}/api/buyer/register/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        setErrors({ form: data.error || data.detail || "Registration failed." });
-        return;
+      if (!response.ok) { 
+        setErrors({ form: data.error || data.detail || "Registration failed." }); 
+        return; 
       }
-
       navigate("/login");
     } catch {
       setErrors({ form: "Network error. Please check your connection." });
@@ -96,311 +74,246 @@ export default function BuyerSignUp() {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    flex: 1,
+    border: "none",
+    background: "transparent",
+    padding: "10px 0",
+    outline: "none",
+    fontSize: 14,
+    fontFamily: "'Nunito', sans-serif",
+    color: "#2c3e50",
+  };
+
+  const wrapStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    background: "#f0f4f8",
+    borderRadius: 8,
+    padding: "0 12px",
+    border: "1.5px solid #e2e8f0",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#2c3e50",
+    marginBottom: 5,
+  };
+
+  const fieldStyle: React.CSSProperties = { marginBottom: 12 };
+
   return (
-    <>
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #c8eaf6 0%, #daf2fb 50%, #c0ebf6 100%)",
+      display: "flex",
+      flexDirection: "column",
+      fontFamily: "'Nunito', sans-serif",
+    }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-          font-family: 'Nunito', sans-serif;
-          background: #c9edf7;
+        input::placeholder { color: #b0bec5; }
+        .field-wrap:focus-within {
+          background: #ffffff !important;
+          border-color: #27ae60 !important;
+          box-shadow: 0 0 0 3px rgba(39,174,96,0.12);
         }
-
-        .page {
-          min-height: 100vh;
-          background: linear-gradient(160deg, #b8e8f5 0%, #d4f0fa 40%, #c0ebf6 100%);
-          display: flex;
-          flex-direction: column;
-        }
-
-        .navbar {
-          padding: 14px 32px;
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-
-        .logo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
-        .brand-text { font-size: 22px; font-weight: 900; color: #1a3a6b; }
-        .brand-sub { font-size: 13px; font-weight: 700; color: #2e86c1; }
-
-        .main {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          width: min(1120px, 100%);
-          margin: 0 auto;
-          padding: 32px 48px 48px;
-          gap: 56px;
-        }
-
-        .image-side {
-          flex: 1 1 440px;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          min-width: 280px;
-          order: 1;
-        }
-
-        .cartoon {
-          width: min(380px, 100%);
-          height: auto;
-          max-height: 560px;
-          object-fit: contain;
-          filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.18));
-        }
-
-        .card {
-          background: rgba(255, 255, 255, 0.93);
-          border-radius: 24px;
-          padding: 42px 48px;
-          width: 460px;
-          flex: 0 0 460px;
-          order: 2;
-          box-shadow: 0 12px 50px rgba(30, 100, 160, 0.16);
-        }
-
-        .card-title {
-          font-size: 36px;
-          font-weight: 900;
-          text-align: center;
-          margin-bottom: 30px;
-          color: #1a3a6b;
-        }
-
-        .field { margin-bottom: 16px; }
-
-        .field-label {
-          font-size: 14.5px;
-          font-weight: 700;
-          margin-bottom: 7px;
-          display: block;
-          color: #2c3e50;
-        }
-
-        .input-wrap {
-          display: flex;
-          align-items: center;
-          background: #f4f4f4;
-          border-radius: 10px;
-          padding: 0 16px;
-        }
-
-        .input-wrap:focus-within {
-          background: white;
-          border: 2px solid #27ae60;
-        }
-
-        .input-wrap input {
-          flex: 1;
-          border: none;
-          background: transparent;
-          padding: 13px 0;
-          outline: none;
-          font-size: 15.5px;
-        }
-
-        .eye-btn {
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 20px;
-        }
-
-        .error-msg {
-          font-size: 13px;
-          color: #e74c3c;
-          margin-top: 4px;
-        }
-
-        .next-btn {
-          width: 100%;
-          padding: 15px;
-          background: #27ae60;
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-weight: 800;
-          font-size: 16.5px;
-          cursor: pointer;
-          margin-top: 12px;
-        }
-
-        .next-btn:disabled {
-          opacity: 0.75;
-          cursor: not-allowed;
-        }
-
-        .signin-text {
-          text-align: center;
-          margin-top: 20px;
-          font-size: 14px;
-        }
-
-        .signin-text a {
-          color: #2980b9;
-          font-weight: 800;
-          text-decoration: none;
-        }
-
-        .auth-links {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 20px;
-          font-size: 14px;
-          color: #1a3a6b;
-        }
-
-        .nav-link {
-          background: none;
-          border: none;
-          color: #2980b9;
-          cursor: pointer;
-          font-weight: 800;
-          text-decoration: none;
-          padding: 0;
-        }
-
-        .nav-link:hover {
-          text-decoration: underline;
-        }
-
-        .nav-separator {
-          color: #7f8c8d;
-        }
-
-        @media (max-width: 900px) {
-          .main {
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 20px 20px 36px;
-            gap: 24px;
-          }
-
-          .image-side {
-            flex: none;
-            min-width: 0;
-            justify-content: center;
-            width: 100%;
-          }
-
-          .cartoon {
-            width: min(260px, 72vw);
-            max-height: 300px;
-          }
-
-          .card {
-            width: min(460px, 100%);
-            flex: none;
-            padding: 32px 24px;
-          }
-        }
+        .next-btn:hover:not(:disabled) { background: #219a52 !important; transform: translateY(-1px); }
+        .next-btn:active:not(:disabled) { transform: translateY(0px); }
       `}</style>
 
-      <div className="page">
-        <nav className="navbar">
-          <img src={logoImg} alt="Logo" className="logo" />
-          <div>
-            <div className="brand-text">SAJILO MART</div>
-            <div className="brand-sub">Shop Anytime Anywhere</div>
-          </div>
-        </nav>
+      {/* Navbar */}
+      <nav style={{
+        padding: "12px 36px",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        background: "rgba(255,255,255,0.88)",
+        backdropFilter: "blur(10px)",
+        boxShadow: "0 2px 10px rgba(30,100,160,0.1)",
+        flexShrink: 0,
+      }}>
+        <img src={logoImg} alt="Logo" style={{ width: 54, height: 54, borderRadius: "50%", objectFit: "cover" }} />
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: "#1a3a6b", letterSpacing: 0.5 }}>SAJILO MART</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#2e86c1" }}>Shop Anytime Anywhere</div>
+        </div>
+      </nav>
 
-        <div className="main">
-          {/* Girl Image - Left Side (Perfectly Centered) */}
-          <div className="image-side">
-            <img src={cartoonImg} alt="Cartoon Girl" className="cartoon" />
-          </div>
+      {/* Main Content - Side by Side */}
+      <div style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px 40px",
+        gap: 60,
+        overflow: "hidden",
+      }}>
 
-          {/* Signup Form */}
-          <div className="card">
-            <h1 className="card-title">Create Buyer Account</h1>
+        {/* LEFT — Girl Image */}
+        <div style={{
+          flex: "1 1 0",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: 0,
+        }}>
+          <img
+            src={cartoonImg}
+            alt="Cartoon"
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              maxHeight: "calc(100vh - 130px)",
+              objectFit: "contain",
+              filter: "drop-shadow(0 16px 32px rgba(0,0,0,0.15))",
+            }}
+          />
+        </div>
 
-            <div className="auth-links">
-              <button type="button" className="nav-link" onClick={() => navigate("/")}>Home</button>
-              <span className="nav-separator">|</span>
-              <Link to="/login" className="nav-link">Login</Link>
-            </div>
+        {/* RIGHT — Wider Form Card */}
+        <div style={{
+          flex: "1 1 0",
+          minWidth: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <div style={{
+            width: "100%",
+            maxWidth: 480,           // ← Increased width
+            background: "rgba(255,255,255,0.97)",
+            borderRadius: 20,
+            padding: "32px 32px",    // Slightly more padding
+            boxShadow: "0 10px 40px rgba(30,100,160,0.15)",
+          }}>
+            <h1 style={{ 
+              fontSize: 32, 
+              fontWeight: 900, 
+              textAlign: "center", 
+              color: "#1a3a6b", 
+              marginBottom: 6 
+            }}>
+              Sign Up
+            </h1>
+            <p style={{ 
+              textAlign: "center", 
+              fontSize: 14.5, 
+              color: "#2e86c1", 
+              fontWeight: 600, 
+              marginBottom: 24 
+            }}>
+              Create your buyer account
+            </p>
 
-            <div className="field">
-              <label className="field-label">Username</label>
-              <div className="input-wrap">
-                <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" />
+            {/* Username */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Username</label>
+              <div className="field-wrap" style={wrapStyle}>
+                <input style={inputStyle} type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" />
               </div>
-              {errors.username && <div className="error-msg">{errors.username}</div>}
+              {errors.username && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.username}</div>}
             </div>
 
-            <div className="field">
-              <label className="field-label">Full Name</label>
-              <div className="input-wrap">
-                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="John Doe" />
+            {/* Full Name */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Full Name</label>
+              <div className="field-wrap" style={wrapStyle}>
+                <input style={inputStyle} type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Enter your full name" />
               </div>
-              {errors.fullName && <div className="error-msg">{errors.fullName}</div>}
+              {errors.fullName && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.fullName}</div>}
             </div>
 
-            <div className="field">
-              <label className="field-label">Email</label>
-              <div className="input-wrap">
-                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="example@email.com" />
+            {/* Email */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Email</label>
+              <div className="field-wrap" style={wrapStyle}>
+                <input style={inputStyle} type="email" name="email" value={formData.email} onChange={handleChange} placeholder="example@email.com" />
               </div>
-              {errors.email && <div className="error-msg">{errors.email}</div>}
+              {errors.email && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.email}</div>}
             </div>
 
-            <div className="field">
-              <label className="field-label">Phone Number</label>
-              <div className="input-wrap">
-                <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+977 98xxxxxxxx" />
+            {/* Phone */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Phone Number</label>
+              <div className="field-wrap" style={wrapStyle}>
+                <input style={inputStyle} type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+977 98xxxxxxxx" />
               </div>
-              {errors.phoneNumber && <div className="error-msg">{errors.phoneNumber}</div>}
+              {errors.phoneNumber && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.phoneNumber}</div>}
             </div>
 
-            <div className="field">
-              <label className="field-label">Address</label>
-              <div className="input-wrap">
-                <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Pokhara, Nepal" />
+            {/* Address */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Address</label>
+              <div className="field-wrap" style={wrapStyle}>
+                <input style={inputStyle} type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Kathmandu, Pokhara, Damauli, etc." />
               </div>
-              {errors.address && <div className="error-msg">{errors.address}</div>}
+              {errors.address && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.address}</div>}
             </div>
 
-            <div className="field">
-              <label className="field-label">Password</label>
-              <div className="input-wrap">
-                <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} />
-                <button className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
+            {/* Password */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Password</label>
+              <div className="field-wrap" style={wrapStyle}>
+                <input style={inputStyle} type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="Create your password" />
+                <button onClick={() => setShowPassword(!showPassword)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, padding: 0, color: "#7f8c8d", lineHeight: 1 }}>
                   {showPassword ? "🙈" : "👁"}
                 </button>
               </div>
-              {errors.password && <div className="error-msg">{errors.password}</div>}
+              {errors.password && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.password}</div>}
             </div>
 
-            <div className="field">
-              <label className="field-label">Confirm Password</label>
-              <div className="input-wrap">
-                <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
-                <button className="eye-btn" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+            {/* Confirm Password */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Confirm Password</label>
+              <div className="field-wrap" style={wrapStyle}>
+                <input style={inputStyle} type={showConfirmPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Re-enter your password" />
+                <button onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, padding: 0, color: "#7f8c8d", lineHeight: 1 }}>
                   {showConfirmPassword ? "🙈" : "👁"}
                 </button>
               </div>
-              {errors.confirmPassword && <div className="error-msg">{errors.confirmPassword}</div>}
+              {errors.confirmPassword && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.confirmPassword}</div>}
             </div>
 
-            <button className="next-btn" onClick={handleNext} disabled={loading}>
-              {loading ? "Creating Account..." : "Next"}
+            {/* Submit Button */}
+            <button
+              className="next-btn"
+              onClick={handleSignUp}
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: "#27ae60",
+                color: "white",
+                border: "none",
+                borderRadius: 10,
+                fontWeight: 800,
+                fontSize: 15.5,
+                fontFamily: "'Nunito', sans-serif",
+                cursor: loading ? "not-allowed" : "pointer",
+                marginTop: 10,
+                opacity: loading ? 0.75 : 1,
+                transition: "background 0.2s, transform 0.15s",
+                letterSpacing: 0.3,
+              }}
+            >
+              {loading ? "Creating Account..." : "Sign Up"}
             </button>
-            {errors.form && <div className="error-msg">{errors.form}</div>}
 
-            <p className="signin-text">
-              Already have an account? <Link to="/login">Login</Link>
+            {errors.form && <div style={{ fontSize: 12, color: "#e74c3c", textAlign: "center", marginTop: 10 }}>{errors.form}</div>}
+
+            <p style={{ textAlign: "center", marginTop: 18, fontSize: 13.5, color: "#2c3e50" }}>
+              Already Have An Account?{" "}
+              <Link to="/login" style={{ color: "#2980b9", fontWeight: 700, textDecoration: "none" }}>Log In</Link>
             </p>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

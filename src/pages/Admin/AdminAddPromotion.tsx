@@ -293,8 +293,20 @@ const CATEGORY_API = `${API_ORIGIN}/api/productcategory/categories/`;
 
         .checkbox{
           display:flex;
+          align-items:center;
           gap:8px;
           margin:5px 0;
+          width:max-content;
+          cursor:pointer;
+        }
+
+        .checkbox input{
+          width:18px;
+          height:18px;
+          padding:0;
+          margin:0;
+          flex:0 0 18px;
+          accent-color:#16a34a;
         }
 
         .btnRow{

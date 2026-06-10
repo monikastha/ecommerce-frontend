@@ -80,8 +80,8 @@ body {
         }
 
         .main {
-          margin-left: 260px;
-          width: 100%;
+          flex: 1;
+          width: calc(100% - 260px);
         }
 
         .content {

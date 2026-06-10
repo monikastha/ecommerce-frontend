@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaBoxOpen, FaCheck, FaTimes, FaEyeSlash, FaUpload, FaFlag, FaTrash } from "react-icons/fa";
+import { FaBoxOpen, FaCheck, FaTimes, FaEye, FaEyeSlash, FaUpload, FaFlag, FaTrash } from "react-icons/fa";
+import ProductViewModal from "../../components/ProductViewModal";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -25,6 +26,7 @@ const AssistantProductManagement: React.FC = () => {
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -97,7 +99,7 @@ const AssistantProductManagement: React.FC = () => {
     }
   };
 
-  const imageUrl = (path?: string) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
+  const imageUrl = (path?: string | null) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
 
   return (
     <>
@@ -232,6 +234,12 @@ const AssistantProductManagement: React.FC = () => {
         }
         .publish-btn:hover { background: #1d4ed8; }
 
+        .view-btn {
+          background: #0f766e;
+          color: white;
+        }
+        .view-btn:hover { background: #0f5f59; }
+
         .productImg { 
           width: 50px; 
           height: 50px; 
@@ -312,6 +320,9 @@ const AssistantProductManagement: React.FC = () => {
                         </td>
                         <td>{product.is_published ? "Yes" : "No"}</td>
                         <td>
+                          <button className="action-btn view-btn" onClick={() => setSelectedProduct(product)}>
+                            <FaEye /> View
+                          </button>
                           {product.status !== "approved" && (
                             <>
                               <button className="action-btn approve-btn" onClick={() => updateStatus(product.id, "approve")}>
@@ -354,8 +365,14 @@ const AssistantProductManagement: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </div>
         </div>
+      </div>
+
+      <ProductViewModal
+        product={selectedProduct}
+        imageUrl={imageUrl}
+        onClose={() => setSelectedProduct(null)}
+      />
   
     </>
   );

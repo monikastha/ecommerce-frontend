@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaFolder, FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import { FaFolder, FaEdit, FaTrash, FaPlus, FaSearch, FaEye } from "react-icons/fa";
+import CategoryViewModal from "../../components/CategoryViewModal";
 
 const API_BASE = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/api/productcategory/categories/`;
 
@@ -21,6 +22,7 @@ const AssistantCategory: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -40,7 +42,7 @@ const AssistantCategory: React.FC = () => {
     fetchCategories();
   }, [search]);
 
-  const getFullUrl = (path: string | null) => {
+  const getFullUrl = (path?: string | null) => {
     if (!path) return "";
     return path.startsWith("http") ? path : `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}${path}`;
   };
@@ -200,6 +202,10 @@ const AssistantCategory: React.FC = () => {
           background: #3b82f6; 
         }
 
+        .iconBtn.view {
+          background: #0f766e;
+        }
+
         .iconBtn.delete { 
           background: #ef4444; 
         }
@@ -319,6 +325,14 @@ const AssistantCategory: React.FC = () => {
                         )}
                       </td>
                       <td className="actions">
+                        <button
+                          className="iconBtn view"
+                          onClick={() => setSelectedCategory(cat)}
+                          title="View category"
+                          aria-label="View category"
+                        >
+                          <FaEye />
+                        </button>
                         <button 
                           className="iconBtn edit" 
                           onClick={() => navigate(`/assistant/category/update/${cat.id}`)}
@@ -352,6 +366,12 @@ const AssistantCategory: React.FC = () => {
           />
         </div>
       )}
+
+      <CategoryViewModal
+        category={selectedCategory}
+        imageUrl={getFullUrl}
+        onClose={() => setSelectedCategory(null)}
+      />
     </>
   );
 };

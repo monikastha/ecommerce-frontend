@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaBox, FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import { FaBox, FaEdit, FaTrash, FaPlus, FaSearch, FaEye } from "react-icons/fa";
 import axios from "axios";
 
 import SellerNavbar from "./SellerNavbar";
 import SellerSidebar from "./SellerSidebar";
+import ProductViewModal from "../../components/ProductViewModal";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -28,8 +29,9 @@ export default function SellerProductManagement() {
   const [products, setProducts] = useState<Product[]>([]); // Empty array
   const [loading, setLoading] = useState(true);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const imageUrl = (path?: string) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
+  const imageUrl = (path?: string | null) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
 
   const fetchProducts = async () => {
     try {
@@ -217,6 +219,7 @@ export default function SellerProductManagement() {
           transition: 0.2s;
         }
         .iconBtn.edit { background: #2563eb; }
+        .iconBtn.view { background: #0f766e; }
         .iconBtn.delete { background: #dc2626; }
         .iconBtn:hover { transform: scale(1.08); }
 
@@ -382,6 +385,14 @@ export default function SellerProductManagement() {
                         {product.description || "-"}
                       </td>
                       <td className="actions">
+                        <button
+                          className="iconBtn view"
+                          onClick={() => setSelectedProduct(product)}
+                          title="View product"
+                          aria-label="View product"
+                        >
+                          <FaEye />
+                        </button>
                         <button 
                           className="iconBtn edit" 
                           onClick={() => navigate(`/seller/product/edit/${product.id}`)}
@@ -415,6 +426,12 @@ export default function SellerProductManagement() {
           />
         </div>
       )}
+
+      <ProductViewModal
+        product={selectedProduct}
+        imageUrl={imageUrl}
+        onClose={() => setSelectedProduct(null)}
+      />
     </>
   );
 }

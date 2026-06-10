@@ -89,6 +89,7 @@ const AssistantUpdateWarehouseStaff: React.FC = () => {
         .dashboard-container {
           background: #f4f6f8;
           min-height: 100vh;
+          display: flex;
         }
 
         .main-content {
@@ -98,7 +99,7 @@ const AssistantUpdateWarehouseStaff: React.FC = () => {
         }
 
         .container {
-          padding: 40px;
+          padding: 24px 30px;
           display: flex;
           justify-content: center;
         }

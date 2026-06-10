@@ -177,8 +177,13 @@ export default function EditProduct() {
                   </div>
 
                   <div className="form-group">
-                    <label>Description</label>
-                    <textarea name="description" value={form.description} onChange={handleChange} placeholder="Write detailed description..." />
+                    <label>Key Specifications</label>
+                    <textarea
+                      name="description"
+                      value={form.description}
+                      onChange={handleChange}
+                      placeholder={"Enter each specification on a new line...\nExample:\n6.5 inch display\n128GB storage\n5000mAh battery"}
+                    />
                   </div>
 
                   <div className="metaRow">

@@ -1,8 +1,52 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 import { FaUsers, FaBoxOpen, FaTags, FaMoneyBillWave } from "react-icons/fa";
 
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 const AdminDashboard = () => {
+  const [stats, setStats] = useState({
+    users: 0,
+    products: 0,
+    categories: 0,
+    earnings: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        setLoading(true);
+        const [usersRes, productsRes, categoriesRes, ordersRes] = await Promise.all([
+          axios.get(`${API_ORIGIN}/api/users/`),
+          axios.get(`${API_ORIGIN}/api/products/`),
+          axios.get(`${API_ORIGIN}/api/productcategory/categories/`),
+          axios.get(`${API_ORIGIN}/api/orders/`),
+        ]);
+
+        const orders = Array.isArray(ordersRes.data) ? ordersRes.data : [];
+        const earnings = orders.reduce((total, order) => total + Number(order.total || 0), 0);
+
+        setStats({
+          users: Array.isArray(usersRes.data) ? usersRes.data.length : 0,
+          products: Array.isArray(productsRes.data) ? productsRes.data.length : 0,
+          categories: Array.isArray(categoriesRes.data) ? categoriesRes.data.length : 0,
+          earnings,
+        });
+      } catch (error) {
+        console.error("Failed to load admin dashboard stats", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, []);
+
+  const countText = (value: number) => loading ? "..." : value.toLocaleString();
+
   return (
     <>
       <style>{`
@@ -137,25 +181,25 @@ const AdminDashboard = () => {
               <div className="card purple">
                 <FaUsers className="card-icon" />
                 <h3>Total Users</h3>
-                <h2>1124</h2>
+                <h2>{countText(stats.users)}</h2>
               </div>
 
               <div className="card blue">
                 <FaBoxOpen className="card-icon" />
                 <h3>Total Products</h3>
-                <h2>23</h2>
+                <h2>{countText(stats.products)}</h2>
               </div>
 
               <div className="card pink">
                 <FaTags className="card-icon" />
                 <h3>Total Categories</h3>
-                <h2>3</h2>
+                <h2>{countText(stats.categories)}</h2>
               </div>
 
               <div className="card green">
                 <FaMoneyBillWave className="card-icon" />
                 <h3>Total Earnings</h3>
-                <h2>Rs. 24,555</h2>
+                <h2>{loading ? "..." : `Rs. ${stats.earnings.toLocaleString()}`}</h2>
               </div>
 
             </div>

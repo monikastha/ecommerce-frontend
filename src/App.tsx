@@ -17,6 +17,7 @@ import ViewAllProducts from "./pages/Buyer/home/ViewAllProduct";
 import ViewAllCategories from "./pages/Buyer/home/ViewAllCategories";
 import Checkout from "./pages/Buyer/home/Checkout";
 import Payment from "./pages/Buyer/home/Payment";
+import AiSmartComparison from "./pages/Buyer/home/AiSmartComparison";
 import Cart from "./pages/Buyer/home/Cart";
 import OrderTracking from "./pages/Buyer/home/OrderTracking";
 import BuyerAccount from "./pages/Buyer/home/BuyerAccount";
@@ -102,6 +103,8 @@ const App = () => {
         <Route path="/product" element={<ProductPage />} />
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/allproducts" element={<ViewAllProducts />} />
+        <Route path="/compare" element={<AiSmartComparison />} />
+        <Route path="/aismartcomparison" element={<AiSmartComparison />} />
         <Route path="/allcategories" element={<ViewAllCategories />} />
         <Route path="/fashion" element={<Navigate to="/allproducts" replace />} />
         <Route path="/electronics" element={<Navigate to="/allproducts" replace />} />

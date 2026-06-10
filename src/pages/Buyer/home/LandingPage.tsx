@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -30,7 +31,6 @@ const TOKEN = {
   pageBg: "#f8fafc",
 };
 
-/* DATA */
 const topProducts = [
   { id: 1, name: "Black Leather Shoes", price: "Rs. 1,799", old: "Rs. 2,120", rating: 4, reviews: 128, img: shoesImg, category: "Shoes" },
   { id: 2, name: "Red Emerald Necklace", price: "Rs. 2,199", old: "Rs. 2,799", rating: 4, reviews: 97, img: Necklace, category: "Accessories" },
@@ -39,13 +39,113 @@ const topProducts = [
 ];
 
 const FEATURES = [
-  { emoji: "🚚", bg: "bg-emerald-50 text-emerald-600", title: "Emergency Fast Delivery", sub: "Same day or next day delivery" },
-  { emoji: "🤖", bg: "bg-violet-50 text-violet-600", title: "AI Smart Comparison", sub: "Compare products instantly" },
-  { emoji: "🎧", bg: "bg-amber-50 text-amber-600", title: "24/7 Customer Support", sub: "Always here to help" },
+  { emoji: "🚚", bg: "bg-emerald-50", title: "Fast Delivery", sub: "Same day or next day delivery" },
+  { emoji: "🤖", bg: "bg-violet-50", title: "AI Smart Comparison", sub: "Compare products instantly" },
+  { emoji: "🎧", bg: "bg-amber-50", title: "24/7 Support", sub: "Always here to help" },
 ];
 
-const imageUrl = (path?: string) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
+const imageUrl = (path?: string) =>
+  !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
 
+/* ── Stars ── */
+function Stars({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <svg
+          key={s}
+          className={`w-3.5 h-3.5 ${s <= rating ? "text-amber-400" : "text-gray-200"}`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+/* ── ProductCard ── */
+function ProductCard({
+  product,
+  liked,
+  onLike,
+  onBuy,
+  onCart,
+}: {
+  product: (typeof topProducts)[0];
+  liked: boolean;
+  onLike: () => void;
+  onBuy: () => void;
+  onCart: () => void;
+}) {
+  return (
+    <div
+      onClick={onBuy}
+      className="bg-white rounded-2xl overflow-hidden cursor-pointer group flex flex-col h-full transition-shadow duration-300 hover:shadow-xl border border-gray-100 hover:border-violet-200"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06)" }}
+    >
+      {/* Image Container - Fixed height for consistency */}
+      <div className="relative w-full h-56 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden border-b border-gray-100">
+        <img
+          src={product.img}
+          alt={product.name}
+          className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
+        />
+        <button
+          onClick={(e) => { e.stopPropagation(); onLike(); }}
+          className="absolute top-3 right-3 w-10 h-10 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg text-lg hover:scale-110 transition-transform z-10 hover:bg-white"
+        >
+          {liked ? "❤️" : "🤍"}
+        </button>
+      </div>
+
+      {/* Card Content - Flex grow to push buttons to bottom */}
+      <div className="p-4 flex flex-col flex-1">
+        <span className="text-[10px] font-bold tracking-widest text-violet-500 uppercase">
+          {product.category}
+        </span>
+        
+        <h3 className="mt-1.5 text-sm font-semibold text-gray-900 leading-tight line-clamp-2 h-9">
+          {product.name}
+        </h3>
+
+        <div className="flex items-center gap-1.5 mt-2">
+          <Stars rating={product.rating || 4} />
+          <span className="text-xs text-gray-500 font-medium">({product.reviews || 0})</span>
+        </div>
+
+        <div className="flex items-baseline gap-2 mt-2.5">
+          <span className="text-lg font-bold text-rose-600">{product.price}</span>
+          {product.old && <span className="text-xs text-gray-400 line-through">{product.old}</span>}
+        </div>
+
+        {/* Spacer to push buttons to bottom */}
+        <div className="flex-1" />
+
+        {/* Button Container - Fixed height for even alignment */}
+        <div className="mt-3 flex flex-col gap-2.5 pt-2 border-t border-gray-100">
+          <button
+            onClick={(e) => { e.stopPropagation(); onBuy(); }}
+            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 active:scale-95 text-white text-sm font-bold transition-all shadow-md hover:shadow-lg"
+          >
+            Buy Now
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onCart(); }}
+            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700 active:scale-95 text-white text-sm font-bold transition-all shadow-md hover:shadow-lg"
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════
+    MAIN EXPORT
+══════════════════════════════════════ */
 export default function SajiloMart() {
   const navigate = useNavigate();
   const [liked, setLiked] = useState<Record<number, boolean>>({});
@@ -65,14 +165,12 @@ export default function SajiloMart() {
     loadCategories();
   }, []);
 
-  const categoryNames = useMemo(() => 
-    Array.from(new Set(categories.map(c => c.name).filter(Boolean))), 
+  const categoryNames = useMemo(
+    () => Array.from(new Set(categories.map((c) => c.name).filter(Boolean))),
     [categories]
   );
 
-  const openProduct = (product: any) => {
-    navigate(`/product/${product.id}`, { state: product });
-  };
+  const openProduct = (product: any) => navigate(`/product/${product.id}`, { state: product });
 
   const addToCart = (product: any) => {
     addBuyerCartItem({
@@ -91,107 +189,153 @@ export default function SajiloMart() {
     <div className="min-h-screen" style={{ background: TOKEN.pageBg }}>
       <BuyerNavbar cartQty={cartQty} categories={categoryNames} />
 
-      {/* HERO */}
-      <section className="relative w-full min-h-[460px] flex items-center overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${TOKEN.heroFrom}, ${TOKEN.heroMid}, ${TOKEN.heroTo})` }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-12">
-          <div className="space-y-6 text-white">
-            <div className="inline-block bg-white/20 px-5 py-2 rounded-full text-sm font-bold tracking-wider">NEW ARRIVALS</div>
-            <h1 className="text-6xl lg:text-7xl font-black leading-none">Sajilo Mart</h1>
-            <p className="text-yellow-300 text-3xl font-medium">Shop Anytime, Anywhere</p>
-            <p className="text-white/90 text-lg max-w-md">
+      {/* ── HERO ── */}
+      <section
+        className="relative w-full overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${TOKEN.heroFrom} 0%, ${TOKEN.heroMid} 50%, ${TOKEN.heroTo} 100%)`,
+          minHeight: 440,
+        }}
+      >
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center py-14">
+          <div className="space-y-5 text-white">
+            <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-bold tracking-[0.15em] uppercase">
+              ✨ New Arrivals 2025
+            </span>
+            <h1 className="text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight">
+              Sajilo<br />
+              <span className="text-yellow-300">Mart</span>
+            </h1>
+            <p className="text-white/80 text-lg max-w-sm leading-relaxed">
               Discover thousands of quality products at the best prices with smart delivery options.
             </p>
-            <div className="flex gap-4 pt-4">
-              <button onClick={() => navigate("/allproducts")} className="bg-yellow-300 hover:bg-yellow-400 text-slate-950 font-bold px-8 py-4 rounded-2xl text-lg shadow-lg transition-all">
+            <div className="flex flex-wrap gap-3 pt-2">
+              <button
+                onClick={() => navigate("/allproducts")}
+                className="bg-yellow-300 hover:bg-yellow-400 active:scale-95 text-slate-900 font-bold px-7 py-3.5 rounded-2xl text-base shadow-lg transition-all"
+              >
                 Browse Products →
               </button>
-              <button onClick={() => navigate("/allproducts")} className="border-2 border-white/70 hover:bg-white/10 text-white font-bold px-8 py-4 rounded-2xl text-lg transition-all">
+              <button
+                onClick={() => navigate("/allproducts")}
+                className="border-2 border-white/50 hover:bg-white/10 active:scale-95 text-white font-semibold px-7 py-3.5 rounded-2xl text-base transition-all"
+              >
                 View Offers
               </button>
             </div>
           </div>
 
-          <div className="hidden lg:flex justify-end">
+          <div className="hidden lg:flex justify-end items-end">
             <img
               src={bbGirl}
               alt="Shopping"
-              className="h-[400px] lg:h-[620px] xl:h-[700px] object-contain drop-shadow-2xl"
+              className="h-[380px] xl:h-[460px] object-contain drop-shadow-2xl"
             />
           </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-8 relative z-10">
-        <div className="bg-white rounded-3xl shadow border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-8 p-8 lg:p-10">
+      {/* ── FEATURE STRIP ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 relative z-10">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
           {FEATURES.map((f, i) => (
-            <div key={i} className="flex gap-5 items-start group">
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 transition-transform group-hover:scale-110 ${f.bg}`}>
+            <button
+              key={i}
+              onClick={() => {
+                if (f.title === "AI Smart Comparison") navigate("/aismartcomparison");
+              }}
+              className="flex items-center gap-4 px-6 py-5 text-left hover:bg-slate-50 transition-colors"
+            >
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${f.bg}`}>
                 {f.emoji}
               </div>
               <div>
-                <h3 className="font-bold text-lg text-gray-900">{f.title}</h3>
-                <p className="text-gray-600 mt-1 leading-relaxed">{f.sub}</p>
+                <p className="font-bold text-gray-900 text-sm">{f.title}</p>
+                <p className="text-gray-500 text-xs mt-0.5">{f.sub}</p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
-      {/* TOP PRODUCTS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-16">
-        <div className="flex justify-between items-end mb-8">
-          <h2 className="text-3xl font-black text-gray-900">Top Selling Products</h2>
-          <button onClick={() => navigate("/allproducts")} className="text-violet-600 font-medium hover:underline">View All →</button>
+      {/* ── TOP PRODUCTS ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-black text-gray-900">Top Selling Products</h2>
+            <p className="text-sm text-gray-400 mt-0.5">Handpicked favourites this week</p>
+          </div>
+          <button
+            onClick={() => navigate("/allproducts")}
+            className="text-sm text-violet-600 font-semibold hover:text-violet-800 transition-colors"
+          >
+            View All →
+          </button>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
           {topProducts.map((p) => (
-            <div key={p.id} onClick={() => openProduct(p)} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group">
-              <div className="relative h-52 bg-gray-100 overflow-hidden">
-                <img src={p.img} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <button onClick={(e) => { e.stopPropagation(); setLiked(l => ({ ...l, [p.id]: !l[p.id] })); }} className="absolute top-4 right-4 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow text-xl">
-                  {liked[p.id] ? "❤️" : "♡"}
-                </button>
-              </div>
-              <div className="p-5">
-                <p className="text-xs text-violet-600 font-semibold uppercase">{p.category}</p>
-                <h3 className="font-bold mt-1 line-clamp-2 min-h-[48px]">{p.name}</h3>
-                <div className="flex items-center gap-2 mt-3">
-                  <span className="font-bold text-xl text-rose-600">{p.price}</span>
-                  <span className="text-xs line-through text-gray-400">{p.old}</span>
-                </div>
-                <div className="flex gap-2 mt-5">
-                  <button onClick={(e) => { e.stopPropagation(); openProduct(p); }} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-2xl text-sm font-bold">Buy Now</button>
-                  <button onClick={(e) => { e.stopPropagation(); addToCart(p); }} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-2xl text-sm font-bold">Add to Cart</button>
-                </div>
-              </div>
-            </div>
+            <ProductCard
+              key={p.id}
+              product={p}
+              liked={!!liked[p.id]}
+              onLike={() => setLiked((l) => ({ ...l, [p.id]: !l[p.id] }))}
+              onBuy={() => openProduct(p)}
+              onCart={() => addToCart(p)}
+            />
           ))}
         </div>
       </div>
 
-      {/* SHOP BY CATEGORY */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-16">
-        <h2 className="text-3xl font-black text-gray-900 mb-8">Shop by Category</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {categories.length > 0 ? categories.map((cat) => (
-            <div
-              key={cat.id}
-              onClick={() => navigate(`/allproducts?category=${encodeURIComponent(cat.name)}`)}
-              className="bg-white rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all border border-gray-100 hover:border-violet-200 group"
-            >
-              <div className="h-40 bg-gray-100 rounded-2xl mb-4 overflow-hidden">
-                {cat.image && <img src={imageUrl(cat.image)} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />}
-              </div>
-              <h3 className="font-bold text-lg">{cat.name}</h3>
-              <p className="text-sm text-gray-500 mt-1">{cat.description || "Explore products"}</p>
-            </div>
-          )) : (
-            <p className="text-gray-500 col-span-full text-center py-10">No categories available yet.</p>
-          )}
+      {/* ── SHOP BY CATEGORY ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-14 mb-16">
+        <div className="mb-6">
+          <h2 className="text-2xl font-black text-gray-900">Shop by Category</h2>
+          <p className="text-sm text-gray-400 mt-0.5">Find what you're looking for</p>
         </div>
+
+        {categories.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                onClick={() => navigate(`/allproducts?category=${encodeURIComponent(cat.name)}`)}
+                className="bg-white rounded-2xl overflow-hidden cursor-pointer group border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all"
+              >
+                <div className="relative w-full bg-gray-100 overflow-hidden" style={{ paddingBottom: "66.67%" }}>
+                  {cat.image ? (
+                    <img
+                      src={imageUrl(cat.image)}
+                      alt={cat.name}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-4xl">🛍️</div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 text-sm">{cat.name}</h3>
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                    {cat.description || "Explore products"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 text-gray-400">
+            <p className="text-4xl mb-3">🛒</p>
+            <p className="text-sm">No categories available yet.</p>
+          </div>
+        )}
       </div>
 
       <BuyerFooter />

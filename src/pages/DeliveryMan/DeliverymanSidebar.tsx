@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
+import ProfileAvatar, { useProfileEmail, useProfileName } from "../../components/ProfileAvatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faGauge,
@@ -13,6 +14,8 @@ const DeliverymanSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogout, setShowLogout] = useState(false);
+  const profileName = useProfileName("Delivery Man");
+  const profileEmail = useProfileEmail("delivery@example.com");
 
   const menuItems = [
     { key: "/delivery/dashboard", label: "Dashboard", icon: faGauge },
@@ -213,11 +216,11 @@ const DeliverymanSidebar = () => {
 
         <div className="sidebar-profile">
           <div className="profile-avatar">
-            <img src={logo} alt="profile" />
+            <ProfileAvatar alt="profile" />
           </div>
           <div className="profile-info">
-            <h4>Profile Name</h4>
-            <p>example@gmail.com</p>
+            <h4>{profileName}</h4>
+            <p>{profileEmail}</p>
           </div>
         </div>
       </div>

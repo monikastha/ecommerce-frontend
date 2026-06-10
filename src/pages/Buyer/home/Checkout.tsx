@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BuyerFooter from "../../../components/BuyerFooter";
 import BuyerNavbar from "../../../components/BuyerNavbar2";
+import ReviewComments from "./ReviewComments";
 import {
+  addBuyerCartItem,
   clearBuyerCart,
   getBuyerCart,
   getBuyerCartCount,
@@ -28,9 +31,43 @@ type ApiLocation = {
   emergency_delivery_charge?: string | number;
 };
 
+type ApiProduct = {
+  id: number;
+  name: string;
+  price: number | string;
+  image?: string;
+  category?: string | number | { id?: number; name?: string } | null;
+  category_name?: string;
+  description?: string;
+  status?: string;
+  is_published?: boolean;
+};
+
+const getItemSizes = (item?: BuyerCartItem): string[] => {
+  const rawSizes = (item as BuyerCartItem & { sizes?: unknown; size_options?: unknown })?.sizes
+    ?? (item as BuyerCartItem & { sizes?: unknown; size_options?: unknown })?.size_options;
+
+  if (Array.isArray(rawSizes)) {
+    return rawSizes
+      .map((size) => String(size).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof rawSizes === "string") {
+    return rawSizes
+      .split(",")
+      .map((size) => size.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
 const paymentMethods = [
   { value: "cash_on_delivery", label: "Cash on Delivery" },
+  { value: "esewa", label: "eSewa Payment" },
 ];
+
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 const currency = (value: number) => `Rs. ${value.toLocaleString()}`;
@@ -39,7 +76,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state || {}) as CheckoutState;
-  const [items] = useState<BuyerCartItem[]>(() => state.items?.length ? state.items : getBuyerCart());
+  const [items, setItems] = useState<BuyerCartItem[]>(() => state.items?.length ? state.items : getBuyerCart());
   const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -56,11 +93,68 @@ export default function Checkout() {
   const [successOrder, setSuccessOrder] = useState<string | null>(null);
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [deliveryFeeError, setDeliveryFeeError] = useState("");
+  const [, setAllowOrderWithoutDeliveryCharge] = useState(false);
+  const [itemDetails, setItemDetails] = useState<Record<number, { quantity: number; size: string }>>(() => {
+    const details: Record<number, { quantity: number; size: string }> = {};
+    items.forEach((item, idx) => {
+      details[idx] = { quantity: item.quantity, size: "" };
+    });
+    return details;
+  });
+  const [similarProducts, setSimilarProducts] = useState<ApiProduct[]>([]);
+
+  const syncCartItems = (nextItems: BuyerCartItem[]) => {
+    setItems(nextItems);
+    setItemDetails((prev) => {
+      const next = { ...prev };
+      nextItems.forEach((item, idx) => {
+        if (!next[idx]) next[idx] = { quantity: item.quantity, size: "" };
+      });
+      return next;
+    });
+  };
+
+  const handleAddSimilarProduct = (product: ApiProduct) => {
+    addBuyerCartItem(
+      {
+        id: product.id,
+        name: product.name,
+        price: Number(product.price),
+        image: product.image,
+        category:
+          typeof product.category === "string"
+            ? product.category
+            : typeof product.category === "object"
+            ? product.category?.name
+            : undefined,
+        description: product.description,
+      },
+      1
+    );
+  };
+
+  useEffect(() => {
+    const onCartChange = () => syncCartItems(getBuyerCart());
+    window.addEventListener("buyer-cart-change", onCartChange);
+    return () => window.removeEventListener("buyer-cart-change", onCartChange);
+  }, []);
+
+  const imageUrl = (path?: string) => {
+    if (!path) return "";
+    if (path.startsWith("http") || path.startsWith("data:") || path.startsWith("blob:") || path.startsWith("/")) {
+      return path;
+    }
+    return `${API_ORIGIN}${path}`;
+  };
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [items]
+    () => items.reduce((sum, item, idx) => {
+      const quantity = itemDetails[idx]?.quantity || item.quantity;
+      return sum + item.price * quantity;
+    }, 0),
+    [items, itemDetails]
   );
+
   useEffect(() => {
     const loadLocations = async () => {
       try {
@@ -73,6 +167,47 @@ export default function Checkout() {
     };
     loadLocations();
   }, []);
+
+  const productCategoryText = (product: ApiProduct | { category?: string | number | { id?: number; name?: string } | null; category_name?: string | null } | null) => {
+    if (!product) return "Product";
+    if (typeof product.category_name === "string" && product.category_name.trim()) return product.category_name.trim();
+    if (typeof product.category === "object") return product.category?.name?.trim() || "Product";
+    if (typeof product.category === "string") return product.category.trim();
+    if (typeof product.category === "number") return String(product.category);
+    return "Product";
+  };
+
+  useEffect(() => {
+    const loadSimilarProducts = async () => {
+      if (!items.length) {
+        setSimilarProducts([]);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_ORIGIN}/api/products/?status=approved&is_published=true`);
+        const data = await res.json();
+        if (!Array.isArray(data)) {
+          setSimilarProducts([]);
+          return;
+        }
+
+        const baseCategory = String(items[0]?.category || "").trim().toLowerCase();
+        const similar = data.filter((product: ApiProduct) => {
+          if (product.id === items[0].id) return false;
+          const productCategory = String(productCategoryText(product)).trim().toLowerCase();
+          return baseCategory && productCategory === baseCategory;
+        });
+
+        setSimilarProducts(similar.slice(0, 4));
+      } catch (error) {
+        console.error(error);
+        setSimilarProducts([]);
+      }
+    };
+
+    loadSimilarProducts();
+  }, [items]);
 
   const activeLocations = useMemo(
     () =>
@@ -95,6 +230,7 @@ export default function Checkout() {
       if (!formData.deliveryLocation || !subtotal) {
         setDeliveryFee(0);
         setDeliveryFeeError("");
+        setAllowOrderWithoutDeliveryCharge(false);
         return;
       }
 
@@ -111,14 +247,30 @@ export default function Checkout() {
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || "Delivery charge is not available for this location.");
+          const errorMsg = data.error || "Delivery charge is not available.";
+          setDeliveryFee(0);
+          setDeliveryFeeError(errorMsg);
+          
+          // Auto-allow order if it's "no rule found" error
+          if (errorMsg.toLowerCase().includes("no delivery charge rule") || 
+              errorMsg.toLowerCase().includes("not available")) {
+            setAllowOrderWithoutDeliveryCharge(true);
+          }
+          return;
         }
 
         setDeliveryFee(Number(data.delivery_charge || 0));
         setDeliveryFeeError("");
+        setAllowOrderWithoutDeliveryCharge(false);
       } catch (error) {
         setDeliveryFee(0);
-        setDeliveryFeeError(error instanceof Error ? error.message : "Delivery charge is not available.");
+        const errorMsg = error instanceof Error ? error.message : "Delivery charge is not available.";
+        setDeliveryFeeError(errorMsg);
+        
+        if (errorMsg.toLowerCase().includes("no delivery charge rule") || 
+            errorMsg.toLowerCase().includes("not available")) {
+          setAllowOrderWithoutDeliveryCharge(true);
+        }
       }
     };
 
@@ -136,26 +288,44 @@ export default function Checkout() {
       return;
     }
 
-    if (!formData.email || !formData.phone || !formData.address || !formData.city || !formData.deliveryLocation || !formData.name || !formData.postal_code) {
+    if (!formData.email || !formData.phone || !formData.address || !formData.city || 
+        !formData.deliveryLocation || !formData.name || !formData.postal_code) {
       alert("Please complete your contact and delivery information.");
       return;
     }
 
-    if (deliveryFeeError) {
-      alert(deliveryFeeError);
-      return;
-    }
+    // Allow order even if delivery fee rule is missing
+    // if (deliveryFeeError && !allowOrderWithoutDeliveryCharge) {
+    //   alert(deliveryFeeError);
+    //   return;
+    // }
 
     setIsProcessing(true);
+
     try {
       const orderId = `ORD-${Date.now().toString().slice(-8)}`;
-      
-      // Create order data
+
+      // Reduce stock first
+      try {
+        await reduceStockForItems(items);
+      } catch (stockError: any) {
+        alert(stockError.message || "Some items are out of stock.");
+        setIsProcessing(false);
+        return;
+      }
+
       const orderData = {
         id: orderId,
-        items,
-        total,
-        deliveryFee,
+        items: items.map((item, idx) => {
+          const size = itemDetails[idx]?.size || "";
+          return {
+            ...item,
+            quantity: itemDetails[idx]?.quantity || item.quantity,
+            ...(size ? { size } : {}),
+          };
+        }),
+        total: subtotal + (deliveryFee || 0),
+        deliveryFee: deliveryFee || 0,
         deliveryType: formData.deliveryType,
         deliveryLocation: selectedLocation
           ? `${selectedLocation.name}, ${selectedLocation.city}`
@@ -168,9 +338,8 @@ export default function Checkout() {
         postal_code: formData.postal_code,
         status: "confirmed",
         createdAt: new Date().toISOString(),
+        note: deliveryFeeError ? "Delivery charge rule not found - charged 0" : undefined,
       };
-
-      await reduceStockForItems(items);
 
       const orders = JSON.parse(localStorage.getItem("buyer_orders") || "[]");
       localStorage.setItem(
@@ -179,8 +348,25 @@ export default function Checkout() {
       );
 
       if (!state.buyNow) clearBuyerCart();
+
       setIsProcessing(false);
-      setSuccessOrder(orderId);
+
+      if (formData.paymentType === "esewa") {
+        navigate("/payment", {
+          state: {
+            orderId,
+            amount: subtotal + (deliveryFee || 0),
+            items,
+            customerName: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: `${formData.address}, ${formData.city}`,
+          }
+        });
+      } else {
+        setSuccessOrder(orderId);
+      }
+
     } catch (error: any) {
       alert(error.message || "Order placement failed");
       setIsProcessing(false);
@@ -208,10 +394,196 @@ export default function Checkout() {
             </button>
           </section>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-            <section className="bg-white border border-slate-200 rounded-lg p-5">
-              <h2 className="text-lg font-black text-slate-900 mb-5">Delivery Information</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6">
+            <div className="space-y-6">
+              <section className="bg-white border border-slate-200 rounded-lg p-5">
+                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
+                  <div className="space-y-4">
+                    <div className="w-full h-[320px] rounded-3xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
+                      <img
+                        src={imageUrl(items[0]?.image)}
+                        alt={items[0]?.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className={`grid ${getItemSizes(items[0]).length ? "grid-cols-2" : "grid-cols-1"} gap-3 text-sm`}>
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-center">
+                        <p className="text-xs text-slate-500">Quantity</p>
+                        <p className="font-black text-slate-900">
+                          {itemDetails[0]?.quantity || items[0]?.quantity}
+                        </p>
+                      </div>
+                      {getItemSizes(items[0]).length > 0 && (
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-center">
+                          <p className="text-xs text-slate-500">Size</p>
+                          <p className="font-black text-slate-900">
+                            {itemDetails[0]?.size || "Not selected"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-5">
+                    <div>
+                      <h2 className="text-2xl font-black text-slate-900">{items[0]?.name}</h2>
+                      <p className="mt-2 text-sm uppercase tracking-[0.18em] text-violet-700 font-semibold">
+                        {items[0]?.category || "Product"}
+                      </p>
+                      <p className="mt-4 text-sm leading-6 text-slate-600">
+                        {items[0]?.description || "No description available for this item."}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-2">Quantity</label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setItemDetails((prev) => ({
+                                ...prev,
+                                0: {
+                                  ...prev[0],
+                                  quantity: Math.max(1, prev[0]?.quantity - 1),
+                                },
+                              }));
+                            }}
+                            className="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 transition-colors"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            value={itemDetails[0]?.quantity || items[0]?.quantity}
+                            onChange={(e) => {
+                              const val = Math.max(1, parseInt(e.target.value) || 1);
+                              setItemDetails((prev) => ({
+                                ...prev,
+                                0: { ...prev[0], quantity: val },
+                              }));
+                            }}
+                            className="w-20 text-center border border-slate-300 rounded-lg px-2 py-2 outline-none focus:border-violet-500"
+                          />
+                          <button
+                            onClick={() => {
+                              setItemDetails((prev) => ({
+                                ...prev,
+                                0: {
+                                  ...prev[0],
+                                  quantity: (prev[0]?.quantity || items[0]?.quantity) + 1,
+                                },
+                              }));
+                            }}
+                            className="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {getItemSizes(items[0]).length > 0 && (
+                        <div>
+                          <label className="text-xs font-bold text-slate-700 block mb-2">Size</label>
+                          <div className="flex flex-wrap gap-2">
+                            {getItemSizes(items[0]).map((sizeOption) => (
+                              <button
+                                key={sizeOption}
+                                onClick={() => {
+                                  setItemDetails((prev) => ({
+                                    ...prev,
+                                    0: { ...prev[0], size: sizeOption },
+                                  }));
+                                }}
+                                className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                                  itemDetails[0]?.size === sizeOption
+                                    ? "bg-violet-600 text-white shadow-md"
+                                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                }`}
+                              >
+                                {sizeOption}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {items[0] && (
+                <ReviewComments
+                  productId={items[0].id}
+                  productName={items[0].name}
+                  showForm={false}
+                  compact
+                />
+              )}
+
+              <section className="bg-white border border-slate-200 rounded-lg p-5">
+                <h2 className="text-lg font-black text-slate-900 mb-5">Similar Products</h2>
+                {similarProducts.length ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {similarProducts.map((product) => {
+                      const alreadyInCart = items.some((item) => item.id === product.id);
+                      return (
+                        <div key={product.id} className="group border border-slate-200 rounded-3xl overflow-hidden transition-shadow hover:shadow-lg">
+                          <div className="h-44 overflow-hidden bg-slate-100">
+                            <img
+                              src={imageUrl(product.image)}
+                              alt={product.name}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          </div>
+                          <div className="p-4">
+                            <p className="text-sm font-black text-slate-900 truncate">{product.name}</p>
+                            <p className="text-xs text-slate-500 mt-1">{product.category_name || String(product.category || "Product")}</p>
+                            <p className="mt-3 font-black text-slate-900">{currency(Number(product.price))}</p>
+                            <button
+                              onClick={() => handleAddSimilarProduct(product)}
+                              className="mt-4 w-full rounded-full bg-violet-600 px-3 py-2 text-sm font-black text-white transition hover:bg-violet-700"
+                            >
+                              {alreadyInCart ? "Add another" : "Add to order"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">No similar products are available for this item.</p>
+                )}
+              </section>
+
+              {items.length > 1 && (
+                <section className="bg-white border border-slate-200 rounded-lg p-5">
+                  <h2 className="text-lg font-black text-slate-900 mb-4">Other Cart Items</h2>
+                  <div className="space-y-4">
+                    {items.slice(1).map((item, idx) => (
+                      <div key={item.id} className="border border-slate-200 rounded-2xl p-4 flex items-center gap-4">
+                        <div className="w-24 h-24 rounded-3xl overflow-hidden bg-slate-100">
+                          <img src={imageUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-slate-900 truncate">{item.name}</p>
+                          <p className="text-sm text-slate-500">{item.category || "Product"}</p>
+                          <p className="mt-2 text-sm text-slate-700">Qty: {itemDetails[idx + 1]?.quantity || item.quantity}</p>
+                          {getItemSizes(item).length > 0 && (
+                            <p className="text-sm text-slate-700">Size: {itemDetails[idx + 1]?.size || "Not selected"}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+
+            <aside className="bg-white border border-slate-200 rounded-lg p-5 h-fit">
+              <h2 className="text-lg font-black text-slate-900">Delivery Information</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                 <label className="block sm:col-span-2">
                   <span className="text-sm font-bold text-slate-700">👤 Full Name *</span>
                   <input
@@ -304,7 +676,9 @@ export default function Checkout() {
                     <option value="emergency">Emergency Fast Delivery</option>
                   </select>
                   {deliveryFeeError && (
-                    <p className="mt-2 text-xs font-bold text-red-600">{deliveryFeeError}</p>
+                    <p className="mt-2 text-xs font-bold text-amber-600">
+                      {deliveryFeeError} — Proceeding with ₹0 delivery charge.
+                    </p>
                   )}
                 </label>
                 <label className="block">
@@ -325,85 +699,59 @@ export default function Checkout() {
               </div>
 
               <div className="mt-7">
-                <h2 className="text-lg font-black text-slate-900 mb-3">Items</h2>
-                <div className="space-y-3">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex gap-3 rounded-lg border border-slate-200 p-3">
-                      <img src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover bg-slate-100" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-slate-900 truncate">{item.name}</p>
-                        <p className="text-sm text-slate-500">{item.category || "Product"}</p>
-                        {item.locationName && (
-                          <p className="text-xs font-bold text-violet-700">
-                            Delivery area: {item.locationName}
-                          </p>
-                        )}
-                        <p className="text-sm font-bold text-slate-700">
-                          {item.quantity} x {currency(item.price)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
+                <h2 className="text-lg font-black text-slate-900">Payment Summary</h2>
+                {formData.name && formData.postal_code && (
+                  <div className="mt-4 mb-5 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-slate-600 font-semibold">DELIVERY TO:</p>
+                    <p className="text-sm font-bold text-slate-900 mt-1">👤 {formData.name}</p>
+                    <p className="text-xs text-slate-600 mt-1">📮 Postal Code: {formData.postal_code}</p>
+                    <p className="text-xs text-slate-600">📍 {formData.city}</p>
+                  </div>
+                )}
 
-            <aside className="bg-white border border-slate-200 rounded-lg p-5 h-fit">
-              <h2 className="text-lg font-black text-slate-900">Payment Summary</h2>
-              
-              {/* Delivery Info Preview */}
-              {formData.name && formData.postal_code && (
-                <div className="mt-4 mb-5 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-slate-600 font-semibold">DELIVERY TO:</p>
-                  <p className="text-sm font-bold text-slate-900 mt-1">👤 {formData.name}</p>
-                  <p className="text-xs text-slate-600 mt-1">📮 Postal Code: {formData.postal_code}</p>
-                  <p className="text-xs text-slate-600">📍 {formData.city}</p>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Subtotal</span>
+                    <span className="font-bold">{currency(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">
+                      Delivery ({formData.deliveryType === "emergency" ? "Emergency" : "Normal"})
+                    </span>
+                    <span className="font-bold">{currency(deliveryFee)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-3 text-base">
+                    <span className="font-black">Total Payment</span>
+                    <span className="font-black text-rose-600">{currency(total)}</span>
+                  </div>
                 </div>
-              )}
-              
-              <div className="space-y-3 mt-5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Subtotal</span>
-                  <span className="font-bold">{currency(subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">
-                    Delivery ({formData.deliveryType === "emergency" ? "Emergency" : "Normal"})
-                  </span>
-                  <span className="font-bold">{currency(deliveryFee)}</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-200 pt-3 text-base">
-                  <span className="font-black">Total Payment</span>
-                  <span className="font-black text-rose-600">{currency(total)}</span>
-                </div>
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={isProcessing}
+                  className="mt-6 w-full rounded-lg bg-green-600 py-3 text-white font-black hover:bg-green-700 disabled:opacity-60"
+                >
+                  {isProcessing ? "Processing..." : "Place Order"}
+                </button>
               </div>
-              <button
-                onClick={handlePlaceOrder}
-                disabled={isProcessing}
-                className="mt-6 w-full rounded-lg bg-green-600 py-3 text-white font-black hover:bg-green-700 disabled:opacity-60"
-              >
-                {isProcessing ? "Processing..." : "Place Order"}
-              </button>
             </aside>
           </div>
         )}
+
       </main>
 
       {successOrder && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] px-4">
           <div className="bg-white rounded-lg p-8 text-center max-w-md w-full shadow-2xl">
-            <div className="text-5xl mb-4">OK</div>
+            <div className="text-5xl mb-4">✅</div>
             <h2 className="text-2xl font-black text-green-700">Order Placed Successfully</h2>
             <p className="text-slate-600 mt-2">
               Order ID: <strong>{successOrder}</strong>
             </p>
             <p className="text-sm text-slate-500 mt-2">
-              {formData.paymentType === "cash_on_delivery"
-                ? "Pay when your order arrives."
-                : "Your order has been confirmed."}
+              Pay when your order arrives.
             </p>
             <button
-              onClick={() => navigate("/ordertracking")}
+              onClick={() => navigate(`/ordertracking?orderId=${successOrder}`)}
               className="mt-6 px-6 py-3 rounded-lg bg-green-600 text-white font-black"
             >
               Track Order

@@ -139,7 +139,6 @@ const AdminAddStaff: React.FC = () => {
   }
 
   .main {
-    margin-left: 260px;
     flex: 1;
     background: #f5f7fa;
     min-height: 100vh;

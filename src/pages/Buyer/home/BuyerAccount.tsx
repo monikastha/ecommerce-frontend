@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LogOut,
-  MapPin,
-  Package,
   Save,
-  ShoppingCart,
-  User,
 } from "lucide-react";
 import BuyerFooter from "../../../components/BuyerFooter";
 import BuyerNavbar from "../../../components/BuyerNavbar2";
+import { saveProfileToStorage } from "../../../components/ProfileAvatar";
 import { getBuyerCart, getBuyerCartCount } from "../../../utils/buyerCart";
 import type { BuyerCartItem } from "../../../utils/buyerCart";
 
@@ -43,6 +41,7 @@ type BuyerProfile = AccountForm & {
   user_id?: number;
   total_orders?: boolean | number;
   total_spent?: number | string;
+  profile_pic?: string;
   created_at?: string;
   updated_at?: string;
 };
@@ -69,6 +68,12 @@ const profileToForm = (profile: Partial<BuyerProfile>): AccountForm => ({
 
 const currency = (value: number) => `Rs. ${value.toLocaleString()}`;
 
+const imageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  return `${API_BASE}${path}`;
+};
+
 const readOrders = (): BuyerOrder[] => {
   try {
     const raw = localStorage.getItem("buyer_orders");
@@ -88,6 +93,8 @@ export default function BuyerAccount() {
   const [cartItems, setCartItems] = useState<BuyerCartItem[]>([]);
   const [orders, setOrders] = useState<BuyerOrder[]>([]);
   const [profile, setProfile] = useState<BuyerProfile | null>(null);
+  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
+  const [profilePicPreview, setProfilePicPreview] = useState<string>("");
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -123,12 +130,15 @@ export default function BuyerAccount() {
 
         const nextProfile = data as BuyerProfile;
         setProfile(nextProfile);
+        setProfilePicPreview(imageUrl(nextProfile.profile_pic));
         setForm(profileToForm(nextProfile));
         localStorage.setItem("name", nextProfile.name || "");
         localStorage.setItem("username", nextProfile.username || "");
         localStorage.setItem("email", nextProfile.email || "");
+        localStorage.setItem("profile_image", nextProfile.profile_pic || "");
         localStorage.setItem("buyer_phone", nextProfile.phone_number || "");
         localStorage.setItem("buyer_address", nextProfile.address || "");
+        saveProfileToStorage(nextProfile);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load profile.");
       } finally {
@@ -138,6 +148,20 @@ export default function BuyerAccount() {
 
     loadProfile();
   }, []);
+
+  useEffect(() => {
+    if (profile && profile.profile_pic) {
+      setProfilePicPreview(imageUrl(profile.profile_pic));
+    }
+  }, [profile]);
+
+  const handleProfilePicChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setProfilePicFile(file);
+    if (file) {
+      setProfilePicPreview(URL.createObjectURL(file));
+    }
+  };
 
   const cartTotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -176,11 +200,28 @@ export default function BuyerAccount() {
       gender: form.gender.trim(),
     };
 
+    let body: BodyInit;
+    let headers: HeadersInit = {};
+
+    if (profilePicFile) {
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (typeof value === "string") {
+          formData.append(key, value);
+        }
+      });
+      formData.append("profile_pic", profilePicFile);
+      body = formData;
+    } else {
+      body = JSON.stringify(payload);
+      headers["Content-Type"] = "application/json";
+    }
+
     try {
       const response = await fetch(`${API_BASE}/api/buyer/profile/${userId}/`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers,
+        body,
       });
       const data = await response.json();
 
@@ -190,12 +231,16 @@ export default function BuyerAccount() {
 
       const nextProfile = data as BuyerProfile;
       setProfile(nextProfile);
+      setProfilePicPreview(imageUrl(nextProfile.profile_pic));
+      setProfilePicFile(null);
       setForm(profileToForm(nextProfile));
       localStorage.setItem("name", nextProfile.name || "");
       localStorage.setItem("username", nextProfile.username || "");
       localStorage.setItem("email", nextProfile.email || "");
+      localStorage.setItem("profile_image", nextProfile.profile_pic || "");
       localStorage.setItem("buyer_phone", nextProfile.phone_number || "");
       localStorage.setItem("buyer_address", nextProfile.address || "");
+      saveProfileToStorage(nextProfile);
       setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save profile.");
@@ -214,68 +259,97 @@ export default function BuyerAccount() {
       <BuyerNavbar cartQty={getBuyerCartCount()} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <p className="text-sm font-black text-teal-700 uppercase">Buyer Account</p>
-            <h1 className="text-2xl font-black text-slate-900">My Account</h1>
-          </div>
-          <button
-            onClick={() => navigate("/allproducts")}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:border-teal-500"
-          >
-            <ShoppingCart size={17} />
-            Continue Shopping
-          </button>
-        </div>
+        <section className="rounded-3xl bg-gradient-to-r from-teal-700 via-cyan-600 to-slate-900 p-8 text-white shadow-xl mb-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-cyan-200/90">Buyer account</p>
+              <h1 className="mt-3 text-4xl font-black tracking-tight">
+                {profile?.name ? `Welcome back, ${profile.name}` : "Welcome back"}
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-cyan-100/90">
+                Manage your profile picture, personal details, and purchase history from one place.
+              </p>
+            </div>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="rounded-lg border border-slate-200 bg-white p-5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-teal-50 text-teal-700">
-                <ShoppingCart size={20} />
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <div className="relative h-24 w-24 overflow-hidden rounded-3xl border border-white/25 bg-white/10 shadow-lg">
+                {profilePicPreview ? (
+                  <img
+                    src={profilePicPreview}
+                    alt="Profile"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-slate-800 text-4xl font-black text-white/90">
+                    {profile?.name ? profile.name.charAt(0).toUpperCase() : "B"}
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="text-sm text-slate-500">Cart Items</p>
-                <p className="text-xl font-black text-slate-900">{getBuyerCartCount()}</p>
-              </div>
+              <button
+                onClick={() => document.getElementById("profilePicInput")?.click()}
+                className="rounded-full border border-white/30 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:bg-white/20"
+              >
+                Change Photo
+              </button>
             </div>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-emerald-700">
-                <Package size={20} />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Orders</p>
-                <p className="text-xl font-black text-slate-900">{orders.length}</p>
-              </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="rounded-3xl bg-white/10 p-5">
+              <p className="text-sm uppercase text-cyan-100/70">Cart</p>
+              <p className="mt-3 text-3xl font-black">{getBuyerCartCount()}</p>
+              <p className="mt-2 text-sm text-cyan-100/80">Items waiting in cart</p>
             </div>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-rose-50 text-rose-700">
-                <MapPin size={20} />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Total Spent</p>
-                <p className="text-xl font-black text-slate-900">{currency(orderTotal)}</p>
-              </div>
+            <div className="rounded-3xl bg-white/10 p-5">
+              <p className="text-sm uppercase text-cyan-100/70">Orders</p>
+              <p className="mt-3 text-3xl font-black">{orders.length}</p>
+              <p className="mt-2 text-sm text-cyan-100/80">Recent purchases</p>
+            </div>
+            <div className="rounded-3xl bg-white/10 p-5">
+              <p className="text-sm uppercase text-cyan-100/70">Spent</p>
+              <p className="mt-3 text-3xl font-black">{currency(orderTotal)}</p>
+              <p className="mt-2 text-sm text-cyan-100/80">Purchase history value</p>
             </div>
           </div>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
           <section className="rounded-lg border border-slate-200 bg-white p-5">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-slate-900 text-white">
-                <User size={20} />
+            <input
+              id="profilePicInput"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleProfilePicChange}
+            />
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="relative h-20 w-20 overflow-hidden rounded-3xl bg-slate-100 border border-slate-200">
+                  {profilePicPreview ? (
+                    <img
+                      src={profilePicPreview}
+                      alt="Profile"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-200 text-3xl font-black text-slate-700">
+                      {profile?.name ? profile.name.charAt(0).toUpperCase() : "B"}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.25em] text-teal-700">Profile</p>
+                  <h2 className="text-2xl font-black text-slate-900">{profile?.name || "Buyer Name"}</h2>
+                  <p className="text-sm text-slate-500">{profile?.email || "Your registered email will appear here."}</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-black text-slate-900">Profile Details</h2>
-                <p className="text-sm text-slate-500">
-                  {profile?.id ? `Buyer ID #${profile.id}` : "Keep your buyer details ready for checkout."}
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => document.getElementById("profilePicInput")?.click()}
+                className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-black text-slate-900 hover:border-teal-500"
+              >
+                Change picture
+              </button>
             </div>
 
             {error && (

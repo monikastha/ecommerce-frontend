@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import logo from "../../assets/logo.png";
+import ProfileAvatar, { useProfileName } from "../../components/ProfileAvatar";
 import RoleProfileModal from "../../components/RoleProfileModal";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -15,6 +15,7 @@ const SellerNavbar = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const profileName = useProfileName("Seller");
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -187,7 +188,7 @@ const SellerNavbar = () => {
       <div className="navbar">
         {/* LEFT SIDE */}
         <div className="navbar-left">
-          <h2>{getGreeting()}, Seller 👋</h2>
+          <h2>{getGreeting()}, {profileName}</h2>
           <p>Manage your store efficiently</p>
         </div>
 
@@ -209,12 +210,7 @@ const SellerNavbar = () => {
 
           {/* PROFILE */}
           <div ref={dropdownRef} style={{ position: "relative" }}>
-            <img
-              className="profile"
-              src={logo}           // Replace with actual user profile image later
-              alt="profile"
-              onClick={() => setProfileOpen(!profileOpen)}
-            />
+            <ProfileAvatar className="profile" onClick={() => setProfileOpen(!profileOpen)} />
 
             {profileOpen && (
               <div className="dropdown">
