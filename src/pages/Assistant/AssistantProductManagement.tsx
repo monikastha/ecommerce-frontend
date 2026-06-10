@@ -287,8 +287,6 @@ const AssistantProductManagement: React.FC = () => {
                     <th>Category</th>
                     <th>Price</th>
                     <th>Stock</th>
-                    <th>Image</th>
-                    <th>Description</th>
                     <th>Status</th>
                     <th>Published</th>
                     <th>Actions</th>
@@ -296,9 +294,9 @@ const AssistantProductManagement: React.FC = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={11} style={{ textAlign: "center", padding: "80px" }}>Loading products...</td></tr>
+                    <tr><td colSpan={9} style={{ textAlign: "center", padding: "80px" }}>Loading products...</td></tr>
                   ) : filtered.length === 0 ? (
-                    <tr><td colSpan={11} style={{ textAlign: "center", padding: "80px" }}>No products found</td></tr>
+                    <tr><td colSpan={9} style={{ textAlign: "center", padding: "80px" }}>No products found</td></tr>
                   ) : (
                     filtered.map((product) => (
                       <tr key={product.id}>
@@ -311,10 +309,6 @@ const AssistantProductManagement: React.FC = () => {
                         <td>{product.category_name}</td>
                         <td>Rs. {product.price}</td>
                         <td>{product.quantity}</td>
-                        <td>
-                          {product.image && <img src={imageUrl(product.image)} alt="" className="productImg" />}
-                        </td>
-                        <td style={{ maxWidth: "280px" }}>{product.description}</td>
                         <td>
                           <span className={`status ${product.status}`}>{product.status.toUpperCase()}</span>
                         </td>

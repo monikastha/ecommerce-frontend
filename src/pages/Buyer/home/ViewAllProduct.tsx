@@ -343,8 +343,6 @@ export default function ViewAllProducts() {
     const priceQuery = parsePriceQuery(query);
 
     return products.filter((product) => {
-      if (!stockByProduct.has(product.id)) return false;
-
       const categoryName = productCategoryName(product);
       const categoryMatch = selectedCategory === "All" || normalizeText(categoryName) === normalizeText(selectedCategory);
       const nameMatch = product.name.toLowerCase().includes(query);
@@ -634,6 +632,8 @@ export default function ViewAllProducts() {
               {visibleProducts.map((product) => {
                 const promotion = promotionForProduct(product, promotions);
                 const finalPrice = discountedPrice(product.price, promotion);
+                const productStock = stockByProduct.get(product.id);
+                const isAvailable = Boolean(productStock);
                 return (
                 <article key={product.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col h-full">
                   {/* Image Container - Fixed height with proper fit */}
@@ -687,7 +687,7 @@ export default function ViewAllProducts() {
                         )}
                       </span>
                       <span className="text-xs bg-slate-100 px-3 py-1 rounded-full">
-                        {`${stockByProduct.get(product.id)?.quantity || 0} available`}
+                        {isAvailable ? `${productStock?.quantity || 0} available` : "Out of Stock"}
                       </span>
                     </div>
 
