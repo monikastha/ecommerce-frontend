@@ -9,6 +9,10 @@ import {
   getBuyerCartCount,
 } from "../../../utils/buyerCart";
 import { isBuyerLoggedIn } from "../../../utils/buyerAuth";
+import {
+  getBuyerWishlistItems,
+  toggleBuyerWishlistItem,
+} from "../../../utils/buyerWishlist";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -38,6 +42,7 @@ type Product = {
   category_name?: string;
   code?: string;
   description?: string;
+  size?: string;
   price: string;
   quantity: number;
   image?: string;
@@ -141,6 +146,12 @@ const keySpecifications = (description?: string) =>
     .map((item) => item.replace(/^[-*]\s*/, "").trim())
     .filter(Boolean);
 
+const productSizes = (size?: string) =>
+  (size || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 export default function ProductPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -149,6 +160,9 @@ export default function ProductPage() {
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(!location.state);
   const [cartQty, setCartQty] = useState(getBuyerCartCount());
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(
+    () => new Set(getBuyerWishlistItems().map((item) => String(item.id)))
+  );
   const [added, setAdded] = useState(false);
   const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [stocks, setStocks] = useState<ApiStock[]>([]);
@@ -158,11 +172,24 @@ export default function ProductPage() {
   );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState<ProductColor | null>(null);
+  const [selectedSize, setSelectedSize] = useState("");
 
   useEffect(() => {
     const refreshCart = () => setCartQty(getBuyerCartCount());
     window.addEventListener("buyer-cart-change", refreshCart);
     return () => window.removeEventListener("buyer-cart-change", refreshCart);
+  }, []);
+
+  useEffect(() => {
+    const refreshWishlist = () => {
+      setWishlistIds(new Set(getBuyerWishlistItems().map((item) => String(item.id))));
+    };
+    window.addEventListener("buyer-wishlist-change", refreshWishlist);
+    window.addEventListener("storage", refreshWishlist);
+    return () => {
+      window.removeEventListener("buyer-wishlist-change", refreshWishlist);
+      window.removeEventListener("storage", refreshWishlist);
+    };
   }, []);
 
   useEffect(() => {
@@ -216,6 +243,12 @@ export default function ProductPage() {
     }
   }, [product, selectedColor]);
 
+  useEffect(() => {
+    const sizes = productSizes(product?.size);
+    if (sizes.length === 1) setSelectedSize(sizes[0]);
+    if (sizes.length === 0) setSelectedSize("");
+  }, [product?.size]);
+
   const activeLocations = locations.filter((loc) => {
     const status = String(loc.status || "").trim().toLowerCase();
     return !status || status === "active";
@@ -245,15 +278,44 @@ export default function ProductPage() {
     return false;
   };
 
+  const requireSize = () => {
+    const sizes = productSizes(product?.size);
+    if (sizes.length === 0 || selectedSize) return true;
+    alert("Please select a size first.");
+    return false;
+  };
+
+  const toggleWishlist = () => {
+    if (!product) return;
+    if (!requireBuyerLogin()) return;
+    const category = productCategoryName(product);
+    const sizes = productSizes(product.size);
+    const result = toggleBuyerWishlistItem({
+      id: product.id,
+      name: product.name,
+      price: finalPrice,
+      originalPrice: product.price,
+      image: imageUrl(product.image),
+      category,
+      description: product.description,
+      size: selectedSize || product.size,
+      sizes,
+      stock: productStock?.quantity,
+    });
+    setWishlistIds(new Set(result.items.map((item) => String(item.id))));
+  };
+
   const addToCart = () => {
     if (!product) return;
     if (!requireBuyerLogin()) return;
     if (!requireDeliveryLocation()) return;
+    if (!requireSize()) return;
     if (!productStock) {
       alert("Out of Stock.");
       return;
     }
     const category = productCategoryName(product);
+    const sizes = productSizes(product.size);
     addBuyerCartItem(
       {
         id: product.id,
@@ -262,6 +324,8 @@ export default function ProductPage() {
         image: imageUrl(product.image),
         category,
         description: product.description,
+        size: selectedSize,
+        sizes,
         stock: productStock.quantity,
         locationId: Number(selectedLocation),
         locationName: selectedLocationName,
@@ -277,11 +341,13 @@ export default function ProductPage() {
     if (!product) return;
     if (!requireBuyerLogin()) return;
     if (!requireDeliveryLocation()) return;
+    if (!requireSize()) return;
     if (!productStock) {
       alert("Out of Stock.");
       return;
     }
     const category = productCategoryName(product);
+    const sizes = productSizes(product.size);
     navigate("/checkout", {
       state: {
         buyNow: true,
@@ -293,6 +359,8 @@ export default function ProductPage() {
             image: imageUrl(product.image),
             category,
             description: product.description,
+            size: selectedSize,
+            sizes,
             quantity: qty,
             stock: productStock.quantity,
             locationId: Number(selectedLocation),
@@ -333,9 +401,9 @@ export default function ProductPage() {
             </div>
 
             <section className="grid grid-cols-1 lg:grid-cols-2 bg-white border border-slate-200 rounded-lg overflow-hidden">
-              {/* Image Gallery Section */}
+             
               <div className="bg-slate-100 flex flex-col">
-                {/* Main Image Display */}
+              
                 <div className="min-h-[360px] flex items-center justify-center flex-1">
                   {product.product_images && product.product_images.length > 0 ? (
                     <img
@@ -354,7 +422,7 @@ export default function ProductPage() {
                   )}
                 </div>
 
-                {/* Image Thumbnails Gallery */}
+             
                 {product.product_images && product.product_images.length > 0 && (
                   <div className="bg-white border-t border-slate-200 p-3">
                     <p className="text-xs font-bold text-slate-700 mb-3 px-1">
@@ -388,12 +456,28 @@ export default function ProductPage() {
               </div>
 
               <div className="p-6 sm:p-8">
-                <p className="text-xs font-black text-violet-600 uppercase">
-                  {productCategoryName(product)}
-                </p>
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-                  {product.name}
-                </h1>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-black text-violet-600 uppercase">
+                      {productCategoryName(product)}
+                    </p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+                      {product.name}
+                    </h1>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleWishlist}
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-2xl transition ${
+                      wishlistIds.has(String(product.id))
+                        ? "border-rose-200 bg-rose-50 text-rose-600"
+                        : "border-slate-200 bg-white text-slate-400 hover:border-rose-200 hover:text-rose-500"
+                    }`}
+                    aria-label={wishlistIds.has(String(product.id)) ? "Remove from wishlist" : "Save to wishlist"}
+                  >
+                    {wishlistIds.has(String(product.id)) ? "♥" : "♡"}
+                  </button>
+                </div>
                 {product.code && (
                   <p className="text-sm text-slate-500 mt-2">Code: {product.code}</p>
                 )}
@@ -418,7 +502,7 @@ export default function ProductPage() {
                     : "Out of Stock"}
                 </p>
 
-                {/* Color Selection */}
+              
                 {product.colors && product.colors.length > 0 && (
                   <label className="block mt-5">
                     <span className="text-sm font-black text-slate-900">Available Colors</span>
@@ -455,6 +539,33 @@ export default function ProductPage() {
                       </p>
                     )}
                   </label>
+                )}
+
+                {productSizes(product.size).length > 0 && (
+                  <div className="mt-5">
+                    <span className="text-sm font-black text-slate-900">Select Size</span>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {productSizes(product.size).map((sizeOption) => (
+                        <button
+                          type="button"
+                          key={sizeOption}
+                          onClick={() => setSelectedSize(sizeOption)}
+                          className={`rounded-lg border px-3 py-2 text-sm font-black transition ${
+                            selectedSize === sizeOption
+                              ? "border-violet-600 bg-violet-600 text-white shadow"
+                              : "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-400"
+                          }`}
+                        >
+                          {sizeOption}
+                        </button>
+                      ))}
+                    </div>
+                    {!selectedSize && (
+                      <p className="mt-2 text-xs font-bold text-rose-600">
+                        Please choose a size before ordering.
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 <label className="block mt-5">

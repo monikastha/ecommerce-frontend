@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BuyerFooter from "../../../components/BuyerFooter";
@@ -429,6 +430,12 @@ export default function AiSmartComparison() {
                   </button>
                 </div>
 
+                {/*
+                  Fix: cards are now `flex flex-col` and the price/stock/button
+                  block is wrapped in `mt-auto`, so that block always sits at the
+                  bottom of the card no matter how long the description/title is.
+                  This keeps "Add to compare" buttons aligned across the row.
+                */}
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {visibleProducts.length ? visibleProducts.map((product) => {
                     const promotion = promotionForProduct(product, promotions);
@@ -438,7 +445,7 @@ export default function AiSmartComparison() {
                     return (
                       <article
                         key={product.id}
-                        className={`rounded-lg border bg-white p-4 transition ${
+                        className={`flex flex-col rounded-lg border bg-white p-4 transition ${
                           selected ? "border-teal-500 shadow-md" : "border-slate-200 hover:shadow-md"
                         }`}
                       >
@@ -458,31 +465,34 @@ export default function AiSmartComparison() {
                         <p className="mt-2 text-sm text-slate-500 line-clamp-2">
                           {product.description || "No specification details available."}
                         </p>
-                        <div className="mt-4 flex items-end justify-between gap-3">
-                          <div>
-                            <p className="text-lg font-black text-rose-600">{currency(finalPrice)}</p>
-                            {promotion && (
-                              <p className="text-xs font-bold text-slate-400 line-through">
-                                {currency(product.price)}
-                              </p>
-                            )}
+
+                        <div className="mt-auto">
+                          <div className="mt-4 flex items-end justify-between gap-3">
+                            <div>
+                              <p className="text-lg font-black text-rose-600">{currency(finalPrice)}</p>
+                              {promotion && (
+                                <p className="text-xs font-bold text-slate-400 line-through">
+                                  {currency(product.price)}
+                                </p>
+                              )}
+                            </div>
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                              {stockByProduct.get(product.id)?.quantity || 0} stock
+                            </span>
                           </div>
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                            {stockByProduct.get(product.id)?.quantity || 0} stock
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => toggleProduct(product)}
+                            disabled={selectedIds.length === 2 && !selected}
+                            className={`mt-4 w-full rounded-lg py-3 text-sm font-black transition ${
+                              selected
+                                ? "bg-slate-900 text-white"
+                                : "bg-teal-600 text-white hover:bg-teal-700 disabled:bg-slate-300"
+                            }`}
+                          >
+                            {selected ? "Remove from compare" : "Add to compare"}
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => toggleProduct(product)}
-                          disabled={selectedIds.length === 2 && !selected}
-                          className={`mt-4 w-full rounded-lg py-3 text-sm font-black transition ${
-                            selected
-                              ? "bg-slate-900 text-white"
-                              : "bg-teal-600 text-white hover:bg-teal-700 disabled:bg-slate-300"
-                          }`}
-                        >
-                          {selected ? "Remove from compare" : "Add to compare"}
-                        </button>
                       </article>
                     );
                   }) : (

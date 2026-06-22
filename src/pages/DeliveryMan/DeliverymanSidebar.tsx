@@ -1,27 +1,22 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
-import ProfileAvatar, { useProfileEmail, useProfileName } from "../../components/ProfileAvatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faGauge,
   faBox,
   faMoneyBill,
-  faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 
 const DeliverymanSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogout, setShowLogout] = useState(false);
-  const profileName = useProfileName("Delivery Man");
-  const profileEmail = useProfileEmail("delivery@example.com");
 
   const menuItems = [
     { key: "/delivery/dashboard", label: "Dashboard", icon: faGauge },
-    { key: "/delivery/orders", label: "Orders Tracking", icon: faBox },
+    { key: "/delivery/tracking", label: "Orders Tracking", icon: faBox },
     { key: "/delivery/earnings", label: "Earnings", icon: faMoneyBill },
-    { key: "logout", label: "Logout", icon: faRightFromBracket },
   ];
 
   const handleClick = (key: string) => {
@@ -213,16 +208,6 @@ const DeliverymanSidebar = () => {
             </li>
           ))}
         </ul>
-
-        <div className="sidebar-profile">
-          <div className="profile-avatar">
-            <ProfileAvatar alt="profile" />
-          </div>
-          <div className="profile-info">
-            <h4>{profileName}</h4>
-            <p>{profileEmail}</p>
-          </div>
-        </div>
       </div>
 
       {showLogout && (

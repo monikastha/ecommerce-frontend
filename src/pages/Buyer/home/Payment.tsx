@@ -30,22 +30,22 @@ export default function Payment() {
 
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Redirect back if no order data
   useEffect(() => {
     if (!orderData?.orderId || !orderData?.items?.length) {
       navigate("/checkout");
     }
   }, [orderData, navigate]);
 
-  const handleEsewaPayment = async () => {
+  const handleKhaltiPayment = async () => {
     if (!orderData) return;
 
     setIsProcessing(true);
+    sessionStorage.setItem("pending_khalti_payment", JSON.stringify(orderData));
 
     try {
       const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-      const res = await fetch(`${API_ORIGIN}/api/initiate-esewa/`, {
+      const res = await fetch(`${API_ORIGIN}/api/initiate-khalti/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -56,35 +56,33 @@ export default function Payment() {
             : `${orderData.items.length} items`,
           customerName: orderData.customerName,
           email: orderData.email,
+          phone: orderData.phone,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Failed to initiate eSewa payment");
+        throw new Error(data.message || "Failed to initiate Khalti payment");
       }
 
-      // Submit to eSewa
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = data.paymentUrl || "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
+      if (!data.paymentUrl) {
+        throw new Error("Khalti did not return a payment URL.");
+      }
 
-      Object.keys(data.formData).forEach((key) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = data.formData[key];
-        form.appendChild(input);
-      });
-
-      document.body.appendChild(form);
-      form.submit();
+      window.location.href = data.paymentUrl;
 
     } catch (error: any) {
       alert(error.message || "Payment initiation failed. Please try again.");
       setIsProcessing(false);
     }
+  };
+
+  const handleTestPaymentSuccess = () => {
+    if (!orderData) return;
+
+    sessionStorage.setItem("pending_khalti_payment", JSON.stringify(orderData));
+    navigate(`/payment-success?orderId=${encodeURIComponent(orderData.orderId)}&refId=LOCAL-TEST`);
   };
 
   if (!orderData) {
@@ -95,7 +93,6 @@ export default function Payment() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Updated Navbar - Now using BuyerNavbar2 like Checkout */}
       <BuyerNavbar cartQty={getBuyerCartCount()} />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
@@ -105,7 +102,7 @@ export default function Payment() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Left - Order Summary */}
+          
           <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl p-6">
             <h2 className="text-xl font-bold mb-6">Order Summary</h2>
 
@@ -130,7 +127,7 @@ export default function Payment() {
               ))}
             </div>
 
-            {/* Customer Details */}
+            
             <div className="mt-8 pt-6 border-t border-slate-200">
               <h3 className="font-bold mb-3">Delivery Details</h3>
               <p><strong>Name:</strong> {orderData.customerName}</p>
@@ -140,7 +137,7 @@ export default function Payment() {
             </div>
           </div>
 
-          {/* Right - Payment Box */}
+          
           <div className="lg:col-span-2">
             <div className="bg-white border border-slate-200 rounded-2xl p-6 sticky top-6">
               <h2 className="text-xl font-bold mb-6">Payment Details</h2>
@@ -153,7 +150,7 @@ export default function Payment() {
 
                 <div className="pt-4 border-t">
                   <button
-                    onClick={handleEsewaPayment}
+                    onClick={handleKhaltiPayment}
                     disabled={isProcessing}
                     className="w-full bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-gray-400 text-white font-bold py-4 rounded-xl text-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
@@ -161,14 +158,25 @@ export default function Payment() {
                       "Processing..."
                     ) : (
                       <>
-                        Pay with <span className="font-black">eSewa</span>
+                        Pay with <span className="font-black">Khalti</span>
                       </>
                     )}
                   </button>
+
+                  {import.meta.env.VITE_ENABLE_KHALTI_SIMULATOR === "true" && (
+                    <button
+                      type="button"
+                      onClick={handleTestPaymentSuccess}
+                      disabled={isProcessing}
+                      className="mt-3 w-full border border-slate-300 bg-white hover:bg-slate-50 disabled:bg-gray-100 text-slate-800 font-bold py-3 rounded-xl text-sm transition-all duration-200"
+                    >
+                      Simulate Successful Payment
+                    </button>
+                  )}
                 </div>
 
                 <p className="text-center text-xs text-slate-500 mt-4">
-                  Secure payment powered by eSewa
+                  Secure payment powered by Khalti
                 </p>
               </div>
             </div>

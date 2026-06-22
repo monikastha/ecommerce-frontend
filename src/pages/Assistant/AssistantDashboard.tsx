@@ -112,20 +112,67 @@ const AssistantDashboard = () => {
     <>
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        .dashboard-container { background: #f3f4f6; min-height: 100vh; }
-        .main-content { margin-left: 250px; width: calc(100% - 250px); min-height: 100vh; background: #f3f4f6; }
+        .dashboard-container { background: #f6f8fb; min-height: 100vh; }
+        .main-content { margin-left: 250px; width: calc(100% - 250px); min-height: 100vh; background: #f6f8fb; }
         .content { padding: 28px 30px; }
         .dashboard-title { font-size: 25px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
         .dashboard-subtitle { color: #64748b; font-size: 14px; margin-bottom: 24px; }
         .alert { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-weight: 700; }
         .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
-        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.06); }
+        .card {
+          position: relative;
+          overflow: hidden;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 19px;
+          box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .card::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 4px;
+          background: var(--card-color);
+        }
+        .card::after {
+          content: "";
+          position: absolute;
+          right: -34px;
+          top: -34px;
+          width: 96px;
+          height: 96px;
+          border-radius: 50%;
+          background: var(--card-color);
+          opacity: 0.08;
+        }
+        .card:hover {
+          transform: translateY(-3px);
+          border-color: color-mix(in srgb, var(--card-color), #e2e8f0 58%);
+          box-shadow: 0 16px 34px rgba(15, 23, 42, 0.11);
+        }
         .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .card h3 { font-size: 13px; color: #64748b; margin-bottom: 8px; font-weight: 700; }
         .card h1 { font-size: 28px; font-weight: 900; color: #0f172a; }
-        .card-icon { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #fff; }
+        .card small { display: block; margin-top: 9px; color: #64748b; font-size: 12px; font-weight: 700; }
+        .card-icon {
+          width: 46px;
+          height: 46px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          color: #fff;
+          background: var(--card-color);
+          box-shadow: 0 10px 20px color-mix(in srgb, var(--card-color), transparent 72%);
+          position: relative;
+          z-index: 1;
+        }
         .overview { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05); }
+        .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06); }
         .panel h2 { color: #0f172a; font-size: 17px; font-weight: 800; margin-bottom: 18px; }
         .bars { height: 230px; display: flex; align-items: flex-end; gap: 18px; border-bottom: 1px solid #e2e8f0; padding: 0 6px; }
         .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
@@ -133,7 +180,7 @@ const AssistantDashboard = () => {
         .bar-label { color: #475569; font-size: 12px; font-weight: 700; text-transform: capitalize; text-align: center; overflow-wrap: anywhere; }
         .bar-value { color: #0f172a; font-size: 12px; font-weight: 900; }
         .summary-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-        .summary { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; }
+        .summary { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; box-shadow: 0 8px 20px rgba(15,23,42,0.05); }
         .summary span { display: block; color: #64748b; font-size: 12px; font-weight: 800; }
         .summary strong { display: block; color: #0f172a; font-size: 20px; margin-top: 6px; }
         @media (max-width: 1180px) { .cards { grid-template-columns: repeat(2, 1fr); } .overview { grid-template-columns: 1fr; } }
@@ -151,40 +198,44 @@ const AssistantDashboard = () => {
             {error && <div className="alert">{error}</div>}
 
             <div className="cards">
-              <div className="card">
+              <div className="card" style={{ "--card-color": "#2563eb" } as any}>
                 <div className="card-top">
                   <div>
                     <h3>Total Users</h3>
                     <h1>{loading ? "..." : countText(stats.users)}</h1>
+                    <small>Registered platform users</small>
                   </div>
-                  <div className="card-icon" style={{ background: "#2563eb" }}><FaUsers /></div>
+                  <div className="card-icon"><FaUsers /></div>
                 </div>
               </div>
-              <div className="card">
+              <div className="card" style={{ "--card-color": "#16a34a" } as any}>
                 <div className="card-top">
                   <div>
                     <h3>Total Products</h3>
                     <h1>{loading ? "..." : countText(stats.products.length)}</h1>
+                    <small>{publishedProducts} published products</small>
                   </div>
-                  <div className="card-icon" style={{ background: "#16a34a" }}><FaBoxOpen /></div>
+                  <div className="card-icon"><FaBoxOpen /></div>
                 </div>
               </div>
-              <div className="card">
+              <div className="card" style={{ "--card-color": "#f97316" } as any}>
                 <div className="card-top">
                   <div>
                     <h3>Total Categories</h3>
                     <h1>{loading ? "..." : countText(stats.categories)}</h1>
+                    <small>Active product groups</small>
                   </div>
-                  <div className="card-icon" style={{ background: "#f97316" }}><FaFolder /></div>
+                  <div className="card-icon"><FaFolder /></div>
                 </div>
               </div>
-              <div className="card">
+              <div className="card" style={{ "--card-color": "#7c3aed" } as any}>
                 <div className="card-top">
                   <div>
                     <h3>Total Orders</h3>
                     <h1>{loading ? "..." : countText(stats.orders.length)}</h1>
+                    <small>{emergencyOrders} emergency orders</small>
                   </div>
-                  <div className="card-icon" style={{ background: "#7c3aed" }}><FaShoppingCart /></div>
+                  <div className="card-icon"><FaShoppingCart /></div>
                 </div>
               </div>
             </div>

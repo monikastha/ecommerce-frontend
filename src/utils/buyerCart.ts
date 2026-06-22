@@ -5,6 +5,8 @@ export type BuyerCartItem = {
   image?: string;
   category?: string;
   description?: string;
+  size?: string;
+  sizes?: string[];
   quantity: number;
   stock?: number;
   locationId?: number;
@@ -36,7 +38,9 @@ export const getBuyerCartCount = () =>
 
 export const addBuyerCartItem = (item: Omit<BuyerCartItem, "quantity">, quantity = 1) => {
   const cart = getBuyerCart();
-  const existing = cart.find((cartItem) => cartItem.id === item.id);
+  const existing = cart.find((cartItem) =>
+    cartItem.id === item.id && (cartItem.size || "") === (item.size || "")
+  );
   const nextQuantity = Math.max(1, quantity);
 
   if (existing) {
@@ -47,6 +51,8 @@ export const addBuyerCartItem = (item: Omit<BuyerCartItem, "quantity">, quantity
     existing.category = item.category || existing.category;
     existing.image = item.image || existing.image;
     existing.description = item.description || existing.description;
+    existing.size = item.size || existing.size;
+    existing.sizes = item.sizes || existing.sizes;
     existing.stock = item.stock || existing.stock;
     existing.price = item.price;
     existing.locationId = item.locationId || existing.locationId;

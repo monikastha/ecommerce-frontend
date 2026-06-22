@@ -17,7 +17,6 @@ const AssistantSidebar = () => {
   const [activeItem, setActiveItem] = useState("dashboard");
   const [userMenu, setUserMenu] = useState(false);
   const [productMenu, setProductMenu] = useState(false);
-  const [orderMenu, setOrderMenu] = useState(false);
 
   return (
     <>
@@ -28,14 +27,13 @@ const AssistantSidebar = () => {
           background: #5BBF9A;
           color: white;
           font-family: sans-serif;
-          position: fixed;           /* ← Fixed Position */
+          position: fixed;
           top: 0;
           left: 0;
-          overflow-y: auto;          /* Scroll if content is too long */
+          overflow-y: auto;
           z-index: 1000;
         }
 
-        /* LOGO */
         .logo-section {
           display: flex;
           justify-content: center;
@@ -74,7 +72,6 @@ const AssistantSidebar = () => {
           transform: translateX(4px);
         }
 
-
         .dropdown-title {
           display: flex;
           align-items: center;
@@ -105,14 +102,11 @@ const AssistantSidebar = () => {
       `}</style>
 
       <div className="sidebar">
-        {/* Logo */}
         <div className="logo-section">
           <img src={logo} alt="logo" />
         </div>
 
-        {/* Menu */}
         <ul className="menu">
-          {/* Dashboard */}
           <li
             className={activeItem === "dashboard" ? "active" : ""}
             onClick={() => {
@@ -124,7 +118,6 @@ const AssistantSidebar = () => {
             Dashboard
           </li>
 
-          {/* User Management */}
           <li onClick={() => setUserMenu(!userMenu)}>
             <div className="dropdown-title">
               <FontAwesomeIcon icon={faUser} />
@@ -141,7 +134,6 @@ const AssistantSidebar = () => {
             </ul>
           )}
 
-          {/* Product Management */}
           <li onClick={() => setProductMenu(!productMenu)}>
             <div className="dropdown-title">
               <FontAwesomeIcon icon={faBox} />
@@ -156,21 +148,17 @@ const AssistantSidebar = () => {
             </ul>
           )}
 
-          {/* Order Management */}
-          <li onClick={() => setOrderMenu(!orderMenu)}>
-            <div className="dropdown-title">
-              <FontAwesomeIcon icon={faCartShopping} />
-              <span>Order Management</span>
-            </div>
+          <li
+            className={activeItem === "order" ? "active" : ""}
+            onClick={() => {
+              setActiveItem("order");
+              navigate("/assistant/order");
+            }}
+          >
+            <FontAwesomeIcon icon={faCartShopping} />
+            Order Management
           </li>
 
-          {orderMenu && (
-            <ul className="submenu">
-              <li onClick={() => { setActiveItem("order"); navigate("/assistant/order"); }}>Order</li>
-            </ul>
-          )}
-
-          {/* Emergency Fast Delivery */}
           <li
             className={activeItem === "emergency" ? "active" : ""}
             onClick={() => {

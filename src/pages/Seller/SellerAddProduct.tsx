@@ -10,6 +10,7 @@ const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 type Category = {
   id: number;
   name: string;
+  requires_size?: boolean;
 };
 
 export default function SellerAddProduct() {
@@ -20,6 +21,7 @@ export default function SellerAddProduct() {
     code: "",
     price: "",
     quantity: "",
+    size: "",
     category: "",
     description: "",
   });
@@ -63,12 +65,16 @@ export default function SellerAddProduct() {
     }
   };
 
+  const selectedCategory = categories.find((cat) => String(cat.id) === formData.category);
+  const sizeRequired = Boolean(selectedCategory?.requires_size);
+
   const validate = () => {
     let temp: any = {};
     if (!formData.name.trim()) temp.name = "Product name is required";
     if (!formData.price) temp.price = "Price is required";
     if (!formData.quantity) temp.quantity = "Quantity is required";
     if (!formData.category) temp.category = "Please select a category";
+    if (sizeRequired && !formData.size.trim()) temp.size = "Size is required for this category";
     setErrors(temp);
     return Object.keys(temp).length === 0;
   };
@@ -86,6 +92,7 @@ export default function SellerAddProduct() {
       payload.append("code", formData.code);
       payload.append("price", formData.price);
       payload.append("quantity", formData.quantity);
+      payload.append("size", formData.size.trim());
       payload.append("category", formData.category);
       payload.append("description", formData.description);
       payload.append("status", "pending");
@@ -101,7 +108,7 @@ export default function SellerAddProduct() {
       navigate("/seller/manageproduct");
     } catch (error: any) {
       console.error("Failed to add product", error);
-      alert(error?.response?.data?.detail || "Failed to add product");
+      alert(error?.response?.data?.size?.[0] || error?.response?.data?.detail || "Failed to add product");
     } finally {
       setLoading(false);
     }
@@ -262,6 +269,17 @@ export default function SellerAddProduct() {
                     ))}
                   </select>
                   {errors.category && <p className="error">{errors.category}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label>Size {sizeRequired ? "*" : "(Optional)"}</label>
+                  <input
+                    name="size"
+                    placeholder="e.g. S, M, L, 42, 10"
+                    value={formData.size}
+                    onChange={handleChange}
+                  />
+                  {errors.size && <p className="error">{errors.size}</p>}
                 </div>
 
                 <div className="form-group">

@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BuyerFooter from "../../../components/BuyerFooter";
@@ -8,6 +10,10 @@ import {
   getBuyerCartCount,
 } from "../../../utils/buyerCart";
 import { isBuyerLoggedIn } from "../../../utils/buyerAuth";
+import {
+  getBuyerWishlistItems,
+  toggleBuyerWishlistItem,
+} from "../../../utils/buyerWishlist";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -18,6 +24,7 @@ type ApiProduct = {
   category_name?: string;
   code?: string;
   description?: string;
+  size?: string;
   price: string;
   quantity: number;
   image?: string;
@@ -187,10 +194,21 @@ const discountedPrice = (price: string | number, promotion?: ApiPromotion) => {
   return Math.max(0, basePrice - value);
 };
 
+const promotionDiscountText = (promotion: ApiPromotion) =>
+  promotion.d_type === "percentage"
+    ? `${priceNumber(promotion.d_value || 0)}% OFF`
+    : `Rs. ${priceNumber(promotion.d_value || 0).toLocaleString()} OFF`;
+
 const keySpecifications = (description?: string) =>
   (description || "")
     .split(/\r?\n|[;•]+/)
     .map((item) => item.replace(/^[-*]\s*/, "").trim())
+    .filter(Boolean);
+
+const productSizes = (size?: string) =>
+  (size || "")
+    .split(",")
+    .map((item) => item.trim())
     .filter(Boolean);
 
 const ProductSkeleton = () => (
@@ -215,9 +233,13 @@ export default function ViewAllProducts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cartQty, setCartQty] = useState(getBuyerCartCount());
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(
+    () => new Set(getBuyerWishlistItems().map((item) => String(item.id)))
+  );
   const [addedId, setAddedId] = useState<number | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>(() => getSearchHistory());
   const [productClicks, setProductClicks] = useState<Record<number, number>>(() => getClickCounts());
+  const [visibleCount, setVisibleCount] = useState<number>(12);
 
   const selectedCategory = params.get("category") || "All";
   const searchQuery = params.get("search") || "";
@@ -226,6 +248,18 @@ export default function ViewAllProducts() {
     const refreshCart = () => setCartQty(getBuyerCartCount());
     window.addEventListener("buyer-cart-change", refreshCart);
     return () => window.removeEventListener("buyer-cart-change", refreshCart);
+  }, []);
+
+  useEffect(() => {
+    const refreshWishlist = () => {
+      setWishlistIds(new Set(getBuyerWishlistItems().map((item) => String(item.id))));
+    };
+    window.addEventListener("buyer-wishlist-change", refreshWishlist);
+    window.addEventListener("storage", refreshWishlist);
+    return () => {
+      window.removeEventListener("buyer-wishlist-change", refreshWishlist);
+      window.removeEventListener("storage", refreshWishlist);
+    };
   }, []);
 
   useEffect(() => {
@@ -338,6 +372,31 @@ export default function ViewAllProducts() {
       .slice(0, 6);
   }, [products, productClicks, searchQuery, searchHistory, stockByProduct]);
 
+  const flashSaleProducts = useMemo(
+    () =>
+      products
+        .filter((product) => product.is_published && product.status === "approved" && stockByProduct.has(product.id))
+        .map((product) => {
+          const promotion = promotionForProduct(product, promotions);
+          return promotion
+            ? {
+                product,
+                promotion,
+                finalPrice: discountedPrice(product.price, promotion),
+              }
+            : null;
+        })
+        .filter((item): item is { product: ApiProduct; promotion: ApiPromotion; finalPrice: number } => !!item)
+        .sort((a, b) => a.finalPrice - b.finalPrice)
+        .slice(0, 8),
+    [products, promotions, stockByProduct]
+  );
+
+  const flashSaleTitle =
+    flashSaleProducts.length > 0
+      ? Array.from(new Set(flashSaleProducts.map((item) => item.promotion.name))).slice(0, 2).join(" + ")
+      : "Flash Sale";
+
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const priceQuery = parsePriceQuery(query);
@@ -363,7 +422,15 @@ export default function ViewAllProducts() {
     });
   }, [products, searchQuery, selectedCategory, stockByProduct]);
 
-  const visibleProducts = filteredProducts.slice(0, 12);
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [searchQuery, selectedCategory]);
+
+  const loadMore = () => {
+    setVisibleCount((prev) => Math.min(filteredProducts.length, prev + 12));
+  };
 
   const updateSearchParams = (next: { category?: string; search?: string }) => {
     const newParams = new URLSearchParams(params);
@@ -406,11 +473,33 @@ export default function ViewAllProducts() {
       image: imageUrl(product.image),
       category,
       description: product.description,
+      size: product.size,
+      sizes: productSizes(product.size),
       stock: productStock.quantity,
     });
     setCartQty(getBuyerCartCount());
     setAddedId(product.id);
     setTimeout(() => setAddedId(null), 1400);
+  };
+
+  const toggleWishlist = (product: ApiProduct) => {
+    trackProductClick(product.id);
+    if (!requireBuyerLogin()) return;
+    const promotion = promotionForProduct(product, promotions);
+    const category = productCategoryName(product);
+    const result = toggleBuyerWishlistItem({
+      id: product.id,
+      name: product.name,
+      price: discountedPrice(product.price, promotion),
+      originalPrice: product.price,
+      image: imageUrl(product.image),
+      category,
+      description: product.description,
+      size: product.size,
+      sizes: productSizes(product.size),
+      stock: stockByProduct.get(product.id)?.quantity,
+    });
+    setWishlistIds(new Set(result.items.map((item) => String(item.id))));
   };
 
   const buyNow = (product: ApiProduct) => {
@@ -433,6 +522,8 @@ export default function ViewAllProducts() {
           image: imageUrl(product.image),
           category,
           description: product.description,
+          size: product.size,
+          sizes: productSizes(product.size),
           stock: productStock.quantity,
         }],
         buyNow: true,
@@ -452,7 +543,6 @@ export default function ViewAllProducts() {
       />
 
       <main>
-        {/* FULL WIDTH HERO - Optimized height with rounded borders */}
         <section
           className="relative w-full flex items-center overflow-hidden rounded-3xl mx-4 sm:mx-6 mt-6 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99]"
           style={{
@@ -462,7 +552,6 @@ export default function ViewAllProducts() {
           onClick={() => navigate("/allproducts")}
         >
           <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center py-8 lg:py-10">
-            {/* Left Content */}
             <div className="space-y-4">
               <span className="inline-block bg-white/20 text-white text-xs font-bold tracking-widest px-4 py-1.5 rounded-full cursor-pointer hover:bg-white/30 transition-colors" onClick={(e) => { e.stopPropagation(); updateSearchParams({ category: "All", search: "" }); }}>
                 BUYER STORE
@@ -505,7 +594,7 @@ export default function ViewAllProducts() {
           </div>
         </section>
 
-        {/* ── FEATURE STRIP ── */}
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-5 relative z-10 mb-10">
           <div className="bg-white rounded-2xl shadow-md border border-slate-200 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">
             {FEATURES.map((f, i) => (
@@ -548,17 +637,105 @@ export default function ViewAllProducts() {
           </div>
 
           {searchHistory.length > 0 && (
-            <div className="mb-6 flex flex-wrap gap-2">
-              {searchHistory.map((term) => (
+            <>
+              <div className="mb-6 flex flex-wrap gap-2">
+                {searchHistory.map((term) => (
+                  <button
+                    key={term}
+                    onClick={() => updateSearchParams({ search: term })}
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:border-teal-300 hover:text-teal-700 transition"
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+              
+            </>
+          )}
+
+          {flashSaleProducts.length > 0 && (
+            <section className="mb-8 rounded-3xl border border-rose-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
+                <div>
+                  <p className="text-sm font-black uppercase tracking-[0.25em] text-rose-600">Flash Sale</p>
+                  <h3 className="mt-2 text-2xl font-black text-slate-900">{flashSaleTitle}</h3>
+                </div>
                 <button
-                  key={term}
-                  onClick={() => updateSearchParams({ search: term })}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:border-teal-300 hover:text-teal-700 transition"
+                  onClick={() => updateSearchParams({ category: "All", search: "" })}
+                  className="text-sm font-black text-rose-600 hover:text-rose-700"
                 >
-                  {term}
+                  View sale products
                 </button>
-              ))}
-            </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {flashSaleProducts.map(({ product, promotion, finalPrice }) => {
+                  const isSaved = wishlistIds.has(String(product.id));
+                  return (
+                    <article
+                      key={`flash-${product.id}-${promotion.id}`}
+                      className="rounded-2xl border border-rose-100 bg-rose-50/30 p-3 transition hover:-translate-y-1 hover:shadow-lg"
+                    >
+                      <button
+                        onClick={() => {
+                          trackProductClick(product.id);
+                          navigate(`/product/${product.id}`, { state: product });
+                        }}
+                        className="block h-32 w-full overflow-hidden rounded-2xl bg-white"
+                      >
+                        {product.image ? (
+                          <img src={imageUrl(product.image)} alt={product.name} className="h-full w-full object-contain" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-sm font-bold text-slate-400">
+                            No Image
+                          </div>
+                        )}
+                      </button>
+
+                      <div className="mt-3 flex items-start justify-between gap-2">
+                        <span className="rounded-full bg-rose-600 px-3 py-1 text-[11px] font-black uppercase text-white">
+                          {promotion.name}
+                        </span>
+                        <button
+                          onClick={() => toggleWishlist(product)}
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-white text-lg transition ${
+                            isSaved
+                              ? "border-rose-200 text-rose-600"
+                              : "border-slate-200 text-slate-400 hover:border-rose-200 hover:text-rose-500"
+                          }`}
+                          aria-label={isSaved ? "Remove from wishlist" : "Save to wishlist"}
+                        >
+                          {isSaved ? "♥" : "♡"}
+                        </button>
+                      </div>
+
+                      <h4 className="mt-3 min-h-[40px] text-sm font-black text-slate-900 line-clamp-2">
+                        {product.name}
+                      </h4>
+                      <p className="mt-1 text-xs font-bold text-rose-600">{promotionDiscountText(promotion)}</p>
+                      <div className="mt-3 flex items-baseline gap-2">
+                        <span className="text-lg font-black text-rose-600">{currency(finalPrice)}</span>
+                        <span className="text-xs font-bold text-slate-400 line-through">{currency(product.price)}</span>
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => buyNow(product)}
+                          className="rounded-lg bg-green-600 px-2 py-2 text-xs font-black text-white hover:bg-green-700"
+                        >
+                          Buy Now
+                        </button>
+                        <button
+                          onClick={() => addToCart(product)}
+                          className="rounded-lg bg-violet-600 px-2 py-2 text-xs font-black text-white hover:bg-violet-700"
+                        >
+                          Add Cart
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           )}
 
           {recommendationProducts.length > 0 && (
@@ -636,7 +813,6 @@ export default function ViewAllProducts() {
                 const isAvailable = Boolean(productStock);
                 return (
                 <article key={product.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col h-full">
-                  {/* Image Container - Fixed height with proper fit */}
                   <button 
                     onClick={() => {
                       trackProductClick(product.id);
@@ -655,9 +831,21 @@ export default function ViewAllProducts() {
                     )}
                   </button>
 
-                  {/* Card Content - Flex grow to push buttons to bottom */}
                   <div className="p-5 flex flex-col flex-1">
-                    <p className="text-xs font-bold text-violet-600 uppercase">{productCategoryName(product)}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs font-bold text-violet-600 uppercase">{productCategoryName(product)}</p>
+                      <button
+                        onClick={() => toggleWishlist(product)}
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-lg transition ${
+                          wishlistIds.has(String(product.id))
+                            ? "border-rose-200 bg-rose-50 text-rose-600"
+                            : "border-slate-200 bg-white text-slate-400 hover:border-rose-200 hover:text-rose-500"
+                        }`}
+                        aria-label={wishlistIds.has(String(product.id)) ? "Remove from wishlist" : "Save to wishlist"}
+                      >
+                        {wishlistIds.has(String(product.id)) ? "♥" : "♡"}
+                      </button>
+                    </div>
                     <h3 className="mt-2 font-bold text-lg line-clamp-2">{product.name}</h3>
                     {keySpecifications(product.description).length > 0 ? (
                       <ul className="mt-3 space-y-1 text-sm text-slate-500">
@@ -676,6 +864,18 @@ export default function ViewAllProducts() {
                         {promotion.name}
                       </span>
                     )}
+                    {productSizes(product.size).length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {productSizes(product.size).slice(0, 4).map((sizeOption) => (
+                          <span
+                            key={sizeOption}
+                            className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-black text-violet-700"
+                          >
+                            {sizeOption}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     
                     <div className="flex justify-between items-center mt-4">
                       <span className="font-bold text-xl text-rose-600">
@@ -691,10 +891,8 @@ export default function ViewAllProducts() {
                       </span>
                     </div>
 
-                    {/* Spacer to push buttons to bottom */}
                     <div className="flex-1" />
 
-                    {/* Button Container - Even height and alignment */}
                     <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-100">
                       <button
                         onClick={() => buyNow(product)}
@@ -714,6 +912,16 @@ export default function ViewAllProducts() {
               )})}
             </div>
           )}
+            {filteredProducts.length > visibleCount && (
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 flex justify-center">
+                <button
+                  onClick={loadMore}
+                  className="px-6 py-3 bg-yellow-500 border border-slate-1000 rounded-xl font-bold hover:bg-yellow-600 transition"
+                >
+                  Load More
+                </button>
+              </div>
+            )}
         </section>
       </main>
 

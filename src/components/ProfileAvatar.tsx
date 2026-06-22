@@ -8,8 +8,11 @@ export const PROFILE_IMAGE_UPDATED_EVENT = "profile-image-change";
 
 export const imageUrl = (path?: string | null) => {
   if (!path) return fallbackLogo;
-  if (path.startsWith("http") || path.startsWith("data:") || path.startsWith("blob:")) return path;
-  return path.startsWith("/") ? `${API_ORIGIN}${path}` : `${API_ORIGIN}/${path}`;
+  if (path.startsWith("data:") || path.startsWith("blob:")) return path;
+
+  const normalizedPath = path.startsWith("http") ? path : path.startsWith("/") ? `${API_ORIGIN}${path}` : `${API_ORIGIN}/${path}`;
+  const separator = normalizedPath.includes("?") ? "&" : "?";
+  return `${normalizedPath}${separator}t=${Date.now()}`;
 };
 
 export const saveProfileToStorage = (profile: {
@@ -84,9 +87,14 @@ type ProfileAvatarProps = {
 
 export default function ProfileAvatar({ className, alt = "profile", onClick }: ProfileAvatarProps) {
   const [src, setSrc] = useState(() => imageUrl(localStorage.getItem("profile_image")));
+  const [renderKey, setRenderKey] = useState(0);
 
   useEffect(() => {
-    const refresh = () => setSrc(imageUrl(localStorage.getItem("profile_image")));
+    const refresh = () => {
+      const storedImage = localStorage.getItem("profile_image");
+      setSrc(imageUrl(storedImage));
+      setRenderKey((prev) => prev + 1);
+    };
 
     window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
     window.addEventListener(PROFILE_IMAGE_UPDATED_EVENT, refresh);
@@ -99,5 +107,5 @@ export default function ProfileAvatar({ className, alt = "profile", onClick }: P
     };
   }, []);
 
-  return <img className={className} src={src} alt={alt} onClick={onClick} />;
+  return <img key={renderKey} className={className} src={src} alt={alt} onClick={onClick} />;
 }

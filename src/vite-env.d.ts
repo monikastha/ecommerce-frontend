@@ -1,5 +1,7 @@
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
+  readonly VITE_ENABLE_ESEWA_SIMULATOR?: string;
+  readonly VITE_ENABLE_KHALTI_SIMULATOR?: string;
 }
 
 interface ImportMeta {

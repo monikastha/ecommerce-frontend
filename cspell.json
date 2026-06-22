@@ -1,0 +1,42 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "aismartcomparison",
+    "allcategories",
+    "bbimg",
+    "buyerhome",
+    "confirmcode",
+    "cSpell",
+    "Dictionary",
+    "emailverified",
+    "esewa",
+    "favourites",
+    "homegoods",
+    "homemove",
+    "homeremovebg",
+    "iphun",
+    "khalt",
+    "Khalti",
+    "logoutremovebg",
+    "logoutrmove",
+    "manageproduct",
+    "myorders",
+    "ordertracking",
+    "paymentfailed",
+    "paymentsuccess",
+    "pidx",
+    "productcategory",
+    "Refresh",
+    "removebg",
+    "Sajilo",
+    "signupway",
+    "studymaterials",
+    "warehousestaff"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
+}

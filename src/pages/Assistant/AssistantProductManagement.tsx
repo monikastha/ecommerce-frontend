@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
-import { FaBoxOpen, FaCheck, FaTimes, FaEye, FaEyeSlash, FaUpload, FaFlag, FaTrash } from "react-icons/fa";
+import { FaBoxOpen, FaCheck, FaTimes, FaEye, FaEyeSlash, FaFlag, FaTrash } from "react-icons/fa";
 import ProductViewModal from "../../components/ProductViewModal";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -14,24 +14,34 @@ type Product = {
   name: string;
   code?: string;
   category_name?: string;
-  price: string;
+  price: string | number;
   quantity: number;
   description?: string;
   image?: string;
   status: "pending" | "approved" | "rejected" | "flagged";
   is_published: boolean;
+  rejection_reason?: string | null;
 };
 
 const AssistantProductManagement: React.FC = () => {
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const itemsPerPage = 5;
+
+  const productErrorMessage = (error: unknown, fallback: string) => {
+    if (axios.isAxiosError<{ error?: string }>(error)) {
+      return error.response?.data?.error || fallback;
+    }
+    return fallback;
+  };
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_ORIGIN}/api/products/`);
+      const res = await axios.get<Product[]>(`${API_ORIGIN}/api/products/`);
       setProducts(res.data);
     } catch (error) {
       console.error("Failed to load products", error);
@@ -44,27 +54,16 @@ const AssistantProductManagement: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const filtered = useMemo(() => 
-    products.filter((product) => {
-      const query = search.toLowerCase();
-      return (
-        product.name.toLowerCase().includes(query) ||
-        (product.seller_name || "").toLowerCase().includes(query) ||
-        (product.category_name || "").toLowerCase().includes(query)
-      );
-    }), [products, search]
-  );
-
   const updateStatus = async (id: number, action: "approve" | "reject") => {
-    if (!window.confirm(`Are you sure you want to ${action} this product?`)) return;
+    if (!window.confirm(`${action === "approve" ? "Approve" : "Reject"} this product?`)) return;
     try {
-      const body = action === "reject" 
+      const body = action === "reject"
         ? { rejection_reason: window.prompt("Reason for rejection (optional)") || "" } 
-        : {};
+        : undefined;
       await axios.post(`${API_ORIGIN}/api/products/${id}/${action}/`, body);
-      fetchProducts();
-    } catch (error: any) {
-      alert(error?.response?.data?.error || `Failed to ${action} product`);
+      await fetchProducts();
+    } catch (error) {
+      alert(productErrorMessage(error, `Failed to ${action} product`));
     }
   };
 
@@ -72,9 +71,9 @@ const AssistantProductManagement: React.FC = () => {
     if (!window.confirm(`${publish ? "Publish" : "Unpublish"} this product?`)) return;
     try {
       await axios.post(`${API_ORIGIN}/api/products/${id}/${publish ? "publish" : "unpublish"}/`);
-      fetchProducts();
-    } catch (error: any) {
-      alert(error?.response?.data?.error || `Failed to update product`);
+      await fetchProducts();
+    } catch (error) {
+      alert(productErrorMessage(error, `Failed to ${publish ? "publish" : "unpublish"} product`));
     }
   };
 
@@ -83,21 +82,37 @@ const AssistantProductManagement: React.FC = () => {
     try {
       const reason = window.prompt("Reason for flagging (optional)") || "";
       await axios.post(`${API_ORIGIN}/api/products/${id}/flag/`, { reason });
-      fetchProducts();
-    } catch (error: any) {
-      alert(error?.response?.data?.error || "Failed to flag product");
+      await fetchProducts();
+    } catch (error) {
+      alert(productErrorMessage(error, "Failed to flag product"));
     }
   };
 
   const removeProduct = async (id: number) => {
-    if (!window.confirm("Remove this inappropriate product permanently?")) return;
+    if (!window.confirm("Remove this product permanently?")) return;
     try {
       await axios.delete(`${API_ORIGIN}/api/products/${id}/remove/`);
-      fetchProducts();
-    } catch (error: any) {
-      alert(error?.response?.data?.error || "Failed to remove product");
+      await fetchProducts();
+    } catch (error) {
+      alert(productErrorMessage(error, "Failed to remove product"));
     }
   };
+
+  const filteredProducts = useMemo(() => {
+    const query = search.toLowerCase();
+    return products.filter((product) =>
+      product.name.toLowerCase().includes(query) ||
+      (product.seller_name || "").toLowerCase().includes(query) ||
+      (product.category_name || "").toLowerCase().includes(query)
+    );
+  }, [products, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedProducts = filteredProducts.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage
+  );
 
   const imageUrl = (path?: string | null) => !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
 
@@ -106,252 +121,282 @@ const AssistantProductManagement: React.FC = () => {
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-        .dashboard-container { background: #f8fafc; min-height: 100vh; }
-        .main-content { margin-left: 260px; width: calc(100% - 260px); }
+        .wrapper { min-height: 100vh; background: #f8fafc; }
+        .main {
+          margin-left: 250px;
+          width: calc(100% - 250px);
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
         .container { padding: 30px; }
 
-        /* Greeting Header */
-        .greeting {
-          font-size: 22px;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 4px;
-        }
-        .welcome { color: #64748b; font-size: 15px; }
-
-        /* Product Management Card */
-        .pm-card {
-          margin-top: 30px;
-          margin-left: 30px;
-          margin-right: 30px;
-          background: white;
-          border-radius: 16px;
-          padding: 20px 24px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        .headerBox {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 24px;
+          background: #ffffff;
+          padding: 22px 24px;
+          border-radius: 16px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+          margin-bottom: 25px;
+          flex-wrap: wrap;
+          gap: 15px;
         }
 
-        .pm-left {
+        .title-section {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 14px;
         }
-        .pm-icon {
-          width: 48px;
-          height: 48px;
-          background: #7c3aed;
-          color: white;
-          border-radius: 12px;
+
+        .header-icon {
+          width: 52px;
+          height: 52px;
+          background: linear-gradient(135deg, #2563eb, #3b82f6);
+          color: #fff;
           display: flex;
           align-items: center;
           justify-content: center;
+          border-radius: 14px;
           font-size: 22px;
         }
 
+        .title { font-size: 24px; font-weight: 700; color: #0f172a; }
+        .subtitle { font-size: 13px; color: #64748b; margin-top: 3px; }
+
         .search {
-          width: 340px;
-          padding: 12px 16px;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
+          width: 320px;
+          padding: 10px 14px;
+          border-radius: 10px;
+          border: 1px solid #d1d5db;
           outline: none;
-          font-size: 15px;
-        }
-        .search:focus { border-color: #7c3aed; }
-
-        .tableBox {
-          background: white;
-          border-radius: 16px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-          overflow: hidden;
-        }
-
-        table { width: 100%; border-collapse: collapse; }
-        th { 
-          background: #f8fafc; 
-          padding: 18px 14px; 
-          text-align: left; 
-          font-weight: 600; 
-          color: #475569;
           font-size: 14px;
         }
-        td { 
-          padding: 18px 14px; 
-          border-top: 1px solid #f1f5f9; 
+        .search:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+        }
+
+        th, td {
+          padding: 14px 12px;
+          color: #475569;
+          border-bottom: 1px solid #e5e7eb;
+          text-align: left;
+          font-size: 14px;
           vertical-align: middle;
+        }
+
+        th {
+          background: #f8fafc;
+          font-weight: 600;
+          color: #334155;
         }
 
         tr:hover { background: #f9fafb; }
 
         .status {
-          padding: 6px 16px;
+          padding: 6px 14px;
           border-radius: 9999px;
-          font-size: 13px;
+          font-size: 12.5px;
           font-weight: 600;
+          text-transform: capitalize;
         }
+        .pending { background: #fef3c7; color: #d97706; }
         .approved { background: #d1fae5; color: #10b981; }
-        .pending { background: #fef3c7; color: #b45309; }
-        .rejected { background: #fee2e2; color: #991b1b; }
-        .flagged { background: #ffedd5; color: #9a3412; }
+        .rejected { background: #fee2e2; color: #ef4444; }
+        .flagged { background: #ffedd5; color: #f97316; }
 
-        /* Medium Action Buttons */
-        .action-btn {
-          padding: 10px 20px;
-          border-radius: 10px;
-          font-weight: 600;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.2s;
+        .actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          max-width: 240px;
+        }
+
+        .actionBtn {
           display: inline-flex;
           align-items: center;
-          gap: 7px;
-          margin: 4px 6px 4px 0;
+          justify-content: center;
+          width: 34px;
+          height: 34px;
+          padding: 0;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
 
-        .approve-btn { background: #10b981; color: white; }
-        .approve-btn:hover { background: #059669; }
-
-        .reject-btn { background: #ef4444; color: white; }
-        .reject-btn:hover { background: #dc2626; }
-
-        .flag-btn { background: #f97316; color: white; }
-        .flag-btn:hover { background: #ea580c; }
-
-        .remove-btn { background: #7f1d1d; color: white; }
-        .remove-btn:hover { background: #651616; }
-
-        .unpublish-btn { 
-          background: #334155; 
-          color: white; 
+        .actionBtn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        .unpublish-btn:hover { background: #1e2937; }
 
-        .publish-btn {
-          background: #2563eb;
+        .approve { background: #16a34a; color: white; }
+        .reject { background: #dc2626; color: white; }
+        .flag { background: #f97316; color: white; }
+        .remove { background: #dc2626; color: white; }
+        .remove:hover { background: #b91c1c; }
+        .publish { background: #2563eb; color: white; }
+        .unpublish { background: #64748b; color: white; }
+        .view { background: #0f766e; color: white; }
+
+        .empty {
+          text-align: center;
+          padding: 80px 20px;
+          color: #94a3b8;
+          font-size: 15px;
+        }
+
+        .pagination {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 20px;
+        }
+        .pagination button {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 8px;
+          background: #1598ad;
           color: white;
+          font-weight: 600;
+          cursor: pointer;
         }
-        .publish-btn:hover { background: #1d4ed8; }
-
-        .view-btn {
-          background: #0f766e;
-          color: white;
+        .pagination button:disabled {
+          background: #cbd5e1;
+          cursor: not-allowed;
         }
-        .view-btn:hover { background: #0f5f59; }
 
-        .productImg { 
-          width: 50px; 
-          height: 50px; 
-          object-fit: cover; 
-          border-radius: 10px; 
+        @media(max-width: 1100px) {
+          .container { padding: 20px; }
+          table { min-width: 1050px; }
+          .tableWrap { overflow-x: auto; }
+          .search { width: 100%; }
+        }
+
+        @media(max-width: 760px) {
+          .main {
+            margin-left: 0;
+            width: 100%;
+          }
         }
       `}</style>
 
-      <div className="dashboard-container">
+      <div className="wrapper">
         <AssistantSidebar />
 
-        <div className="main-content">
+        <div className="main">
           <AssistantNavbar />
+          <div className="container">
 
-
-            {/* Product Management Header */}
-            <div className="pm-card">
-              <div className="pm-left">
-                <div className="pm-icon">
-                  <FaBoxOpen />
-                </div>
+            <div className="headerBox">
+              <div className="title-section">
+                <div className="header-icon"><FaBoxOpen /></div>
                 <div>
-                  <h2 style={{ fontSize: "22px", fontWeight: 700 }}>Product Management</h2>
-                  <p style={{ color: "#64748b", marginTop: "2px" }}>Review and manage seller products</p>
+                  <h2 className="title">Product Management</h2>
+                  <p className="subtitle">Approve, review, and manage seller products</p>
                 </div>
               </div>
 
               <input
                 type="text"
                 className="search"
-                placeholder="Search products, seller or category..."
+                placeholder="Search products, sellers, or categories..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
             </div>
 
-            {/* Table */}
-            <div className="tableBox">
+            <div className="tableWrap">
               <table>
                 <thead>
                   <tr>
                     <th>ID</th>
                     <th>Seller</th>
-                    <th>Product Name</th>
+                    <th>Product</th>
                     <th>Category</th>
                     <th>Price</th>
                     <th>Stock</th>
                     <th>Status</th>
                     <th>Published</th>
-                    <th>Actions</th>
+                    <th style={{ minWidth: "280px" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={9} style={{ textAlign: "center", padding: "80px" }}>Loading products...</td></tr>
-                  ) : filtered.length === 0 ? (
-                    <tr><td colSpan={9} style={{ textAlign: "center", padding: "80px" }}>No products found</td></tr>
+                    <tr><td colSpan={9} className="empty">Loading products...</td></tr>
+                  ) : filteredProducts.length === 0 ? (
+                    <tr><td colSpan={9} className="empty">No products found</td></tr>
                   ) : (
-                    filtered.map((product) => (
+                    paginatedProducts.map((product) => (
                       <tr key={product.id}>
                         <td><strong>#{product.id}</strong></td>
                         <td>
-                          <strong>{product.seller_name}</strong><br/>
-                          <small style={{ color: "#64748b" }}>{product.seller_email}</small>
+                          <strong>{product.seller_name || "-"}</strong>
+                          {product.seller_email && <div style={{ color: "#64748b", fontSize: "12px" }}>{product.seller_email}</div>}
                         </td>
-                        <td><strong>{product.name}</strong></td>
-                        <td>{product.category_name}</td>
+                        <td>
+                          <strong>{product.name}</strong>
+                          {product.code && <div style={{ color: "#64748b", fontSize: "12px" }}>Code: {product.code}</div>}
+                        </td>
+                        <td>{product.category_name || "-"}</td>
                         <td>Rs. {product.price}</td>
                         <td>{product.quantity}</td>
                         <td>
-                          <span className={`status ${product.status}`}>{product.status.toUpperCase()}</span>
+                          <span className={`status ${product.status}`}>{product.status}</span>
                         </td>
-                        <td>{product.is_published ? "Yes" : "No"}</td>
+                        <td>{product.is_published ? "✅ Published" : "❌ Unpublished"}</td>
                         <td>
-                          <button className="action-btn view-btn" onClick={() => setSelectedProduct(product)}>
-                            <FaEye /> View
-                          </button>
-                          {product.status !== "approved" && (
-                            <>
-                              <button className="action-btn approve-btn" onClick={() => updateStatus(product.id, "approve")}>
-                                <FaCheck /> Approve
-                              </button>
-                              <button className="action-btn reject-btn" onClick={() => updateStatus(product.id, "reject")}>
-                                <FaTimes /> Reject
-                              </button>
-                            </>
-                          )}
-                          {product.status !== "flagged" && (
-                            <button className="action-btn flag-btn" onClick={() => flagProduct(product.id)}>
-                              <FaFlag /> Flag
+                          <div className="actions">
+                            <button className="actionBtn view" onClick={() => setSelectedProduct(product)} title="View product" aria-label="View product">
+                              <FaEye />
                             </button>
-                          )}
-                          <button className="action-btn remove-btn" onClick={() => removeProduct(product.id)}>
-                            <FaTrash /> Remove
-                          </button>
-                          {product.status === "approved" && (
-                            product.is_published ? (
-                              <button 
-                                className="action-btn unpublish-btn"
-                                onClick={() => updatePublication(product.id, false)}
-                              >
-                                <FaEyeSlash /> Unpublish
+
+                            {product.status !== "approved" && (
+                              <>
+                                <button className="actionBtn approve" onClick={() => updateStatus(product.id, "approve")} title="Approve product" aria-label="Approve product">
+                                  <FaCheck />
+                                </button>
+                                <button className="actionBtn reject" onClick={() => updateStatus(product.id, "reject")} title="Reject product" aria-label="Reject product">
+                                  <FaTimes />
+                                </button>
+                              </>
+                            )}
+
+                            {product.status !== "flagged" && (
+                              <button className="actionBtn flag" onClick={() => flagProduct(product.id)} title="Flag product" aria-label="Flag product">
+                                <FaFlag />
                               </button>
-                            ) : (
-                              <button 
-                                className="action-btn publish-btn"
-                                onClick={() => updatePublication(product.id, true)}
-                              >
-                                <FaUpload /> Publish
-                              </button>
-                            )
-                          )}
+                            )}
+
+                            <button className="actionBtn remove" onClick={() => removeProduct(product.id)} title="Remove product" aria-label="Remove product">
+                              <FaTrash />
+                            </button>
+
+                            {product.status === "approved" && (
+                              product.is_published ? (
+                                <button className="actionBtn unpublish" onClick={() => updatePublication(product.id, false)} title="Unpublish product" aria-label="Unpublish product">
+                                  <FaEyeSlash />
+                                </button>
+                              ) : (
+                                <button className="actionBtn publish" onClick={() => updatePublication(product.id, true)} title="Publish product" aria-label="Publish product">
+                                  <FaEye />
+                                </button>
+                              )
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -359,6 +404,23 @@ const AssistantProductManagement: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {filteredProducts.length > 0 && (
+              <div className="pagination">
+                <span className="pagination-info">
+                  Showing page {safeCurrentPage} of {totalPages}
+                </span>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button onClick={() => setCurrentPage((page) => page - 1)} disabled={safeCurrentPage === 1}>
+                    Previous
+                  </button>
+                  <button onClick={() => setCurrentPage((page) => page + 1)} disabled={safeCurrentPage === totalPages}>
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

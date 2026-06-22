@@ -17,8 +17,12 @@ import ViewAllProducts from "./pages/Buyer/home/ViewAllProduct";
 import ViewAllCategories from "./pages/Buyer/home/ViewAllCategories";
 import Checkout from "./pages/Buyer/home/Checkout";
 import Payment from "./pages/Buyer/home/Payment";
+import PaymentSuccess from "./pages/Buyer/home/PaymentSuccess";
+import PaymentFailed from "./pages/Buyer/home/PaymentFailed";
 import AiSmartComparison from "./pages/Buyer/home/AiSmartComparison";
 import Cart from "./pages/Buyer/home/Cart";
+import Wishlist from "./pages/Buyer/home/Wishlist";
+import MyOrders from "./pages/Buyer/home/MyOrders";
 import OrderTracking from "./pages/Buyer/home/OrderTracking";
 import BuyerAccount from "./pages/Buyer/home/BuyerAccount";
 // ====================== DELIVERY MAN PAGES ======================
@@ -53,6 +57,7 @@ import AdminAddCategory from "./pages/Admin/AdminAddCategory";
 import AdminUpdateCategory from "./pages/Admin/AdminUpdateCategory";
 import AdminProduct from "./pages/Admin/AdminProduct";
 import AdminOrder from "./pages/Admin/AdminOrder";
+import AssignDelivery from "./pages/Admin/AssignDelivery";
 import AdminPromotion from "./pages/Admin/AdminPromotion";
 import AdminAddPromotion from "./pages/Admin/AdminAddPromotion";
 import AdminUpdatePromotion from "./pages/Admin/AdminUpdatePromotion";
@@ -83,7 +88,6 @@ import SellerEditProduct from "./pages/Seller/SellerEditProduct";
 import SellerAddProduct from "./pages/Seller/SellerAddProduct";
 import SellerPublishProduct from "./pages/Seller/SellerPublishProduct";
 import SellerUnpublishProduct from "./pages/Seller/SellerUnpublishProduct";
-import SellerOrders from "./pages/Seller/SellerOrders";
 import SellerManageOrders from "./pages/Seller/SellerManageOrders";
 import SellerReviews from "./pages/Seller/SellerReviews";
 import SellerProfile from "./pages/Seller/SellerProfile";
@@ -106,6 +110,10 @@ const App = () => {
         <Route path="/compare" element={<AiSmartComparison />} />
         <Route path="/aismartcomparison" element={<AiSmartComparison />} />
         <Route path="/allcategories" element={<ViewAllCategories />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failed" element={<PaymentFailed />} />
+        <Route path="/paymentsuccess" element={<PaymentSuccess />} />
+        <Route path="/paymentfailed" element={<PaymentFailed />} />
         <Route path="/fashion" element={<Navigate to="/allproducts" replace />} />
         <Route path="/electronics" element={<Navigate to="/allproducts" replace />} />
         <Route path="/homegoods" element={<Navigate to="/allproducts" replace />} />
@@ -124,6 +132,8 @@ const App = () => {
         <Route element={<ProtectedRoute allowedRoles={["buyer"]} />}>
   
           <Route path="/cart" element={<Cart />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/myorders" element={<MyOrders />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/ordertracking" element={<OrderTracking />} />
@@ -152,6 +162,8 @@ const App = () => {
 
           <Route path="/admin/product" element={<AdminProduct />} />
           <Route path="/admin/order" element={<AdminOrder />} />
+          <Route path="/admin/assign-delivery" element={<AssignDelivery />} />
+          <Route path="/admin/assign-delivery/:orderId" element={<AssignDelivery />} />
 
           <Route path="/admin/promotion" element={<AdminPromotion />} />
           <Route path="/admin/promotion/add" element={<AdminAddPromotion />} />
@@ -195,7 +207,7 @@ const App = () => {
           <Route path="/seller/product/edit/:id" element={<SellerEditProduct />} />
           <Route path="/seller/product/publish" element={<SellerPublishProduct />} />
           <Route path="/seller/product/unpublish" element={<SellerUnpublishProduct />} />
-          <Route path="/seller/orders" element={<SellerOrders />} />
+          <Route path="/seller/orders" element={<SellerManageOrders />} />
           <Route path="/seller/orders/manage" element={<SellerManageOrders />} />
           <Route path="/seller/reviews" element={<SellerReviews />} />
           <Route path="/seller/profile" element={<SellerProfile />} />

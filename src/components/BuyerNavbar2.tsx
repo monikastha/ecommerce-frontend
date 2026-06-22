@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import logoImg from "../assets/logo.png";
@@ -8,6 +10,18 @@ import signupIcon from "../assets/signupRemove.png";
 import account from "../assets/account logo.jpg";
 import logout from "../assets/logoutremovebg.png";
 import ProfileAvatar from "./ProfileAvatar";
+import { getBuyerWishlistCount } from "../utils/buyerWishlist";
+
+const normalizeApiOrigin = (value: string) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "http://127.0.0.1:8000";
+  const normalized = raw.replace(/\/+$/, "");
+  return normalized.startsWith("http://") || normalized.startsWith("https://")
+    ? normalized
+    : `http://${normalized}`;
+};
+
+const API_ORIGIN = normalizeApiOrigin(import.meta.env.VITE_API_URL || "http://127.0.0.1:8000");
 
 const GUEST_NAV_ITEMS = [
   { label: "Home", icon: homeLogo, path: "/" },
@@ -20,6 +34,9 @@ const AUTH_NAV_ITEMS = [
   { label: "Account", icon: account, path: "/account" },
   { label: "Logout", icon: logout, path: "/" },
 ];
+
+
+const EMPTY_CATEGORIES: string[] = [];
 
 type BuyerNavbarProps = {
   cartQty?: number;
@@ -34,7 +51,7 @@ type BuyerNavbarProps = {
 export default function BuyerNavbar({ 
   activeCat: propActiveCat = "All", 
   onCatChange,
-  categories = [],
+  categories = EMPTY_CATEGORIES,
   searchQuery = "",
   onSearchChange,
   cartQty = 0,
@@ -45,8 +62,10 @@ export default function BuyerNavbar({
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [activeCat, setActiveCat] = useState(propActiveCat);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [wishlistQty, setWishlistQty] = useState(getBuyerWishlistCount());
+  const [internalCategories, setInternalCategories] = useState<string[]>(categories);
 
-  const categoryTabs = showAllCategory ? ["All", ...new Set(categories)] : [...new Set(categories)];
+  const categoryTabs = showAllCategory ? ["All", ...new Set(internalCategories)] : [...new Set(internalCategories)];
 
   useEffect(() => {
     setActiveCat(propActiveCat);
@@ -57,10 +76,79 @@ export default function BuyerNavbar({
   }, [searchQuery]);
 
   useEffect(() => {
+    setInternalCategories(categories);
+  }, [categories]);
+
+  useEffect(() => {
+    if (categories.length > 0 || !showAllCategory) return;
+
+    const buildCategoryEndpoints = () => {
+      const normalizedPath = "/api/productcategory/categories/";
+      return Array.from(
+        new Set([
+          `${API_ORIGIN}${normalizedPath}`,
+          `${API_ORIGIN.replace("localhost", "127.0.0.1")}${normalizedPath}`,
+          `${API_ORIGIN.replace("127.0.0.1", "localhost")}${normalizedPath}`,
+          normalizedPath,
+        ])
+      );
+    };
+
+    const fetchCategories = async () => {
+      let lastError: unknown;
+      for (const url of buildCategoryEndpoints()) {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) continue;
+          const data = await response.json();
+          const payload = Array.isArray(data)
+            ? data
+            : data?.results || data?.data || data?.categories || [];
+          if (!Array.isArray(payload)) continue;
+
+          const names = Array.from(
+            new Set(
+              payload
+                .map((item: any) => {
+                  if (typeof item === "string") return item;
+                  if (typeof item === "object" && item !== null) {
+                    return item.name || item.title || item.category || null;
+                  }
+                  return null;
+                })
+                .filter(Boolean)
+            )
+          );
+
+          if (names.length) {
+            setInternalCategories(names);
+            return;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      console.error("Failed to load navbar categories from any endpoint:", lastError);
+    };
+
+    fetchCategories();
+  }, [categories, showAllCategory]);
+
+  useEffect(() => {
     const loggedIn = localStorage.getItem("isLoggedIn") === "true";
     const role = localStorage.getItem("role");
     const username = localStorage.getItem("username");
     setIsLoggedIn(loggedIn && role === "buyer" && !!username);
+  }, []);
+
+  useEffect(() => {
+    const refreshWishlist = () => setWishlistQty(getBuyerWishlistCount());
+    window.addEventListener("buyer-wishlist-change", refreshWishlist);
+    window.addEventListener("storage", refreshWishlist);
+    return () => {
+      window.removeEventListener("buyer-wishlist-change", refreshWishlist);
+      window.removeEventListener("storage", refreshWishlist);
+    };
   }, []);
 
   const navItems = isLoggedIn ? AUTH_NAV_ITEMS : GUEST_NAV_ITEMS;
@@ -73,10 +161,19 @@ export default function BuyerNavbar({
 
   const handleCategoryClick = (label: string) => {
     setActiveCat(label);
-    onCatChange?.(label);
+    if (onCatChange) {
+      onCatChange(label);
+      return;
+    }
+
+    const categoryPath =
+      label === "All"
+        ? "/allproducts"
+        : `/allproducts?category=${encodeURIComponent(label)}`;
+    navigate(categoryPath);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (onSearchChange) {
       onSearchChange(localSearch);
@@ -144,6 +241,35 @@ export default function BuyerNavbar({
 
             {isLoggedIn && (
               <button
+                onClick={() => navigate("/myorders")}
+                className="flex flex-col items-center px-3 py-1 text-xs text-gray-600 hover:text-teal-700 transition-colors relative"
+              >
+                <div className="relative text-lg leading-none">
+                  📦
+                </div>
+                <span>My Orders</span>
+              </button>
+            )}
+
+            {isLoggedIn && (
+              <button
+                onClick={() => navigate("/wishlist")}
+                className="flex flex-col items-center px-3 py-1 text-xs text-gray-600 hover:text-rose-600 transition-colors relative"
+              >
+                <div className="relative text-lg leading-none">
+                  ♥
+                  {wishlistQty > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-bold min-w-[17px] h-[17px] flex items-center justify-center rounded-full">
+                      {wishlistQty}
+                    </span>
+                  )}
+                </div>
+                <span>Wishlist</span>
+              </button>
+            )}
+
+            {isLoggedIn && (
+              <button
                 onClick={() => navigate("/cart")}
                 className="flex flex-col items-center px-3 py-1 text-xs text-gray-600 hover:text-teal-700 transition-colors relative"
               >
@@ -162,7 +288,7 @@ export default function BuyerNavbar({
         </div>
 
         {/* Category Tabs */}
-        <div className="flex gap-2 pb-4 overflow-x-auto hide-scroll">
+        <div className="flex gap-2 pb-4 overflow-x-auto hide-scroll min-h-[44px] items-center">
           {categoryTabs.map((label) => (
             <button
               key={label}

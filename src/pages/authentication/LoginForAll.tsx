@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
+import { PROFILE_IMAGE_UPDATED_EVENT } from "../../components/ProfileAvatar";
 
 type Role = {
   value: string;
@@ -77,6 +78,7 @@ export default function LoginForAll() {
       localStorage.setItem("profile_image", data.profile_image || "");
       localStorage.setItem("role", data.role);
       localStorage.setItem("isLoggedIn", "true");
+      window.dispatchEvent(new Event(PROFILE_IMAGE_UPDATED_EVENT));
       if (data.seller_id) {
         localStorage.setItem("seller_id", String(data.seller_id));
       } else {

@@ -8,7 +8,7 @@ import SellerSidebar from "./SellerSidebar";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-type Category = { id: number; name: string };
+type Category = { id: number; name: string; requires_size?: boolean };
 type ProductStatus = "pending" | "approved" | "rejected";
 
 export default function EditProduct() {
@@ -26,6 +26,7 @@ export default function EditProduct() {
     name: "",
     price: "",
     quantity: "",
+    size: "",
     category: "",
     code: "",
     description: "",
@@ -48,6 +49,7 @@ export default function EditProduct() {
           name: product.name || "",
           price: product.price || "",
           quantity: String(product.quantity ?? ""),
+          size: product.size || "",
           category: product.category ? String(product.category) : "",
           code: product.code || "",
           description: product.description || "",
@@ -75,8 +77,15 @@ export default function EditProduct() {
     setImage(e.target.files?.[0] || null);
   };
 
+  const selectedCategory = categories.find((cat) => String(cat.id) === form.category);
+  const sizeRequired = Boolean(selectedCategory?.requires_size);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (sizeRequired && !form.size.trim()) {
+      alert("Size is required for this category.");
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -97,7 +106,7 @@ export default function EditProduct() {
       navigate("/seller/manageproduct");
     } catch (error: any) {
       console.error("Failed to update product", error);
-      alert(error?.response?.data?.detail || "Failed to update product");
+      alert(error?.response?.data?.size?.[0] || error?.response?.data?.detail || "Failed to update product");
     } finally {
       setSubmitting(false);
     }
@@ -174,6 +183,17 @@ export default function EditProduct() {
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Size {sizeRequired ? "*" : "(Optional)"}</label>
+                    <input
+                      name="size"
+                      value={form.size}
+                      onChange={handleChange}
+                      required={sizeRequired}
+                      placeholder="e.g. S, M, L, 42, 10"
+                    />
                   </div>
 
                   <div className="form-group">
