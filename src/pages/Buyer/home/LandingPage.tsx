@@ -8,6 +8,11 @@ import {
   addBuyerCartItem,
   getBuyerCartCount,
 } from "../../../utils/buyerCart";
+import { isBuyerLoggedIn } from "../../../utils/buyerAuth";
+import {
+  getBuyerWishlistItems,
+  toggleBuyerWishlistItem,
+} from "../../../utils/buyerWishlist";
 
 import shoesImg from "../../../assets/shoes4.jpg";
 import Necklace from "../../../assets/accessories2.jpg";
@@ -47,7 +52,7 @@ const FEATURES = [
 const imageUrl = (path?: string) =>
   !path ? "" : path.startsWith("http") ? path : `${API_ORIGIN}${path}`;
 
-/* ── Stars ── */
+
 function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex gap-0.5">
@@ -65,7 +70,7 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-/* ── ProductCard ── */
+
 function ProductCard({
   product,
   liked,
@@ -85,7 +90,7 @@ function ProductCard({
       className="bg-white rounded-2xl overflow-hidden cursor-pointer group flex flex-col h-full transition-shadow duration-300 hover:shadow-xl border border-gray-100 hover:border-violet-200"
       style={{ boxShadow: "0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06)" }}
     >
-      {/* Image Container - Fixed height for consistency */}
+
       <div className="relative w-full h-56 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden border-b border-gray-100">
         <img
           src={product.img}
@@ -100,7 +105,7 @@ function ProductCard({
         </button>
       </div>
 
-      {/* Card Content - Flex grow to push buttons to bottom */}
+
       <div className="p-4 flex flex-col flex-1">
         <span className="text-[10px] font-bold tracking-widest text-violet-500 uppercase">
           {product.category}
@@ -120,10 +125,10 @@ function ProductCard({
           {product.old && <span className="text-xs text-gray-400 line-through">{product.old}</span>}
         </div>
 
-        {/* Spacer to push buttons to bottom */}
+    
         <div className="flex-1" />
 
-        {/* Button Container - Fixed height for even alignment */}
+    
         <div className="mt-3 flex flex-col gap-2.5 pt-2 border-t border-gray-100">
           <button
             onClick={(e) => { e.stopPropagation(); onBuy(); }}
@@ -143,12 +148,12 @@ function ProductCard({
   );
 }
 
-/* ══════════════════════════════════════
-    MAIN EXPORT
-══════════════════════════════════════ */
+
 export default function SajiloMart() {
   const navigate = useNavigate();
-  const [liked, setLiked] = useState<Record<number, boolean>>({});
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(
+    () => new Set(getBuyerWishlistItems().map((item) => String(item.id)))
+  );
   const [cartQty, setCartQty] = useState(getBuyerCartCount());
   const [categories, setCategories] = useState<ApiCategory[]>([]);
 
@@ -171,6 +176,25 @@ export default function SajiloMart() {
   );
 
   const openProduct = (product: any) => navigate(`/product/${product.id}`, { state: product });
+
+  const toggleWishlist = (product: (typeof topProducts)[0]) => {
+    if (!isBuyerLoggedIn()) {
+      navigate("/login", { state: { from: "/" } });
+      return;
+    }
+
+    const result = toggleBuyerWishlistItem({
+      id: product.id,
+      name: product.name,
+      price: Number(product.price.replace(/[^0-9.]/g, "")) || 0,
+      originalPrice: product.old,
+      image: product.img,
+      category: product.category,
+      description: `${product.category} product`,
+      stock: 99,
+    });
+    setWishlistIds(new Set(result.items.map((item) => String(item.id))));
+  };
 
   const addToCart = (product: any) => {
     addBuyerCartItem({
@@ -243,7 +267,7 @@ export default function SajiloMart() {
         </div>
       </section>
 
-      {/* ── FEATURE STRIP ── */}
+     
       <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 relative z-10">
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
           {FEATURES.map((f, i) => (
@@ -266,7 +290,7 @@ export default function SajiloMart() {
         </div>
       </div>
 
-      {/* ── TOP PRODUCTS ── */}
+    
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -286,8 +310,8 @@ export default function SajiloMart() {
             <ProductCard
               key={p.id}
               product={p}
-              liked={!!liked[p.id]}
-              onLike={() => setLiked((l) => ({ ...l, [p.id]: !l[p.id] }))}
+              liked={wishlistIds.has(String(p.id))}
+              onLike={() => toggleWishlist(p)}
               onBuy={() => openProduct(p)}
               onCart={() => addToCart(p)}
             />
@@ -295,7 +319,7 @@ export default function SajiloMart() {
         </div>
       </div>
 
-      {/* ── SHOP BY CATEGORY ── */}
+     
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-14 mb-16">
         <div className="mb-6">
           <h2 className="text-2xl font-black text-gray-900">Shop by Category</h2>

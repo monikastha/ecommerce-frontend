@@ -35,22 +35,27 @@ const WarehouseStaffSidebar = () => {
           width: 260px; 
           min-height: 100vh; 
           background: #b8cce4; 
+          font-family:'Poppins',sans-serif;
           display: flex; 
           flex-direction: column; 
         }
         .sidebar-logo { 
-          padding: 20px; 
-          text-align: center; 
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 18px 20px; 
           border-bottom: 1px solid rgba(255,255,255,0.4); 
         }
         .sidebar-logo img { 
-          width: 120px; 
-          height: 120px; 
-          border-radius: 50%; 
+          margin-top: -30px;
+          width: 390px; 
+          height: 270px; 
+          object-fit: contain;
         }
 
         .sidebar-menu { 
           list-style: none; 
+          margin-top: -65px;
           padding: 10px; 
           flex: 1; 
         }

@@ -4,7 +4,8 @@ import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
 import axios from "axios";
 
-const API_BASE = `${import.meta.env.VITE_API_URL}/api/productcategory/categories/`;
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE = `${API_ORIGIN}/api/productcategory/categories/`;
 
 const AdminAddCategory: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const AdminAddCategory: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    requires_size: false,
     // is_active removed
   });
 
@@ -21,7 +23,12 @@ const AdminAddCategory: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      setFormData({ ...formData, requires_size: (e.target as HTMLInputElement).checked });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: "" });
   };
 
@@ -49,6 +56,7 @@ const AdminAddCategory: React.FC = () => {
     const form = new FormData();
     form.append("name", formData.name);
     form.append("description", formData.description);
+    form.append("requires_size", String(formData.requires_size));
     form.append("is_active", "true"); // Default to active
     if (image) form.append("image", image);
 
@@ -149,6 +157,19 @@ const AdminAddCategory: React.FC = () => {
                     onChange={handleChange}
                   />
                   {errors.description && <p className="error">{errors.description}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <input
+                      type="checkbox"
+                      name="requires_size"
+                      checked={formData.requires_size}
+                      onChange={handleChange}
+                      style={{ width: "auto" }}
+                    />
+                    Require size for products in this category
+                  </label>
                 </div>
 
                 {/* Image Upload */}

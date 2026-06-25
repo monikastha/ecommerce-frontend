@@ -16,6 +16,7 @@ type Product = {
   category_name?: string;
   price: string;
   quantity: number;
+  size?: string;
   description?: string;
   status: "pending" | "approved" | "rejected" | "flagged";
   rejection_reason?: string;

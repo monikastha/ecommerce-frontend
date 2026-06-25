@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -15,6 +17,11 @@ export type BuyerProductReview = {
   sentiment: ReviewSentiment;
   createdAt: string;
   orderId?: string;
+  sellerReply?: {
+    message: string;
+    sellerName: string;
+    createdAt: string;
+  };
 };
 
 type ReviewCommentsProps = {
@@ -27,6 +34,7 @@ type ReviewCommentsProps = {
 
 const REVIEWS_KEY = "buyer_product_reviews";
 const ORDERS_KEY = "buyer_orders";
+const STAR_VALUES = [1, 2, 3, 4, 5];
 
 export const getBuyerProductReviews = (): BuyerProductReview[] => {
   try {
@@ -59,7 +67,50 @@ const purchasedOrderForProduct = (productId: number) => {
   );
 };
 
-const ratingText = (rating: number) => `${rating}/5`;
+type StarRatingProps = {
+  value: number;
+  onChange?: (value: number) => void;
+  sizeClass?: string;
+  className?: string;
+};
+
+const StarRating = ({
+  value,
+  onChange,
+  sizeClass = "text-lg",
+  className = "",
+}: StarRatingProps) => {
+  const roundedValue = Math.max(0, Math.min(5, Math.round(value)));
+
+  return (
+    <div className={`inline-flex items-center gap-0.5 ${className}`} aria-label={`${roundedValue} out of 5 stars`}>
+      {STAR_VALUES.map((star) => {
+        const isFilled = star <= roundedValue;
+        const starIcon = (
+          <span className={`${sizeClass} leading-none ${isFilled ? "text-amber-400" : "text-slate-300"}`}>
+            {isFilled ? "★" : "☆"}
+          </span>
+        );
+
+        if (!onChange) {
+          return <span key={star}>{starIcon}</span>;
+        }
+
+        return (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(star)}
+            className="rounded px-0.5 focus:outline-none focus:ring-2 focus:ring-amber-300"
+            aria-label={`${star} star${star > 1 ? "s" : ""}`}
+          >
+            {starIcon}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function ReviewComments({
   productId,
@@ -89,7 +140,15 @@ export default function ReviewComments({
     () =>
       reviews
         .filter((review) => Number(review.productId) === Number(productId))
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+        .sort((a, b) => {
+          if (a.sentiment !== b.sentiment) {
+            return a.sentiment === "positive" ? -1 : 1;
+          }
+          if (a.rating !== b.rating) {
+            return b.rating - a.rating;
+          }
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }),
     [reviews, productId]
   );
 
@@ -153,7 +212,10 @@ export default function ReviewComments({
           </p>
         </div>
         <div className="text-right">
-          <p className="text-sm font-black text-amber-500">
+          <div className="flex justify-end">
+            <StarRating value={averageRating} sizeClass="text-base" />
+          </div>
+          <p className="mt-1 text-sm font-black text-amber-500">
             {productReviews.length ? averageRating.toFixed(1) : "0.0"} / 5
           </p>
           <p className="text-xs font-bold text-slate-500">{productReviews.length} reviews</p>
@@ -166,19 +228,11 @@ export default function ReviewComments({
             <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-4">
               <label className="block">
                 <span className="text-sm font-bold text-slate-700">Rating</span>
-                <select
-                  value={rating}
-                  onChange={(event) => setRating(Number(event.target.value))}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 outline-none focus:border-violet-500"
-                >
-                  {[5, 4, 3, 2, 1].map((value) => (
-                    <option key={value} value={value}>
-                      {value} Star{value > 1 ? "s" : ""}
-                    </option>
-                  ))}
-                </select>
+                <div className="mt-2 rounded-lg border border-slate-300 bg-white px-3 py-2">
+                  <StarRating value={rating} onChange={setRating} sizeClass="text-2xl" />
+                </div>
                 <p className={`mt-2 text-xs font-black ${sentiment === "positive" ? "text-green-700" : "text-red-700"}`}>
-                  Detected: {sentiment}
+                  {rating} Star{rating > 1 ? "s" : ""} · Detected: {sentiment}
                 </p>
               </label>
 
@@ -218,7 +272,10 @@ export default function ReviewComments({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-black text-slate-900">{review.buyerUsername}</p>
-                  <p className="text-sm font-black text-amber-500">{ratingText(review.rating)}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <StarRating value={review.rating} sizeClass="text-base" />
+                    <span className="text-xs font-black text-slate-500">{review.rating}/5</span>
+                  </div>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-black ${
                   review.sentiment === "positive"
@@ -232,6 +289,19 @@ export default function ReviewComments({
               <p className="mt-3 text-xs font-semibold text-slate-400">
                 {new Date(review.createdAt).toLocaleString()}
               </p>
+              {review.sellerReply?.message && (
+                <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+                  <p className="text-xs font-black uppercase text-emerald-700">
+                    Seller Reply
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    {review.sellerReply.message}
+                  </p>
+                  <p className="mt-2 text-xs font-semibold text-emerald-700">
+                    {review.sellerReply.sellerName} · {new Date(review.sellerReply.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              )}
             </article>
           ))
         )}

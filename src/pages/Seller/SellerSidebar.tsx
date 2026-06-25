@@ -138,7 +138,7 @@ const SellerSidebar = () => {
             className={activeItem === "orders" ? "active" : ""}
             onClick={() => {
               setActiveItem("orders");
-              navigate("/seller/orders");
+              navigate("/seller/orders/manage");
               setOrderMenu(!orderMenu);
             }}
           >

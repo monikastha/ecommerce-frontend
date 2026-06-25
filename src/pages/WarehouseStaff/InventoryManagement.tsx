@@ -182,7 +182,7 @@ export default function InventoryManagement() {
   return (
     <>
       <style>{`
-        .layout { display:flex; min-height:100vh; background:#f1f5f9; }
+        .layout { display:flex; min-height:100vh; background:#f1f5f9; font-family:'Poppins',sans-serif; }
         .main { flex:1; display:flex; flex-direction:column; min-width:0; }
         .content { padding:20px; flex:1; }
         .header { margin-bottom:20px; }

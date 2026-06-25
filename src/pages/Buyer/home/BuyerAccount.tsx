@@ -1,3 +1,6 @@
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +10,7 @@ import {
 } from "lucide-react";
 import BuyerFooter from "../../../components/BuyerFooter";
 import BuyerNavbar from "../../../components/BuyerNavbar2";
-import { saveProfileToStorage } from "../../../components/ProfileAvatar";
+import { saveProfileToStorage, PROFILE_IMAGE_UPDATED_EVENT } from "../../../components/ProfileAvatar";
 import { getBuyerCart, getBuyerCartCount } from "../../../utils/buyerCart";
 import type { BuyerCartItem } from "../../../utils/buyerCart";
 
@@ -71,7 +74,9 @@ const currency = (value: number) => `Rs. ${value.toLocaleString()}`;
 const imageUrl = (path?: string) => {
   if (!path) return "";
   if (path.startsWith("http")) return path;
-  return `${API_BASE}${path}`;
+
+  const url = `${API_BASE}${path}`;
+  return `${url}?v=1`;
 };
 
 const readOrders = (): BuyerOrder[] => {
@@ -94,12 +99,13 @@ export default function BuyerAccount() {
   const [orders, setOrders] = useState<BuyerOrder[]>([]);
   const [profile, setProfile] = useState<BuyerProfile | null>(null);
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
-  const [profilePicPreview, setProfilePicPreview] = useState<string>("");
+  const [profilePicPreview, setProfilePicPreview] = useState<string>(() => imageUrl(localStorage.getItem("profile_image") ?? undefined) || "");
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState<AccountForm>(() => emptyForm());
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const refreshCart = () => setCartItems(getBuyerCart());
@@ -146,7 +152,21 @@ export default function BuyerAccount() {
       }
     };
 
+    const loadCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/productcategory/categories/`);
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          const categoryNames = data.map((c: any) => c.name).filter(Boolean);
+          setCategories(categoryNames);
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      }
+    };
+
     loadProfile();
+    loadCategories();
   }, []);
 
   useEffect(() => {
@@ -237,10 +257,11 @@ export default function BuyerAccount() {
       localStorage.setItem("name", nextProfile.name || "");
       localStorage.setItem("username", nextProfile.username || "");
       localStorage.setItem("email", nextProfile.email || "");
-      localStorage.setItem("profile_image", nextProfile.profile_pic || "");
       localStorage.setItem("buyer_phone", nextProfile.phone_number || "");
       localStorage.setItem("buyer_address", nextProfile.address || "");
       saveProfileToStorage(nextProfile);
+      
+      window.dispatchEvent(new Event(PROFILE_IMAGE_UPDATED_EVENT));
       setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save profile.");
@@ -256,7 +277,7 @@ export default function BuyerAccount() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <BuyerNavbar cartQty={getBuyerCartCount()} />
+      <BuyerNavbar cartQty={getBuyerCartCount()} categories={categories} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <section className="rounded-3xl bg-gradient-to-r from-teal-700 via-cyan-600 to-slate-900 p-8 text-white shadow-xl mb-6">

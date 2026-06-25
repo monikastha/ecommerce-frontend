@@ -175,7 +175,7 @@ const AdminSidebar = () => {
             <ul className="submenu">
              <li onClick={() => navigate("/admin/order")}>Order</li>
                <li onClick={() => navigate("/admin/earnings")}>Earnings</li>
-              <li>Assign Delivery</li>
+              <li onClick={() => navigate("/admin/assign-delivery")}>Assign Delivery</li>
             </ul>
           )}
 

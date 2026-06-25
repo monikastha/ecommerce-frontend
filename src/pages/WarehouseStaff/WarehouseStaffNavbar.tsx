@@ -48,6 +48,7 @@ const WarehouseStaffNavbar = () => {
         .navbar {
           height: 72px;
           background: rgba(255,255,255,0.97);
+          font-family:'Poppins',sans-serif;
           backdrop-filter: blur(10px);
           border-bottom: 1px solid #e2e8f0;
           padding: 0 30px;

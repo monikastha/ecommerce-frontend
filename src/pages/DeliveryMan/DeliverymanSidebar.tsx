@@ -1,49 +1,58 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
-import ProfileAvatar, { useProfileEmail, useProfileName } from "../../components/ProfileAvatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faGauge,
   faBox,
   faMoneyBill,
-  faRightFromBracket,
+  faTruckFast,
 } from "@fortawesome/free-solid-svg-icons";
 
 const DeliverymanSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showLogout, setShowLogout] = useState(false);
-  const profileName = useProfileName("Delivery Man");
-  const profileEmail = useProfileEmail("delivery@example.com");
+  const [earningsOpen, setEarningsOpen] = useState(
+    location.pathname === "/delivery/tracking" || location.pathname === "/delivery/earnings"
+  );
+  const [dropdownFocus, setDropdownFocus] = useState(false);
 
   const menuItems = [
     { key: "/delivery/dashboard", label: "Dashboard", icon: faGauge },
-    { key: "/delivery/orders", label: "Orders Tracking", icon: faBox },
-    { key: "/delivery/earnings", label: "Earnings", icon: faMoneyBill },
-    { key: "logout", label: "Logout", icon: faRightFromBracket },
+    { key: "/delivery/assigned", label: "Order Tracking", icon: faTruckFast },
   ];
 
   const handleClick = (key: string) => {
-    if (key === "logout") {
-      setShowLogout(true);
-    } else {
-      navigate(key);
-    }
+    setDropdownFocus(false);
+    navigate(key);
   };
 
-  const isActive = (key: string) => location.pathname === key;
+  const isActive = (key: string) => location.pathname === key && !dropdownFocus;
+  const isSubmenuActive = (key: string) => location.pathname === key;
 
   return (
     <>
       <style>{`
         .sidebar {
           width: 260px;
-          min-height: 100vh;
+          height: 100vh;
           background: #b8cce4;
           display: flex;
           flex-direction: column;
-          position: relative;
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 1000;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+
+        .sidebar + .dash-main,
+        .sidebar + .main,
+        .sidebar + .assigned-main,
+        .sidebar + .earnings-main {
+          margin-left: 260px;
+          width: calc(100% - 260px);
         }
 
         .sidebar-logo {
@@ -83,10 +92,74 @@ const DeliverymanSidebar = () => {
         }
 
         .sidebar-menu li:hover {
-          background: rgba(255,255,255,0.35);
+          background: #e8392a;
+          color: white;
         }
 
         .sidebar-menu li.active {
+          background: #e8392a;
+          color: white;
+          font-weight: 600;
+        }
+
+        .sidebar-menu li.sidebar-dropdown {
+          display: block;
+          align-items: stretch;
+          gap: 0;
+          padding: 0;
+          margin: 4px 0;
+          cursor: default;
+          border-radius: 0;
+          color: inherit;
+        }
+
+        .sidebar-menu li.sidebar-dropdown:hover {
+          background: transparent;
+        }
+
+        .dropdown-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          color: #1e3a5f;
+          transition: 0.2s;
+        }
+
+        .dropdown-title:hover {
+          background: #e8392a;
+          color: white;
+        }
+
+        .submenu {
+          list-style: none;
+          padding-left: 20px;
+          margin: 4px 0 8px;
+          width: 100%;
+        }
+
+        .sidebar-menu .submenu li {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 14px;
+          font-size: 13px;
+          margin: 2px 0;
+          border-radius: 6px;
+          color: #25496f;
+          transition: 0.2s;
+        }
+
+        .sidebar-menu .submenu li:hover {
+          background: #9B0F06;
+          color: white;
+        }
+
+        .sidebar-menu .submenu li.active {
           background: #e8392a;
           color: white;
           font-weight: 600;
@@ -125,75 +198,20 @@ const DeliverymanSidebar = () => {
           color: #3b5f8a;
         }
 
-        .logout-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 999;
+        @media (max-width: 768px) {
+          .sidebar {
+            width: 220px;
+          }
+
+          .sidebar + .dash-main,
+          .sidebar + .main,
+          .sidebar + .assigned-main,
+          .sidebar + .earnings-main {
+            margin-left: 220px;
+            width: calc(100% - 220px);
+          }
         }
 
-        .logout-modal {
-          background: white;
-          border-radius: 16px;
-          padding: 30px;
-          width: 340px;
-          text-align: center;
-          position: relative;
-        }
-
-        .logout-modal-bar {
-          height: 8px;
-          background: #e8392a;
-          border-radius: 12px 12px 0 0;
-          position: absolute;
-          top: 0; left: 0; right: 0;
-        }
-
-        .logout-close {
-          position: absolute;
-          top: 12px; right: 14px;
-          background: #7f1d1d;
-          color: white;
-          border: none;
-          border-radius: 50%;
-          width: 28px; height: 28px;
-          font-size: 16px;
-          cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-        }
-
-        .logout-modal p {
-          font-size: 16px;
-          color: #334155;
-          margin: 20px 0;
-        }
-
-        .logout-btns {
-          display: flex;
-          gap: 12px;
-          justify-content: center;
-        }
-
-        .btn-yes {
-          padding: 10px 30px;
-          background: #f1f5f9;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-
-        .btn-cancel {
-          padding: 10px 30px;
-          background: #f1f5f9;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 14px;
-        }
       `}</style>
 
       <div className="sidebar">
@@ -212,32 +230,46 @@ const DeliverymanSidebar = () => {
               {item.label}
             </li>
           ))}
-        </ul>
 
-        <div className="sidebar-profile">
-          <div className="profile-avatar">
-            <ProfileAvatar alt="profile" />
-          </div>
-          <div className="profile-info">
-            <h4>{profileName}</h4>
-            <p>{profileEmail}</p>
-          </div>
-        </div>
-      </div>
-
-      {showLogout && (
-        <div className="logout-overlay">
-          <div className="logout-modal">
-            <div className="logout-modal-bar" />
-            <button className="logout-close" onClick={() => setShowLogout(false)}>✕</button>
-            <p>Are you sure you want to logout?</p>
-            <div className="logout-btns">
-              <button className="btn-yes" onClick={() => navigate("/login")}>Yes</button>
-              <button className="btn-cancel" onClick={() => setShowLogout(false)}>Cancel</button>
+          <li className="sidebar-dropdown">
+            <div
+              className="dropdown-title"
+              onClick={() => {
+                setDropdownFocus(true);
+                setEarningsOpen((open) => !open);
+              }}
+            >
+              <FontAwesomeIcon icon={faMoneyBill} />
+              <span>Earnings Management</span>
             </div>
-          </div>
-        </div>
-      )}
+
+            {earningsOpen && (
+              <ul className="submenu">
+                <li
+                  className={isSubmenuActive("/delivery/tracking") ? "active" : ""}
+                  onClick={() => {
+                    setDropdownFocus(false);
+                    navigate("/delivery/tracking");
+                  }}
+                >
+                  <FontAwesomeIcon icon={faBox} />
+                  Delivery History
+                </li>
+                <li
+                  className={isSubmenuActive("/delivery/earnings") ? "active" : ""}
+                  onClick={() => {
+                    setDropdownFocus(false);
+                    navigate("/delivery/earnings");
+                  }}
+                >
+                  <FontAwesomeIcon icon={faMoneyBill} />
+                  Earnings
+                </li>
+              </ul>
+            )}
+          </li>
+        </ul>
+      </div>
     </>
   );
 };

@@ -9,6 +9,7 @@ export type ProductViewItem = {
   category_name?: string | null;
   price?: string | number | null;
   quantity?: string | number | null;
+  size?: string | null;
   description?: string | null;
   image?: string | null;
   status?: string | null;
@@ -38,6 +39,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({ product, imageUrl, 
     ["Product ID", `#${product.id}`],
     ["Code", product.code || "-"],
     ["Category", product.category_name || "-"],
+    ["Size", product.size || "-"],
     ["Stock", `${product.quantity ?? 0}`],
     ["Status", product.status || "-"],
     ["Published", product.is_published ? "Yes" : "No"],

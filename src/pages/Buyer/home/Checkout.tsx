@@ -31,6 +31,11 @@ type ApiLocation = {
   emergency_delivery_charge?: string | number;
 };
 
+type ApiCategory = {
+  id: number;
+  name: string;
+};
+
 type ApiProduct = {
   id: number;
   name: string;
@@ -45,7 +50,8 @@ type ApiProduct = {
 
 const getItemSizes = (item?: BuyerCartItem): string[] => {
   const rawSizes = (item as BuyerCartItem & { sizes?: unknown; size_options?: unknown })?.sizes
-    ?? (item as BuyerCartItem & { sizes?: unknown; size_options?: unknown })?.size_options;
+    ?? (item as BuyerCartItem & { sizes?: unknown; size_options?: unknown })?.size_options
+    ?? item?.size;
 
   if (Array.isArray(rawSizes)) {
     return rawSizes
@@ -65,10 +71,52 @@ const getItemSizes = (item?: BuyerCartItem): string[] => {
 
 const paymentMethods = [
   { value: "cash_on_delivery", label: "Cash on Delivery" },
-  { value: "esewa", label: "eSewa Payment" },
+  { value: "khalti", label: "Khalti Payment" },
 ];
 
-const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const normalizeApiOrigin = (value: string) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "http://127.0.0.1:8000";
+  const normalized = raw.replace(/\/+$/, "");
+  return normalized.startsWith("http://") || normalized.startsWith("https://")
+    ? normalized
+    : `http://${normalized}`;
+};
+
+const apiOrigin = normalizeApiOrigin(import.meta.env.VITE_API_URL || "http://127.0.0.1:8000");
+
+const buildApiEndpoints = (path: string) => {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return Array.from(
+    new Set([
+      `${apiOrigin}${normalizedPath}`,
+      `${apiOrigin.replace("localhost", "127.0.0.1")}${normalizedPath}`,
+      `${apiOrigin.replace("127.0.0.1", "localhost")}${normalizedPath}`,
+      normalizedPath,
+    ])
+  );
+};
+
+const fetchApi = async (path: string, init?: RequestInit) => {
+  let lastError: unknown;
+  for (const endpoint of buildApiEndpoints(path)) {
+    try {
+      const res = await fetch(endpoint, init);
+      if (res.ok || res.status >= 400) {
+        return res;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error(`Failed to fetch ${path}`);
+};
+
+const fetchApiJson = async (path: string, init?: RequestInit) => {
+  const res = await fetchApi(path, init);
+  const data = await res.json().catch(() => ({}));
+  return { res, data };
+};
 
 const currency = (value: number) => `Rs. ${value.toLocaleString()}`;
 
@@ -78,6 +126,7 @@ export default function Checkout() {
   const state = (location.state || {}) as CheckoutState;
   const [items, setItems] = useState<BuyerCartItem[]>(() => state.items?.length ? state.items : getBuyerCart());
   const [locations, setLocations] = useState<ApiLocation[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -90,14 +139,14 @@ export default function Checkout() {
     paymentType: "cash_on_delivery",
   });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [successOrder, setSuccessOrder] = useState<string | null>(null);
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [deliveryFeeError, setDeliveryFeeError] = useState("");
   const [, setAllowOrderWithoutDeliveryCharge] = useState(false);
   const [itemDetails, setItemDetails] = useState<Record<number, { quantity: number; size: string }>>(() => {
     const details: Record<number, { quantity: number; size: string }> = {};
     items.forEach((item, idx) => {
-      details[idx] = { quantity: item.quantity, size: "" };
+      const sizes = getItemSizes(item);
+      details[idx] = { quantity: item.quantity, size: sizes.length === 1 ? sizes[0] : "" };
     });
     return details;
   });
@@ -108,7 +157,10 @@ export default function Checkout() {
     setItemDetails((prev) => {
       const next = { ...prev };
       nextItems.forEach((item, idx) => {
-        if (!next[idx]) next[idx] = { quantity: item.quantity, size: "" };
+        if (!next[idx]) {
+          const sizes = getItemSizes(item);
+          next[idx] = { quantity: item.quantity, size: sizes.length === 1 ? sizes[0] : "" };
+        }
       });
       return next;
     });
@@ -144,7 +196,7 @@ export default function Checkout() {
     if (path.startsWith("http") || path.startsWith("data:") || path.startsWith("blob:") || path.startsWith("/")) {
       return path;
     }
-    return `${API_ORIGIN}${path}`;
+    return `${apiOrigin}${path}`;
   };
 
   const subtotal = useMemo(
@@ -158,14 +210,23 @@ export default function Checkout() {
   useEffect(() => {
     const loadLocations = async () => {
       try {
-        const res = await fetch(`${API_ORIGIN}/api/locations/`);
-        const data = await res.json();
-        setLocations(Array.isArray(data) ? data : []);
+        const { data } = await fetchApiJson(`/api/locations/`);
+        setLocations(Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : []);
       } catch (error) {
         console.error(error);
       }
     };
     loadLocations();
+    
+    const loadCategories = async () => {
+      try {
+        const { data } = await fetchApiJson(`/api/productcategory/categories/`);
+        setCategories(Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadCategories();
   }, []);
 
   const productCategoryText = (product: ApiProduct | { category?: string | number | { id?: number; name?: string } | null; category_name?: string | null } | null) => {
@@ -185,8 +246,7 @@ export default function Checkout() {
       }
 
       try {
-        const res = await fetch(`${API_ORIGIN}/api/products/?status=approved&is_published=true`);
-        const data = await res.json();
+        const { data } = await fetchApiJson(`/api/products/?status=approved&is_published=true`);
         if (!Array.isArray(data)) {
           setSimilarProducts([]);
           return;
@@ -225,6 +285,11 @@ export default function Checkout() {
 
   const total = subtotal + deliveryFee;
 
+  const categoryNames = useMemo(
+    () => Array.from(new Set(categories.map((c) => c.name).filter(Boolean))),
+    [categories]
+  );
+
   useEffect(() => {
     const calculateDeliveryFee = async () => {
       if (!formData.deliveryLocation || !subtotal) {
@@ -235,7 +300,7 @@ export default function Checkout() {
       }
 
       try {
-        const res = await fetch(`${API_ORIGIN}/api/delivery-charge/calculate/`, {
+        const { res, data } = await fetchApiJson(`/api/delivery-charge/calculate/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -244,14 +309,13 @@ export default function Checkout() {
             product_total: subtotal,
           }),
         });
-        const data = await res.json();
 
         if (!res.ok) {
           const errorMsg = data.error || "Delivery charge is not available.";
           setDeliveryFee(0);
           setDeliveryFeeError(errorMsg);
           
-          // Auto-allow order if it's "no rule found" error
+          
           if (errorMsg.toLowerCase().includes("no delivery charge rule") || 
               errorMsg.toLowerCase().includes("not available")) {
             setAllowOrderWithoutDeliveryCharge(true);
@@ -294,18 +358,14 @@ export default function Checkout() {
       return;
     }
 
-    // Allow order even if delivery fee rule is missing
-    // if (deliveryFeeError && !allowOrderWithoutDeliveryCharge) {
-    //   alert(deliveryFeeError);
-    //   return;
-    // }
+
 
     setIsProcessing(true);
 
     try {
       const orderId = `ORD-${Date.now().toString().slice(-8)}`;
 
-      // Reduce stock first
+    
       try {
         await reduceStockForItems(items);
       } catch (stockError: any) {
@@ -336,22 +396,83 @@ export default function Checkout() {
         phone: formData.phone,
         address: `${formData.address}, ${formData.city}`,
         postal_code: formData.postal_code,
-        status: "confirmed",
+        status: "pending",
         createdAt: new Date().toISOString(),
         note: deliveryFeeError ? "Delivery charge rule not found - charged 0" : undefined,
       };
 
+      const { res: orderRes, data: orderApiData } = await fetchApiJson(`/api/orders/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_number: orderId,
+          user_id: Number(localStorage.getItem("user_id") || 0) || undefined,
+          username: localStorage.getItem("username") || "",
+          customer_name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          postal_code: formData.postal_code,
+          delivery_location: Number(formData.deliveryLocation) || null,
+          delivery_location_name: orderData.deliveryLocation,
+          delivery_type: formData.deliveryType,
+          delivery_fee: deliveryFee || 0,
+          payment_type: formData.paymentType,
+          status: "pending",
+          notes: orderData.note || "",
+          reduce_stock: false,
+          items: orderData.items.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+            image: item.image,
+            size: item.size || "",
+          })),
+        }),
+      });
+      if (!orderRes.ok) {
+        throw new Error(orderApiData.error || orderApiData.detail || orderApiData.message || JSON.stringify(orderApiData));
+      }
+
+      if (formData.paymentType === "cash_on_delivery") {
+        const { res: paymentRes, data: paymentData } = await fetchApiJson(`/api/record-cod-payment/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            amount: orderData.total,
+            items: orderData.items,
+            customerName: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: orderData.address,
+            deliveryType: formData.deliveryType,
+            deliveryLocation: orderData.deliveryLocation,
+            deliveryFee: orderData.deliveryFee,
+          }),
+        });
+
+        if (!paymentRes.ok) {
+          const errorMessage = paymentData.message || paymentData.error || paymentData.detail || "Failed to record cash on delivery payment.";
+          throw new Error(errorMessage);
+        }
+      }
+
       const orders = JSON.parse(localStorage.getItem("buyer_orders") || "[]");
-      localStorage.setItem(
-        "buyer_orders",
-        JSON.stringify([{ ...orderData, stockReduced: true }, ...orders])
-      );
+      const orderToStore = {
+        ...orderData,
+        stockReduced: true,
+        paymentStatus: formData.paymentType === "cash_on_delivery" ? "completed" : undefined,
+        paymentReference: formData.paymentType === "cash_on_delivery" ? "COD-LOCAL" : undefined,
+      };
+      localStorage.setItem("buyer_orders", JSON.stringify([orderToStore, ...orders]));
 
       if (!state.buyNow) clearBuyerCart();
 
       setIsProcessing(false);
 
-      if (formData.paymentType === "esewa") {
+      if (formData.paymentType === "khalti") {
         navigate("/payment", {
           state: {
             orderId,
@@ -364,7 +485,7 @@ export default function Checkout() {
           }
         });
       } else {
-        setSuccessOrder(orderId);
+        navigate(`/payment-success?orderId=${encodeURIComponent(orderId)}&refId=COD-LOCAL`);
       }
 
     } catch (error: any) {
@@ -375,7 +496,7 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <BuyerNavbar cartQty={getBuyerCartCount()} />
+      <BuyerNavbar cartQty={getBuyerCartCount()} categories={categoryNames} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-6">
@@ -618,7 +739,7 @@ export default function Checkout() {
                   />
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="text-sm font-bold text-slate-700">Delivery Address</span>
+                  <span className="text-sm font-bold text-slate-700">Address</span>
                   <input
                     name="address"
                     value={formData.address}
@@ -730,7 +851,11 @@ export default function Checkout() {
                   disabled={isProcessing}
                   className="mt-6 w-full rounded-lg bg-green-600 py-3 text-white font-black hover:bg-green-700 disabled:opacity-60"
                 >
-                  {isProcessing ? "Processing..." : "Place Order"}
+                  {isProcessing
+                    ? "Processing..."
+                    : formData.paymentType === "khalti"
+                    ? "Proceed to Payment"
+                    : "Place COD Order"}
                 </button>
               </div>
             </aside>
@@ -738,27 +863,6 @@ export default function Checkout() {
         )}
 
       </main>
-
-      {successOrder && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] px-4">
-          <div className="bg-white rounded-lg p-8 text-center max-w-md w-full shadow-2xl">
-            <div className="text-5xl mb-4">✅</div>
-            <h2 className="text-2xl font-black text-green-700">Order Placed Successfully</h2>
-            <p className="text-slate-600 mt-2">
-              Order ID: <strong>{successOrder}</strong>
-            </p>
-            <p className="text-sm text-slate-500 mt-2">
-              Pay when your order arrives.
-            </p>
-            <button
-              onClick={() => navigate(`/ordertracking?orderId=${successOrder}`)}
-              className="mt-6 px-6 py-3 rounded-lg bg-green-600 text-white font-black"
-            >
-              Track Order
-            </button>
-          </div>
-        </div>
-      )}
 
       <BuyerFooter />
     </div>
