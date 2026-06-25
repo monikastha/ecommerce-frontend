@@ -84,8 +84,9 @@ const paymentLabel = (paymentType?: string) => {
 
 const statusLabel = (status?: string) => (status || "pending").replace(/_/g, " ");
 
-const canAssignDelivery = (status?: string) => ["confirmed", "processing"].includes(status || "");
-const canCancelOrder = (status?: string) => ["pending", "confirmed", "processing"].includes(status || "");
+const canAssignDelivery = (status?: string) => ["ready_for_delivery", "delivery_rejected", "processing"].includes(status || "");
+const canCancelOrder = (status?: string) =>
+  ["pending", "seller_accepted", "preparing", "warehouse_processing", "ready_for_delivery", "delivery_assigned"].includes(status || "");
 
 const orderProducts = (order: OrderRecord) =>
   order.items?.length
@@ -203,11 +204,22 @@ const OrderManagementView: React.FC<Props> = ({
   }, [deliveryFilter, emergencyOnly, orders, search]);
 
   const orderStats = useMemo(() => {
-    const activeStatuses = ["processing", "shipped", "out_for_delivery"];
+    const activeStatuses = [
+      "seller_accepted",
+      "preparing",
+      "warehouse_processing",
+      "ready_for_delivery",
+      "delivery_assigned",
+      "delivery_accepted",
+      "picked_up",
+      "out_for_delivery",
+      "processing",
+      "shipped",
+    ];
     const emergency = orders.filter((order) => order.delivery_type === "emergency");
     return {
       total: orders.length,
-      pending: orders.filter((order) => ["pending", "confirmed"].includes(order.status)).length,
+      pending: orders.filter((order) => ["pending", "seller_accepted", "preparing"].includes(order.status)).length,
       active: orders.filter((order) => activeStatuses.includes(order.status)).length,
       delivered: orders.filter((order) => order.status === "delivered").length,
       normal: orders.filter((order) => order.delivery_type === "normal").length,
@@ -436,13 +448,11 @@ const OrderManagementView: React.FC<Props> = ({
                   <p>{latestEmergency.customer_name || "Buyer"} needs urgent delivery for {orderProducts(latestEmergency)}. Assign a nearby deliveryman and process this order first.</p>
                 </div>
                 {canAssignDelivery(latestEmergency.status) ? (
-                  <button className="btn assign" onClick={() => setAssignOrder(latestEmergency)} title="Assign deliveryman and ship" aria-label="Assign deliveryman and ship">
+                  <button className="btn assign" onClick={() => setAssignOrder(latestEmergency)} title="Assign deliveryman" aria-label="Assign deliveryman">
                     <FaTruck />
                   </button>
                 ) : (
-                  <button className="btn complete" onClick={() => updateStatus(latestEmergency.id, "confirmed")} title="Confirm order" aria-label="Confirm order">
-                    <FaCheck />
-                  </button>
+                  <strong>Waiting for seller or warehouse</strong>
                 )}
               </div>
             )}
@@ -458,12 +468,12 @@ const OrderManagementView: React.FC<Props> = ({
                   <div className="statCard statPending">
                     <div className="statTop"><span className="statLabel">Pending</span><span className="statIcon"><FaClock /></span></div>
                     <div className="statValue">{orderStats.pending}</div>
-                    <div className="statHint">Pending or confirmed</div>
+                    <div className="statHint">Seller queue</div>
                   </div>
                   <div className="statCard statActive">
                     <div className="statTop"><span className="statLabel">Processing</span><span className="statIcon"><FaCogs /></span></div>
                     <div className="statValue">{orderStats.active}</div>
-                    <div className="statHint">On the way</div>
+                    <div className="statHint">In progress</div>
                   </div>
                   <div className="statCard statDelivered">
                     <div className="statTop"><span className="statLabel">Delivered</span><span className="statIcon"><FaCheck /></span></div>
@@ -560,17 +570,8 @@ const OrderManagementView: React.FC<Props> = ({
                           <td>
                             <div className="actionBtns">
                               <button className="btn view" onClick={() => setViewOrder(order)} title="View order details" aria-label="View order details"><FaEye /></button>
-                              {order.status === "pending" && (
-                                <button className="btn complete" onClick={() => updateStatus(order.id, "confirmed")} title="Confirm order" aria-label="Confirm order"><FaCheck /></button>
-                              )}
-                              {order.status === "confirmed" && (
-                                <button className="btn process" onClick={() => updateStatus(order.id, "processing")} title="Mark processing" aria-label="Mark processing"><FaCogs /></button>
-                              )}
                               {canAssignDelivery(order.status) && (
-                                <button className="btn assign" onClick={() => setAssignOrder(order)} title="Assign deliveryman and ship" aria-label="Assign deliveryman and ship"><FaTruck /></button>
-                              )}
-                              {order.status === "out_for_delivery" && (
-                                <button className="btn complete" onClick={() => updateStatus(order.id, "delivered")} title="Mark delivered" aria-label="Mark delivered"><FaCheck /></button>
+                                <button className="btn assign" onClick={() => setAssignOrder(order)} title="Assign deliveryman" aria-label="Assign deliveryman"><FaTruck /></button>
                               )}
                               {canCancelOrder(order.status) && (
                                 <button className="btn cancel" onClick={() => updateStatus(order.id, "cancelled")} title="Cancel order" aria-label="Cancel order"><FaBan /></button>

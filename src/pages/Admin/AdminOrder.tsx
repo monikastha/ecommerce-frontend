@@ -76,17 +76,9 @@ const paymentLabel = (paymentType?: string) => {
   return paymentType || "-";
 };
 
-const canAssignDelivery = (status?: string) => ["confirmed", "processing"].includes(status || "");
-const canCancelOrder = (status?: string) => ["pending", "confirmed", "processing"].includes(status || "");
-const SELLER_ACCEPTED_STATUSES = new Set([
-  "confirmed",
-  "processing",
-  "shipped",
-  "out_for_delivery",
-  "delivered",
-]);
-
-const isSellerAcceptedOrder = (order: AdminOrderRecord) => SELLER_ACCEPTED_STATUSES.has(order.status);
+const canAssignDelivery = (status?: string) => ["ready_for_delivery", "delivery_rejected", "processing"].includes(status || "");
+const canCancelOrder = (status?: string) =>
+  ["pending", "seller_accepted", "preparing", "warehouse_processing", "ready_for_delivery", "delivery_assigned"].includes(status || "");
 
 const orderProducts = (order: AdminOrderRecord) =>
   order.items?.length
@@ -124,8 +116,7 @@ const AdminOrder: React.FC = () => {
       const res = await fetch(`${API_ORIGIN}/api/orders/`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load orders");
-      const acceptedOrders = Array.isArray(data) ? data.filter(isSellerAcceptedOrder) : [];
-      setOrders(acceptedOrders);
+      setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load orders");
       setOrders([]);
@@ -187,10 +178,21 @@ const AdminOrder: React.FC = () => {
   }, [deliveryFilter, orders, search]);
 
   const orderStats = useMemo(() => {
-    const activeStatuses = ["processing", "shipped", "out_for_delivery"];
+    const activeStatuses = [
+      "seller_accepted",
+      "preparing",
+      "warehouse_processing",
+      "ready_for_delivery",
+      "delivery_assigned",
+      "delivery_accepted",
+      "picked_up",
+      "out_for_delivery",
+      "processing",
+      "shipped",
+    ];
     return {
       total: orders.length,
-      pending: orders.filter((order) => order.status === "confirmed").length,
+      pending: orders.filter((order) => order.status === "pending").length,
       active: orders.filter((order) => activeStatuses.includes(order.status)).length,
       delivered: orders.filter((order) => order.status === "delivered").length,
       normal: orders.filter((order) => order.delivery_type === "normal").length,
@@ -207,12 +209,8 @@ const AdminOrder: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update order");
-      setOrders((prev) =>
-        isSellerAcceptedOrder(data)
-          ? prev.map((order) => (order.id === orderId ? data : order))
-          : prev.filter((order) => order.id !== orderId)
-      );
-      setViewOrder((prev) => (prev?.id === orderId && isSellerAcceptedOrder(data) ? data : prev?.id === orderId ? null : prev));
+      setOrders((prev) => prev.map((order) => (order.id === orderId ? data : order)));
+      setViewOrder((prev) => (prev?.id === orderId ? data : prev));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update order");
     }
@@ -229,13 +227,9 @@ const AdminOrder: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to assign deliveryman");
-      setOrders((prev) =>
-        isSellerAcceptedOrder(data)
-          ? prev.map((order) => (order.id === assignOrder.id ? data : order))
-          : prev.filter((order) => order.id !== assignOrder.id)
-      );
+      setOrders((prev) => prev.map((order) => (order.id === assignOrder.id ? data : order)));
       setAssignOrder(null);
-      setViewOrder((prev) => (prev?.id === assignOrder.id && isSellerAcceptedOrder(data) ? data : prev?.id === assignOrder.id ? null : prev));
+      setViewOrder((prev) => (prev?.id === assignOrder.id ? data : prev));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to assign deliveryman");
     } finally {
@@ -418,16 +412,16 @@ const AdminOrder: React.FC = () => {
                   <span className="statIcon"><FaShoppingBag /></span>
                 </div>
                 <div className="statValue">{orderStats.total}</div>
-                <div className="statHint">Seller accepted orders</div>
+                <div className="statHint">All buyer orders</div>
               </button>
 
               <div className="statCard statPending">
                 <div className="statTop">
-                  <span className="statLabel">Accepted</span>
+                  <span className="statLabel">Pending</span>
                   <span className="statIcon"><FaClock /></span>
                 </div>
                 <div className="statValue">{orderStats.pending}</div>
-                <div className="statHint">Ready for processing</div>
+                <div className="statHint">Awaiting confirmation</div>
               </div>
 
               <div className="statCard statActive">
@@ -528,24 +522,9 @@ const AdminOrder: React.FC = () => {
                               <button className="btn view" onClick={() => setViewOrder(order)} title="View order details" aria-label="View order details">
                                 <FaEye />
                               </button>
-                              {order.status === "pending" && (
-                                <button className="btn complete" onClick={() => updateStatus(order.id, "confirmed")} title="Confirm order" aria-label="Confirm order">
-                                  <FaCheck />
-                                </button>
-                              )}
-                              {order.status === "confirmed" && (
-                                <button className="btn process" onClick={() => updateStatus(order.id, "processing")} title="Mark processing" aria-label="Mark processing">
-                                  <FaCogs />
-                                </button>
-                              )}
                               {canAssignDelivery(order.status) && (
-                                <button className="btn assign" onClick={() => navigate(`/admin/assign-delivery/${order.id}`)} title="Assign deliveryman and ship" aria-label="Assign deliveryman and ship">
+                                <button className="btn assign" onClick={() => navigate(`/admin/assign-delivery/${order.id}`)} title="Assign deliveryman" aria-label="Assign deliveryman">
                                   <FaTruck />
-                                </button>
-                              )}
-                              {order.status === "out_for_delivery" && (
-                                <button className="btn complete" onClick={() => updateStatus(order.id, "delivered")} title="Mark delivered" aria-label="Mark delivered">
-                                  <FaCheck />
                                 </button>
                               )}
                               {canCancelOrder(order.status) && (
@@ -561,7 +540,7 @@ const AdminOrder: React.FC = () => {
                   ) : (
                     <tr>
                       <td colSpan={9} className="empty">
-                        No seller accepted orders found yet.
+                        No buyer orders found yet.
                       </td>
                     </tr>
                   )}

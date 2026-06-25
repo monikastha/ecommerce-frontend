@@ -65,7 +65,10 @@ const DeliverymanNavbar = () => {
             customer: o.customer_name || "Unknown",
             phone: o.phone || "N/A",
             address: `${o.address}, ${o.city}`,
-            status: o.status === "confirmed" ? "Pending"
+            status: o.status === "delivery_assigned" ? "Assigned"
+                  : o.status === "delivery_accepted" ? "Accepted"
+                  : o.status === "picked_up" ? "Picked Up"
+                  : o.status === "out_for_delivery" ? "Out For Delivery"
                   : o.status === "shipped" ? "Accepted"
                   : o.status === "delivered" ? "Delivered"
                   : o.status,
@@ -106,13 +109,20 @@ const DeliverymanNavbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => { localStorage.clear(); navigate("/login"); };
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate("/login", { replace: true });
+  };
   const handleProfile = () => { setModalOpen(true); setProfileOpen(false); };
   const handleBellClick = () => { setNotifOpen(!notifOpen); setHasUnread(false); };
 
   const getStatusColor = (status: string) => {
     if (status === "Pending") return "#f97316";
+    if (status === "Assigned") return "#2563eb";
     if (status === "Accepted") return "#3b82f6";
+    if (status === "Picked Up") return "#0284c7";
+    if (status === "Out For Delivery") return "#7c3aed";
     if (status === "Delivered") return "#22c55e";
     return "#64748b";
   };
@@ -178,7 +188,7 @@ const DeliverymanNavbar = () => {
                       onClick={() => {
                         setSearchQuery("");
                         setSearchOpen(false);
-                        navigate("/delivery/tracking");
+                        navigate("/delivery/assigned");
                       }}
                     >
                       <div>
@@ -206,16 +216,16 @@ const DeliverymanNavbar = () => {
             </div>
             {notifOpen && (
               <div style={{ position: "absolute", top: "34px", right: "0", width: "280px", background: "white", borderRadius: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.12)", padding: "16px", zIndex: 1001 }}>
-                <h4 style={{ margin: "0 0 12px", fontSize: "14px", color: "#0f172a", fontWeight: 600 }}>🔔 Notifications</h4>
+                    <h4 style={{ margin: "0 0 12px", fontSize: "14px", color: "#0f172a", fontWeight: 600 }}>Notifications</h4>
                 <div>
-                  <div className="notif-item" style={{ background: "#fef9c3", color: "#854d0e" }} onClick={() => { navigate("/delivery/tracking?filter=Pending"); setNotifOpen(false); }}>
-                    📦 You have pending deliveries. Check now.
+                  <div className="notif-item" style={{ background: "#fef9c3", color: "#854d0e" }} onClick={() => { navigate("/delivery/assigned?filter=Pending"); setNotifOpen(false); }}>
+                    You have pending deliveries. Check now.
                   </div>
-                  <div className="notif-item" style={{ background: "#dbeafe", color: "#1e40af" }} onClick={() => { navigate("/delivery/tracking"); setNotifOpen(false); }}>
-                    🚚 Check your assigned orders and update status.
+                  <div className="notif-item" style={{ background: "#dbeafe", color: "#1e40af" }} onClick={() => { navigate("/delivery/assigned"); setNotifOpen(false); }}>
+                    Check your assigned orders and update status.
                   </div>
                   <div className="notif-item" style={{ background: "#dcfce7", color: "#166534" }} onClick={() => { navigate("/delivery/earnings"); setNotifOpen(false); }}>
-                    💰 Check your latest earnings.
+                    Check your latest earnings.
                   </div>
                 </div>
                 <p style={{ margin: "6px 0 0", fontSize: "11px", color: "#94a3b8", textAlign: "right" }}>Click to navigate</p>

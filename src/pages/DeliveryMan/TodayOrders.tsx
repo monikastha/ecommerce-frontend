@@ -124,7 +124,7 @@ const TodayOrders = () => {
                 </thead>
 
                 <tbody>
-                  {todayOrders.map((o) => (
+                  {orders.map((o) => (
                     <tr key={o.id}>
                       <td><strong>{o.id}</strong></td>
 

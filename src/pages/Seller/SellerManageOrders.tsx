@@ -27,6 +27,7 @@ type Order = {
   city?: string;
   postal_code?: string;
   payment_type?: string;
+  delivery_type?: string;
   subtotal?: string | number;
   total?: string | number;
   status?: string;
@@ -166,7 +167,7 @@ export default function SellerManageOrders() {
     }).sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
   }, [activeTab, orders, searchQuery]);
 
-  const updateOrderStatus = async (orderId: number, nextStatus: "confirmed" | "cancelled") => {
+  const updateOrderStatus = async (orderId: number, nextStatus: "seller_accepted" | "preparing" | "warehouse_processing" | "cancelled") => {
     try {
       const res = await fetch(`${API_ORIGIN}/api/orders/${orderId}/set-status/`, {
         method: "POST",
@@ -186,6 +187,10 @@ export default function SellerManageOrders() {
 
   const sellerStatusLabel = (status?: string) => {
     if (isCompleted(status)) return "Completed";
+    if (status === "pending") return "New Order";
+    if (status === "seller_accepted") return "Accepted";
+    if (status === "preparing") return "Preparing";
+    if (status === "warehouse_processing") return "Sent To Warehouse";
     return "Pending";
   };
 
@@ -209,115 +214,124 @@ export default function SellerManageOrders() {
   const completedCount = orders.filter((order) => isCompleted(order.status)).length;
 
   return (
-    <div className="flex w-full h-screen bg-gray-100 font-sans text-[13px]">
-
-      {/* Sidebar */}
+    <div className="min-h-screen bg-slate-100 font-sans text-[13px] text-slate-900">
       <SellerSidebar />
 
-      {/* Main Section */}
-      <div className="flex-1 flex flex-col">
-
-        {/* Navbar */}
+      <div className="ml-[260px] flex min-h-screen flex-col bg-slate-100">
         <SellerNavbar />
 
-        {/* Page Content */}
-        <div className="p-5">
-
-          {/* Tabs + Search */}
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
-
-            {(["All Orders", "Pending", "Completed"] as FilterTab[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-full border text-xs ${
-                  activeTab === tab
-                    ? "bg-blue-900 text-white"
-                    : "bg-white text-gray-700"
-                }`}
-              >
-                {tab}
-                {tab === "Pending" ? ` (${pendingCount})` : tab === "Completed" ? ` (${completedCount})` : ""}
-              </button>
-            ))}
-
-            <div className="flex-1 flex justify-end items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 text-[11px] text-gray-500">
-                <span>{refreshing ? "Refreshing..." : "Live refresh"}</span>
-                <span className="font-semibold">•</span>
-                <span>{lastUpdated ? `Updated at ${lastUpdated}` : "Waiting for first load..."}</span>
+        <main className="p-6">
+          <section className="mb-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h1 className="text-xl font-black text-slate-900">Order Management</h1>
+                <p className="mt-1 text-sm font-semibold text-slate-500">
+                  Review seller orders, prepare products, and send ready orders to warehouse.
+                </p>
               </div>
-              <button
-                type="button"
-                onClick={() => void loadOrders(true)}
-                className="bg-blue-900 text-white px-3 py-2 rounded-md text-xs"
-              >
-                Refresh
-              </button>
-              <input
-                type="text"
-                placeholder="Search order..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="border px-3 py-2 rounded-md w-64 text-xs"
-              />
+
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <div className="text-right text-[11px] font-semibold text-slate-500">
+                  <div>{refreshing ? "Refreshing..." : "Live refresh"}</div>
+                  <div>{lastUpdated ? `Updated at ${lastUpdated}` : "Waiting for first load"}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void loadOrders(true)}
+                  className="rounded-lg bg-blue-900 px-4 py-2.5 text-xs font-black text-white shadow-sm hover:bg-blue-800"
+                >
+                  Refresh
+                </button>
+                <input
+                  type="text"
+                  placeholder="Search order, buyer, product..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-10 w-72 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
             </div>
 
-          </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {(["All Orders", "Pending", "Completed"] as FilterTab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`rounded-full border px-4 py-2 text-xs font-black transition ${
+                    activeTab === tab
+                      ? "border-blue-900 bg-blue-900 text-white shadow-sm"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:border-blue-200 hover:bg-blue-50"
+                  }`}
+                >
+                  {tab}
+                  {tab === "Pending" ? ` (${pendingCount})` : tab === "Completed" ? ` (${completedCount})` : ""}
+                </button>
+              ))}
+            </div>
+          </section>
 
-          {/* Table */}
           {error && (
-            <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">
               {error}
             </div>
           )}
 
-          <div className="bg-white border rounded-md overflow-hidden">
-
-            <table className="w-full text-xs">
-              <thead className="bg-gray-200">
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <table className="w-full table-fixed text-xs">
+              <thead className="bg-slate-100 text-left text-[11px] uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="p-3 text-left">Order ID</th>
-                  <th className="p-3 text-center">Customer</th>
-                  <th className="p-3 text-center">Products</th>
-                  <th className="p-3 text-center">Total</th>
-                  <th className="p-3 text-center">Status</th>
-                  <th className="p-3 text-center">Action</th>
+                  <th className="w-[15%] px-4 py-3">Order</th>
+                  <th className="w-[18%] px-4 py-3">Customer</th>
+                  <th className="w-[22%] px-4 py-3">Products</th>
+                  <th className="w-[12%] px-4 py-3 text-right">Total</th>
+                  <th className="w-[15%] px-4 py-3 text-center">Status</th>
+                  <th className="w-[18%] px-4 py-3">Action</th>
                 </tr>
               </thead>
 
               <tbody>
                 {loading ? (
                   <tr>
-                    <td className="p-6 text-center text-gray-500" colSpan={6}>
+                    <td className="p-10 text-center text-sm font-bold text-slate-500" colSpan={6}>
                       Loading seller orders...
                     </td>
                   </tr>
                 ) : filteredOrders.length === 0 ? (
                   <tr>
-                    <td className="p-6 text-center text-gray-500" colSpan={6}>
+                    <td className="p-10 text-center text-sm font-bold text-slate-500" colSpan={6}>
                       No orders found.
                     </td>
                   </tr>
                 ) : (
                   filteredOrders.map((order) => {
                     const canAccept = order.status === "pending";
-                    const canReject = ["pending", "confirmed", "processing"].includes(order.status || "");
+                    const canPrepare = order.status === "seller_accepted";
+                    const canSendWarehouse = order.status === "preparing";
+                    const canReject = ["pending", "seller_accepted", "preparing"].includes(order.status || "");
                     return (
-                      <tr key={order.id} className="border-t">
-                        <td className="p-3">
-                          <strong>{order.order_number || `#${order.id}`}</strong>
-                          <div className="text-[11px] text-gray-500">#{order.id}</div>
+                      <tr key={order.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
+                        <td className="px-4 py-4">
+                          <strong className="block truncate text-sm text-slate-900">{order.order_number || `#${order.id}`}</strong>
+                          <div className="mt-1 text-[11px] font-semibold text-slate-400">#{order.id}</div>
+                          {order.delivery_type === "emergency" && (
+                            <span className="mt-2 inline-flex rounded-full bg-red-50 px-2 py-1 text-[10px] font-black uppercase text-red-700">
+                              Emergency
+                            </span>
+                          )}
                         </td>
-                        <td className="p-3 text-center">
-                          <div className="font-semibold">{order.customer_name || "Customer"}</div>
-                          <div className="text-[11px] text-gray-500">{order.phone || order.email || "-"}</div>
+                        <td className="px-4 py-4">
+                          <div className="truncate font-black text-slate-900">{order.customer_name || "Customer"}</div>
+                          <div className="mt-1 truncate text-[11px] font-semibold text-slate-500">{order.phone || order.email || "-"}</div>
                         </td>
-                        <td className="p-3 text-center max-w-[260px] truncate">{orderProducts(order)}</td>
-                        <td className="p-3 text-center font-semibold">{currency(order.total)}</td>
-                        <td className="p-3 text-center">
+                        <td className="px-4 py-4">
+                          <div className="truncate font-semibold text-slate-700" title={orderProducts(order)}>
+                            {orderProducts(order)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-right font-black text-slate-900">{currency(order.total)}</td>
+                        <td className="px-4 py-4 text-center">
                           <span
-                            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${
+                            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-black ${
                               isCompleted(order.status)
                                 ? "bg-green-100 text-green-700"
                                 : "bg-amber-100 text-amber-700"
@@ -326,30 +340,53 @@ export default function SellerManageOrders() {
                           >
                             {sellerStatusLabel(order.status)}
                           </span>
-                          <div className="mt-1 text-[11px] text-gray-500">{orderStatusLabel(order.status)}</div>
+                          <div className="mt-1 text-[11px] font-semibold text-slate-500">{orderStatusLabel(order.status)}</div>
                         </td>
-                        <td className="p-3">
-                          <div className="flex justify-center gap-2 flex-wrap">
+                        <td className="px-4 py-4">
+                          <div className="flex flex-wrap gap-2">
                             <button
-                              className="bg-blue-900 text-white px-3 py-1 rounded text-xs"
+                              className="rounded-md bg-blue-900 px-3 py-2 text-xs font-black text-white hover:bg-blue-800"
                               onClick={() => setSelectedOrder(order)}
                             >
                               Details
                             </button>
-                            <button
-                              className="bg-green-600 text-white px-3 py-1 rounded text-xs disabled:cursor-not-allowed disabled:bg-gray-300"
-                              disabled={!canAccept}
-                              onClick={() => void updateOrderStatus(order.id, "confirmed")}
-                            >
-                              Accept
-                            </button>
-                            <button
-                              className="bg-red-600 text-white px-3 py-1 rounded text-xs disabled:cursor-not-allowed disabled:bg-gray-300"
-                              disabled={!canReject}
-                              onClick={() => void updateOrderStatus(order.id, "cancelled")}
-                            >
-                              Reject
-                            </button>
+                            {canAccept && (
+                              <button
+                                className="rounded-md bg-green-600 px-3 py-2 text-xs font-black text-white hover:bg-green-700"
+                                onClick={() => void updateOrderStatus(order.id, "seller_accepted")}
+                              >
+                                Accept
+                              </button>
+                            )}
+                            {canPrepare && (
+                              <button
+                                className="rounded-md bg-indigo-600 px-3 py-2 text-xs font-black text-white hover:bg-indigo-700"
+                                onClick={() => void updateOrderStatus(order.id, "preparing")}
+                              >
+                                Prepare
+                              </button>
+                            )}
+                            {canSendWarehouse && (
+                              <button
+                                className="rounded-md bg-teal-600 px-3 py-2 text-xs font-black text-white hover:bg-teal-700"
+                                onClick={() => void updateOrderStatus(order.id, "warehouse_processing")}
+                              >
+                                Send Warehouse
+                              </button>
+                            )}
+                            {canReject && (
+                              <button
+                                className="rounded-md bg-red-600 px-3 py-2 text-xs font-black text-white hover:bg-red-700"
+                                onClick={() => void updateOrderStatus(order.id, "cancelled")}
+                              >
+                                Reject
+                              </button>
+                            )}
+                            {!canAccept && !canPrepare && !canSendWarehouse && !canReject && (
+                              <span className="inline-flex items-center rounded-md bg-slate-100 px-3 py-2 text-[11px] font-black text-slate-500">
+                                No seller action
+                              </span>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -363,16 +400,16 @@ export default function SellerManageOrders() {
           </div>
 
           {/* Pagination */}
-          <div className="flex justify-end gap-2 mt-4">
-            <button className="bg-blue-900 text-white px-4 py-2 rounded text-xs" disabled>
+          <div className="mt-4 flex justify-end gap-2">
+            <button className="rounded-md bg-blue-900 px-4 py-2 text-xs font-black text-white disabled:opacity-60" disabled>
               Previous
             </button>
-            <button className="bg-blue-900 text-white px-4 py-2 rounded text-xs" disabled>
+            <button className="rounded-md bg-blue-900 px-4 py-2 text-xs font-black text-white disabled:opacity-60" disabled>
               Next
             </button>
           </div>
 
-        </div>
+        </main>
       </div>
 
       {selectedOrder && (

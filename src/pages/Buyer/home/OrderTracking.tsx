@@ -27,6 +27,7 @@ type TrackingOrder = {
   phone: string;
   address: string;
   paymentType: string;
+  deliveryType: string;
   deliveryFee: number;
   total: number;
   status: string;
@@ -42,10 +43,12 @@ const normalizeLookupValue = (value?: string | number | null) =>
 const normalizeStatus = (status?: string | null) => {
   const normalized = normalizeLookupValue(status).replace(/[\s-]+/g, "_");
   const statusAliases: Record<string, string> = {
-    accepted: "processing",
-    packed: "processing",
-    ready: "shipped",
-    ready_for_shipping: "shipped",
+    accepted: "seller_accepted",
+    confirmed: "seller_accepted",
+    packed: "warehouse_processing",
+    ready: "ready_for_delivery",
+    ready_for_shipping: "ready_for_delivery",
+    shipped: "delivery_accepted",
     completed: "delivered",
   };
 
@@ -79,6 +82,7 @@ const normalizeOrder = (raw: any): TrackingOrder => {
     phone: raw.phone || "",
     address: [raw.address, raw.city].filter(Boolean).join(", ") || raw.address || "",
     paymentType: raw.payment_type || raw.paymentType || "cash_on_delivery",
+    deliveryType: raw.delivery_type || raw.deliveryType || "normal",
     deliveryFee: Number(raw.delivery_fee ?? raw.deliveryFee ?? 0),
     total: Number(raw.total || 0),
     status: normalizeStatus(raw.status),
@@ -160,17 +164,48 @@ export default function OrderTracking() {
     if (!displayOrder) return [];
     const status = normalizeStatus(displayOrder.status);
     const createdDate = displayOrder.createdAt ? new Date(displayOrder.createdAt).toLocaleDateString() : "";
-    const statusOrder = ["pending", "confirmed", "processing", "shipped", "out_for_delivery", "delivered"];
+    const statusOrder = [
+      "pending",
+      "seller_accepted",
+      "preparing",
+      "warehouse_processing",
+      "ready_for_delivery",
+      "delivery_assigned",
+      "delivery_accepted",
+      "picked_up",
+      "out_for_delivery",
+      "delivered",
+    ];
     const currentIndex = statusOrder.indexOf(status);
     const completedThrough = currentIndex >= 0 ? currentIndex : 0;
-    return [
-      { status: "Order Placed", completed: completedThrough >= 0, date: createdDate },
-      { status: "Order Confirmed", completed: completedThrough >= 1, date: "" },
-      { status: "Processing", completed: completedThrough >= 2, date: "" },
-      { status: "Shipped", completed: completedThrough >= 3, date: "" },
-      { status: "Out For Delivery", completed: completedThrough >= 4, date: "" },
-      { status: "Delivered", completed: completedThrough >= 5, date: status === "delivered" ? createdDate : "" },
-    ];
+    const emergency = displayOrder.deliveryType === "emergency";
+    const steps = emergency
+      ? [
+          ["pending", "Order Placed"],
+          ["seller_accepted", "Emergency Priority"],
+          ["preparing", "Fast Preparation"],
+          ["warehouse_processing", "Warehouse Processing"],
+          ["ready_for_delivery", "Priority Delivery Ready"],
+          ["delivery_assigned", "Priority Delivery Assigned"],
+          ["out_for_delivery", "Out For Delivery"],
+          ["delivered", "Delivered"],
+        ]
+      : [
+          ["pending", "Order Placed"],
+          ["seller_accepted", "Seller Accepted"],
+          ["preparing", "Preparing"],
+          ["warehouse_processing", "Warehouse Processing"],
+          ["ready_for_delivery", "Ready For Delivery"],
+          ["delivery_assigned", "Delivery Assigned"],
+          ["out_for_delivery", "Out For Delivery"],
+          ["delivered", "Delivered"],
+        ];
+
+    return steps.map(([stepStatus, label]) => ({
+      status: label,
+      completed: completedThrough >= statusOrder.indexOf(stepStatus),
+      date: stepStatus === "pending" || (stepStatus === "delivered" && status === "delivered") ? createdDate : "",
+    }));
   }, [displayOrder]);
 
   const subtotal = displayOrder?.items?.reduce((sum, item) => sum + item.subtotal, 0) || 0;

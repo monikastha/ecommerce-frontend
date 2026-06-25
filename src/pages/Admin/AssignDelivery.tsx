@@ -56,7 +56,7 @@ type OrderRecord = {
 const currency = (value?: string | number) =>
   `Rs. ${Number(value || 0).toLocaleString()}`;
 
-const canAssignDelivery = (status?: string) => ["confirmed", "processing"].includes(status || "");
+const canAssignDelivery = (status?: string) => ["ready_for_delivery", "delivery_rejected", "processing"].includes(status || "");
 
 const imageUrl = (path?: string | null) => {
   if (!path) return "";
@@ -327,7 +327,7 @@ const AssignDelivery: React.FC = () => {
                 </div>
 
                 {!canAssignDelivery(order.status) && !order.assigned_deliveryman && (
-                  <div className="error">Confirm and process this order before assigning a deliveryman.</div>
+                  <div className="error">Warehouse must mark this order ready for delivery before assigning a deliveryman.</div>
                 )}
 
                 {filteredDeliverymen.length ? (

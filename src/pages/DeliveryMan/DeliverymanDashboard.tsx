@@ -38,7 +38,13 @@ const assignmentFields: (keyof ApiOrder)[] = [
   "assigned_to",
 ];
 
-const pendingStatuses = new Set(["pending", "confirmed", "processing", "shipped", "out_for_delivery"]);
+const pendingStatuses = new Set([
+  "delivery_assigned",
+  "delivery_accepted",
+  "picked_up",
+  "out_for_delivery",
+  "shipped",
+]);
 const completedStatuses = new Set(["delivered"]);
 
 const normalizeStatus = (status?: string) => (status || "").toLowerCase().replace(/\s+/g, "_");
@@ -210,7 +216,7 @@ const DeliverymanDashboard = () => {
 
             <div className="stat-cards">
 
-              <div className="stat-card" onClick={() => navigate("/delivery/tracking")}>
+              <div className="stat-card" onClick={() => navigate("/delivery/assigned")}>
                 <div className="stat-card-left">
                   <h4>Total Assigned Deliveries</h4>
                   <h2>{totalAssigned}</h2>
@@ -218,7 +224,7 @@ const DeliverymanDashboard = () => {
                 <FaTruck className="stat-card-icon" />
               </div>
 
-              <div className="stat-card" onClick={() => navigate("/delivery/tracking?filter=Pending")}>
+              <div className="stat-card" onClick={() => navigate("/delivery/assigned?filter=Pending")}>
                 <div className="stat-card-left">
                   <h4>Pending Deliveries</h4>
                   <h2>{pendingDeliveries}</h2>
@@ -234,7 +240,7 @@ const DeliverymanDashboard = () => {
                 <FaMoneyBillWave className="stat-card-icon" />
               </div>
 
-              <div className="stat-card" onClick={() => navigate("/delivery/tracking?filter=Delivered")}>
+              <div className="stat-card" onClick={() => navigate("/delivery/assigned?filter=Completed")}>
                 <div className="stat-card-left">
                   <h4>Completed Deliveries</h4>
                   <h2>{completedDeliveries}</h2>

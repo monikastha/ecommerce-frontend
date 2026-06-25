@@ -1,5 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
-import { FaBoxOpen, FaFolder, FaShoppingCart, FaUsers } from "react-icons/fa";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaBoxOpen, FaClipboardCheck, FaFolder, FaShoppingCart, FaUsers } from "react-icons/fa";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
 
@@ -14,9 +28,12 @@ type Product = {
 
 type Order = {
   id: number;
+  assigned_deliveryman?: number | null;
   total?: string | number;
   status?: string;
   delivery_type?: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 type DashboardStats = {
@@ -28,8 +45,14 @@ type DashboardStats = {
 
 const countText = (value: number) => value.toLocaleString();
 const moneyText = (value: number) => `Rs. ${value.toLocaleString()}`;
+const listFromResponse = <T,>(data: T[] | { results?: T[] }) =>
+  Array.isArray(data) ? data : data.results || [];
+const statusLabel = (status: string) => status.replace(/_/g, " ");
+const chartColors = ["#2563eb", "#16a34a", "#f97316", "#7c3aed", "#dc2626", "#0f766e"];
+type CardStyle = CSSProperties & { "--card-color": string };
 
 const AssistantDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     users: 0,
     products: [],
@@ -63,11 +86,16 @@ const AssistantDashboard = () => {
           ordersRes.json(),
         ]);
 
+        const userList = listFromResponse(users);
+        const productList = listFromResponse<Product>(products);
+        const categoryList = listFromResponse(categories);
+        const orderList = listFromResponse<Order>(orders);
+
         setStats({
-          users: Array.isArray(users) ? users.length : 0,
-          products: Array.isArray(products) ? products : [],
-          categories: Array.isArray(categories) ? categories.length : 0,
-          orders: Array.isArray(orders) ? orders : [],
+          users: userList.length,
+          products: productList,
+          categories: categoryList.length,
+          orders: orderList,
         });
       } catch (err) {
         console.error(err);
@@ -82,17 +110,23 @@ const AssistantDashboard = () => {
 
   const approvedProducts = stats.products.filter((product) => product.status === "approved").length;
   const pendingProducts = stats.products.filter((product) => product.status === "pending").length;
+  const rejectedProducts = stats.products.filter((product) => product.status === "rejected").length;
+  const flaggedProducts = stats.products.filter((product) => product.status === "flagged").length;
   const publishedProducts = stats.products.filter((product) => product.is_published).length;
   const totalEarnings = stats.orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
   const emergencyOrders = stats.orders.filter((order) => order.delivery_type === "emergency").length;
+  const activeOrders = stats.orders.filter((order) => !["delivered", "cancelled"].includes(order.status || "")).length;
+  const unassignedDeliveries = stats.orders.filter((order) => order.status === "ready_for_delivery" && !order.assigned_deliveryman).length;
 
   const productStatusData = useMemo(
     () => [
       { label: "Approved", value: approvedProducts, color: "#16a34a" },
       { label: "Pending", value: pendingProducts, color: "#f97316" },
-      { label: "Published", value: publishedProducts, color: "#2563eb" },
+      { label: "Rejected", value: rejectedProducts, color: "#dc2626" },
+      { label: "Flagged", value: flaggedProducts, color: "#7c3aed" },
+      { label: "Draft", value: Math.max(stats.products.length - publishedProducts, 0), color: "#64748b" },
     ],
-    [approvedProducts, pendingProducts, publishedProducts]
+    [approvedProducts, flaggedProducts, pendingProducts, publishedProducts, rejectedProducts, stats.products.length]
   );
 
   const orderStatusData = useMemo(() => {
@@ -102,11 +136,38 @@ const AssistantDashboard = () => {
       return acc;
     }, {});
 
-    return Object.entries(counts).slice(0, 4);
+    return Object.entries(counts)
+      .map(([status, count]) => ({ status: statusLabel(status), count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
   }, [stats.orders]);
 
-  const maxProductValue = Math.max(1, ...productStatusData.map((item) => item.value));
-  const maxOrderValue = Math.max(1, ...orderStatusData.map(([, value]) => value));
+  const deliveryTypeData = useMemo(() => {
+    const normalOrders = stats.orders.filter((order) => order.delivery_type !== "emergency").length;
+    return [
+      { name: "Normal", value: normalOrders },
+      { name: "Emergency", value: emergencyOrders },
+    ].filter((item) => item.value > 0);
+  }, [emergencyOrders, stats.orders]);
+
+  const needsToDo = useMemo(
+    () => [
+      { label: "Review pending products", count: pendingProducts, path: "/assistant/product" },
+      { label: "Check flagged products", count: flaggedProducts, path: "/assistant/product" },
+      { label: "Process active orders", count: activeOrders, path: "/assistant/order" },
+      { label: "Assign ready deliveries", count: unassignedDeliveries, path: "/assistant/order" },
+      { label: "Monitor emergency orders", count: emergencyOrders, path: "/assistant/emergency-orders" },
+    ],
+    [activeOrders, emergencyOrders, flaggedProducts, pendingProducts, unassignedDeliveries]
+  );
+
+  const recentOrders = useMemo(
+    () =>
+      [...stats.orders]
+        .sort((a, b) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime())
+        .slice(0, 5),
+    [stats.orders]
+  );
 
   return (
     <>
@@ -171,20 +232,30 @@ const AssistantDashboard = () => {
           position: relative;
           z-index: 1;
         }
-        .overview { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chart-grid { margin-top: 26px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
         .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06); }
-        .panel h2 { color: #0f172a; font-size: 17px; font-weight: 800; margin-bottom: 18px; }
-        .bars { height: 230px; display: flex; align-items: flex-end; gap: 18px; border-bottom: 1px solid #e2e8f0; padding: 0 6px; }
-        .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
-        .bar { width: 100%; max-width: 58px; min-height: 8px; border-radius: 8px 8px 0 0; }
-        .bar-label { color: #475569; font-size: 12px; font-weight: 700; text-transform: capitalize; text-align: center; overflow-wrap: anywhere; }
-        .bar-value { color: #0f172a; font-size: 12px; font-weight: 900; }
+        .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .panel h2 { color: #0f172a; font-size: 17px; font-weight: 800; }
+        .panel p { color: #64748b; font-size: 12px; margin-top: 4px; }
+        .chart-box { height: 280px; min-width: 0; }
+        .todo-grid { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+        .todo-list { display: grid; gap: 10px; }
+        .todo-item { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; background: #f8fafc; cursor: pointer; transition: 0.2s; }
+        .todo-item:hover { border-color: #5BBF9A; transform: translateY(-1px); }
+        .todo-item strong { color: #334155; font-size: 13px; }
+        .todo-count { min-width: 34px; text-align: center; border-radius: 999px; padding: 6px 10px; background: #fee2e2; color: #991b1b; font-size: 12px; font-weight: 900; }
+        .recent-list { display: grid; gap: 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+        .recent-row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 12px 14px; border-bottom: 1px solid #edf2f7; font-size: 13px; }
+        .recent-row:last-child { border-bottom: 0; }
+        .recent-row strong { color: #0f172a; }
+        .badge { display: inline-flex; border-radius: 999px; padding: 5px 9px; background: #dbeafe; color: #1d4ed8; font-size: 11px; font-weight: 900; text-transform: capitalize; }
+        .empty { padding: 22px; text-align: center; color: #94a3b8; font-size: 13px; font-weight: 800; }
         .summary-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
         .summary { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; box-shadow: 0 8px 20px rgba(15,23,42,0.05); }
         .summary span { display: block; color: #64748b; font-size: 12px; font-weight: 800; }
         .summary strong { display: block; color: #0f172a; font-size: 20px; margin-top: 6px; }
-        @media (max-width: 1180px) { .cards { grid-template-columns: repeat(2, 1fr); } .overview { grid-template-columns: 1fr; } }
-        @media (max-width: 760px) { .main-content { margin-left: 0; width: 100%; } .cards, .summary-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1180px) { .cards { grid-template-columns: repeat(2, 1fr); } .chart-grid, .todo-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 760px) { .main-content { margin-left: 0; width: 100%; } .content { padding: 18px; } .cards, .summary-grid { grid-template-columns: 1fr; } .recent-row { grid-template-columns: 1fr; } }
       `}</style>
 
       <div className="dashboard-container">
@@ -198,7 +269,7 @@ const AssistantDashboard = () => {
             {error && <div className="alert">{error}</div>}
 
             <div className="cards">
-              <div className="card" style={{ "--card-color": "#2563eb" } as any}>
+              <div className="card" style={{ "--card-color": "#2563eb" } as CardStyle}>
                 <div className="card-top">
                   <div>
                     <h3>Total Users</h3>
@@ -208,7 +279,7 @@ const AssistantDashboard = () => {
                   <div className="card-icon"><FaUsers /></div>
                 </div>
               </div>
-              <div className="card" style={{ "--card-color": "#16a34a" } as any}>
+              <div className="card" style={{ "--card-color": "#16a34a" } as CardStyle}>
                 <div className="card-top">
                   <div>
                     <h3>Total Products</h3>
@@ -218,7 +289,7 @@ const AssistantDashboard = () => {
                   <div className="card-icon"><FaBoxOpen /></div>
                 </div>
               </div>
-              <div className="card" style={{ "--card-color": "#f97316" } as any}>
+              <div className="card" style={{ "--card-color": "#f97316" } as CardStyle}>
                 <div className="card-top">
                   <div>
                     <h3>Total Categories</h3>
@@ -228,7 +299,7 @@ const AssistantDashboard = () => {
                   <div className="card-icon"><FaFolder /></div>
                 </div>
               </div>
-              <div className="card" style={{ "--card-color": "#7c3aed" } as any}>
+              <div className="card" style={{ "--card-color": "#7c3aed" } as CardStyle}>
                 <div className="card-top">
                   <div>
                     <h3>Total Orders</h3>
@@ -240,30 +311,55 @@ const AssistantDashboard = () => {
               </div>
             </div>
 
-            <div className="overview">
+            <div className="chart-grid">
               <div className="panel">
-                <h2>Product Review Status</h2>
-                <div className="bars">
-                  {productStatusData.map((item) => (
-                    <div className="bar-wrap" key={item.label}>
-                      <span className="bar-value">{item.value}</span>
-                      <div className="bar" style={{ height: `${(item.value / maxProductValue) * 180}px`, background: item.color }} />
-                      <span className="bar-label">{item.label}</span>
-                    </div>
-                  ))}
+                <div className="panel-head">
+                  <div>
+                    <h2>Order Status Bar Graph</h2>
+                    <p>Live order counts grouped by current backend status.</p>
+                  </div>
+                </div>
+                <div className="chart-box">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={orderStatusData} barSize={32}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="status" tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                      <Tooltip contentStyle={{ border: "0", borderRadius: 8, boxShadow: "0 10px 26px rgba(15,23,42,0.12)" }} />
+                      <Bar dataKey="count" name="Orders" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
               <div className="panel">
-                <h2>Order Status</h2>
-                <div className="bars">
-                  {(orderStatusData.length ? orderStatusData : [["No Orders", 0] as [string, number]]).map(([label, value]) => (
-                    <div className="bar-wrap" key={label}>
-                      <span className="bar-value">{value}</span>
-                      <div className="bar" style={{ height: `${(value / maxOrderValue) * 180}px`, background: "#0f766e" }} />
-                      <span className="bar-label">{label.replace(/_/g, " ")}</span>
-                    </div>
-                  ))}
+                <div className="panel-head">
+                  <div>
+                    <h2>Product Status Pie Chart</h2>
+                    <p>Approval, flag, rejection, and draft product split.</p>
+                  </div>
+                </div>
+                <div className="chart-box">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={productStatusData.filter((item) => item.value > 0)}
+                        dataKey="value"
+                        nameKey="label"
+                        cx="50%"
+                        cy="48%"
+                        outerRadius={88}
+                        innerRadius={48}
+                        paddingAngle={2}
+                      >
+                        {productStatusData.filter((item) => item.value > 0).map((item) => (
+                          <Cell key={item.label} fill={item.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ border: "0", borderRadius: 8, boxShadow: "0 10px 26px rgba(15,23,42,0.12)" }} />
+                      <Legend verticalAlign="bottom" iconType="circle" />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </div>
@@ -280,6 +376,76 @@ const AssistantDashboard = () => {
               <div className="summary">
                 <span>Total Order Value</span>
                 <strong>{loading ? "..." : moneyText(totalEarnings)}</strong>
+              </div>
+            </div>
+
+            <div className="todo-grid">
+              <div className="panel">
+                <div className="panel-head">
+                  <div>
+                    <h2>Needs To Be Done</h2>
+                    <p>Tasks calculated from live products and orders.</p>
+                  </div>
+                  <FaClipboardCheck color="#5BBF9A" />
+                </div>
+                <div className="todo-list">
+                  {needsToDo.map((task) => (
+                    <div className="todo-item" key={task.label} onClick={() => navigate(task.path)}>
+                      <strong>{task.label}</strong>
+                      <span className="todo-count">{loading ? "..." : task.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="panel">
+                <div className="panel-head">
+                  <div>
+                    <h2>Delivery Type Pie Chart</h2>
+                    <p>Normal versus emergency delivery demand.</p>
+                  </div>
+                </div>
+                <div className="chart-box">
+                  {deliveryTypeData.length ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={deliveryTypeData} dataKey="value" nameKey="name" cx="50%" cy="48%" outerRadius={92}>
+                          {deliveryTypeData.map((item, index) => (
+                            <Cell key={item.name} fill={chartColors[index % chartColors.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ border: "0", borderRadius: 8, boxShadow: "0 10px 26px rgba(15,23,42,0.12)" }} />
+                        <Legend verticalAlign="bottom" iconType="circle" />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="empty">No order delivery data yet.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="panel" style={{ marginTop: 20 }}>
+              <div className="panel-head">
+                <div>
+                  <h2>Recent Orders</h2>
+                  <p>Latest backend order activity for assistant follow-up.</p>
+                </div>
+              </div>
+              <div className="recent-list">
+                {loading ? (
+                  <div className="empty">Loading recent orders...</div>
+                ) : recentOrders.length ? (
+                  recentOrders.map((order) => (
+                    <div className="recent-row" key={order.id}>
+                      <strong>Order #{order.id}</strong>
+                      <span className="badge">{statusLabel(order.status || "pending")}</span>
+                      <strong>{moneyText(Number(order.total || 0))}</strong>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty">No orders found.</div>
+                )}
               </div>
             </div>
           </div>
