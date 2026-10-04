@@ -167,7 +167,7 @@ const AdminSidebar = () => {
           <li onClick={() => setOrderMenu(!orderMenu)}>
             <div className="dropdown-title">
               <FontAwesomeIcon icon={faCartShopping} />
-              <span>Order Management</span>
+              <span>Order & Earnings Management</span>
             </div>
           </li>
 

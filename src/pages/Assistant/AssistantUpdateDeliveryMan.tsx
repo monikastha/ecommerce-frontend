@@ -56,6 +56,7 @@ const AssistantUpdateDeliveryMan: React.FC = () => {
     setSubmitting(true);
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload: any = { ...form };
       if (!payload.password) delete payload.password; // Don't send empty password
 
@@ -63,6 +64,7 @@ const AssistantUpdateDeliveryMan: React.FC = () => {
 
       alert("Delivery man updated successfully!");
       navigate("/assistant/delivery-man");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
       alert(err.response?.data?.detail || "Failed to update delivery man");

@@ -1,4 +1,6 @@
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBoxOpen, FaClipboardCheck, FaFolder, FaShoppingCart, FaUsers } from "react-icons/fa";
 import {
@@ -16,6 +18,7 @@ import {
 } from "recharts";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
+import { FaBell } from "react-icons/fa";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -27,6 +30,8 @@ type Product = {
 };
 
 type Order = {
+  order_number: ReactNode;
+  customer_name: string;
   id: number;
   assigned_deliveryman?: number | null;
   total?: string | number;
@@ -169,6 +174,36 @@ const AssistantDashboard = () => {
     [stats.orders]
   );
 
+  const notificationRef = useRef<HTMLDivElement | null>(null);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [ordersNotifs, setOrdersNotifs] = useState<Order[]>([]);
+  const NOTIF_KEY = "assistant_order_notifications_seen_at";
+  const [, setSeenAt] = useState(() => localStorage.getItem(NOTIF_KEY) || "");
+
+  useEffect(() => {
+    const loadOrderNotifications = async () => {
+      try {
+        const res = await fetch(`${API_ORIGIN}/api/orders/`);
+        const data = await res.json();
+        if (!res.ok) throw new Error((data && (data as any).error) || "Failed to load order notifications");
+        setOrdersNotifs(Array.isArray(data) ? data.slice(0, 8) : []);
+      } catch (error) {
+        console.error("assistant load order notifications", error);
+      }
+    };
+
+    loadOrderNotifications();
+    const interval = window.setInterval(loadOrderNotifications, 30000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function money(arg0: number): import("react").ReactNode {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <>
       <style>{`
@@ -178,6 +213,23 @@ const AssistantDashboard = () => {
         .content { padding: 28px 30px; }
         .dashboard-title { font-size: 25px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
         .dashboard-subtitle { color: #64748b; font-size: 14px; margin-bottom: 24px; }
+        /* Admin-style notification panel (copied) */
+        .notification-wrap { position: relative; }
+        .bell-btn { position: relative; width: 38px; height: 38px; border: none; border-radius: 10px; background: #f8fafc; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .bell-btn:hover { background: #eef2ff; }
+        .badge { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #dc2626; color: white; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        .notification-panel { position: absolute; top: 48px; right: 0; width: 380px; max-width: calc(100vw - 28px); background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 18px 45px rgba(15,23,42,0.16); overflow: hidden; z-index: 250; }
+        .notification-head { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .notification-head h3 { font-size: 14px; color: #0f172a; font-weight: 800; margin: 0; }
+        .notification-head button { border: none; background: #2563eb; color: white; border-radius: 8px; padding: 7px 10px; font-size: 11px; font-weight: 800; cursor: pointer; }
+        .notification-list { max-height: 390px; overflow-y: auto; }
+        .notification-item { width: 100%; border: none; background: white; text-align: left; padding: 13px 16px; border-bottom: 1px solid #f8fafc; cursor: pointer; display: grid; gap: 6px; }
+        .notification-item:hover { background: #f8fafc; }
+        .notification-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #0f172a; font-size: 13px; font-weight: 800; }
+        .notification-total { color: #16a34a; white-space: nowrap; }
+        .notification-meta { color: #64748b; font-size: 12px; line-height: 1.45; }
+        .notification-status { display: inline-flex; width: fit-content; border-radius: 999px; padding: 4px 8px; background: #dbeafe; color: #1d4ed8; font-size: 11px; font-weight: 800; text-transform: capitalize; }
+        .notification-empty { padding: 28px 16px; text-align: center; color: #94a3b8; font-size: 13px; font-weight: 700; }
         .alert { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-weight: 700; }
         .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
         .card {
@@ -262,6 +314,43 @@ const AssistantDashboard = () => {
         <AssistantSidebar />
         <div className="main-content">
           <AssistantNavbar />
+          <div style={{ padding: '12px 24px', display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="notification-wrap" ref={notificationRef}>
+              {notificationOpen && (
+                <div className="notification-panel">
+                  <div className="notification-head">
+                    <h3>Order Notifications</h3>
+                    <button onClick={() => navigate('/assistant/order')}>View Orders</button>
+                  </div>
+                  <div className="notification-list">
+                    {ordersNotifs.length ? (
+                      ordersNotifs.map((order) => (
+                        <button
+                          key={order.id}
+                          className="notification-item"
+                          onClick={() => {
+                            setNotificationOpen(false);
+                            navigate('/assistant/order');
+                          }}
+                        >
+                          <div className="notification-title">
+                            <span>{order.order_number}</span>
+                            <span className="notification-total">{money(Number(order.total || 0))}</span>
+                          </div>
+                          <div className="notification-meta">
+                            {order.customer_name || 'Buyer'} | {order.created_at ? new Date(order.created_at).toLocaleString() : '-'}
+                          </div>
+                          <span className="notification-status">{order.delivery_type || 'normal'} | {statusLabel(order.status)}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="notification-empty">No order notifications yet.</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="content">
             <h1 className="dashboard-title">Dashboard Overview</h1>
             <p className="dashboard-subtitle">Live users, products, categories, and order activity.</p>

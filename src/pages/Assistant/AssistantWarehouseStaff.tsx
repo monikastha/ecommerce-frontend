@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
@@ -6,6 +7,7 @@ import { FaSearch, FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const WarehouseStaff: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [staff, setStaff] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

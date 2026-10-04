@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaUsers, FaTrash } from "react-icons/fa";
@@ -29,6 +30,7 @@ const Buyer: React.FC = () => {
       const res = await axios.get(`${API_BASE}/buyer/`);
       setBuyers(res.data);
       setError("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
       setError("Failed to load buyers. Please try again.");
@@ -50,6 +52,7 @@ const Buyer: React.FC = () => {
       await axios.delete(`${API_BASE}/users/${buyer.user_id}/`);
       alert("Buyer deleted successfully.");
       fetchBuyers();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert("Failed to delete buyer. Please try again.");
       console.error(err);

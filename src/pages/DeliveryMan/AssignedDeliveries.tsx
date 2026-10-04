@@ -275,6 +275,7 @@ const AssignedDeliveries = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update delivery status");
       setOrders((prev) => prev.map((order) => (order.id === orderId ? data : order)));
+      setSelectedOrder((prev) => (prev?.id === orderId ? data : prev));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update delivery status");
     }

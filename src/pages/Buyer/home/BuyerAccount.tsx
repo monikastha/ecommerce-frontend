@@ -93,6 +93,29 @@ const statusLabel = (status?: string) =>
     .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
+const parseJsonOrText = async (response: Response) => {
+  const contentType = response.headers.get("content-type") || "";
+  const text = await response.text();
+
+  if (contentType.includes("application/json")) {
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(text || `Invalid JSON response (${response.status})`);
+    }
+  }
+
+  if (!text) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(text.replace(/\s+/g, " ").trim().slice(0, 200));
+  }
+};
+
 export default function BuyerAccount() {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<BuyerCartItem[]>([]);
@@ -128,10 +151,10 @@ export default function BuyerAccount() {
       setError("");
       try {
         const response = await fetch(`${API_BASE}/api/buyer/profile/${userId}/`);
-        const data = await response.json();
+        const data = await parseJsonOrText(response);
 
         if (!response.ok) {
-          throw new Error(data.error || data.detail || "Failed to load profile.");
+          throw new Error(data?.error || data?.detail || "Failed to load profile.");
         }
 
         const nextProfile = data as BuyerProfile;
@@ -221,7 +244,9 @@ export default function BuyerAccount() {
     };
 
     let body: BodyInit;
-    let headers: HeadersInit = {};
+    let headers: HeadersInit = {
+      Accept: "application/json",
+    };
 
     if (profilePicFile) {
       const formData = new FormData();
@@ -243,10 +268,10 @@ export default function BuyerAccount() {
         headers,
         body,
       });
-      const data = await response.json();
+      const data = await parseJsonOrText(response);
 
       if (!response.ok) {
-        throw new Error(data.error || data.detail || "Failed to save profile.");
+        throw new Error(data?.error || data?.detail || "Failed to save profile.");
       }
 
       const nextProfile = data as BuyerProfile;

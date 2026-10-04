@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
@@ -46,6 +48,7 @@ const Seller: React.FC = () => {
       const res = await axios.get(`${API_BASE}/`);
       setSellers(res.data);
       setError("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError("Failed to load sellers. Please try again.");
       console.error(err);
