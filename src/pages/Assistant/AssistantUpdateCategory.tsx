@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AssistantSidebar from "./AssistantSidebar";
@@ -18,6 +19,7 @@ const AssistantUpdateCategory: React.FC = () => {
   const [image, setImage] = useState<File | null>(null);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +62,8 @@ const AssistantUpdateCategory: React.FC = () => {
   };
 
   const validate = () => {
-    let temp: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const temp: any = {};
     if (!formData.name.trim()) temp.name = "Category name is required";
     setErrors(temp);
     return Object.keys(temp).length === 0;
@@ -84,6 +87,7 @@ const AssistantUpdateCategory: React.FC = () => {
       });
       alert("Category updated successfully!");
       navigate("/assistant/category");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
       alert(err.response?.data?.name?.[0] || "Failed to update category");

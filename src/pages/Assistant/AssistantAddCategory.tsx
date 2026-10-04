@@ -16,6 +16,7 @@ const AssistantAddCategory: React.FC = () => {
 
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +34,8 @@ const AssistantAddCategory: React.FC = () => {
   };
 
   const validate = () => {
-    let temp: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const temp: any = {};
     if (!formData.name.trim()) temp.name = "Category name is required";
     if (!formData.description.trim()) temp.description = "Description is required";
     setErrors(temp);
@@ -57,6 +59,7 @@ const AssistantAddCategory: React.FC = () => {
       });
       alert("Category added successfully!");
       navigate("/assistant/category");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
       alert(err.response?.data?.name?.[0] || "Failed to add category");

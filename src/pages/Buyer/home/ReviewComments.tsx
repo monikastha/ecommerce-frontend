@@ -35,6 +35,7 @@ type ReviewCommentsProps = {
 const REVIEWS_KEY = "buyer_product_reviews";
 const ORDERS_KEY = "buyer_orders";
 const STAR_VALUES = [1, 2, 3, 4, 5];
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export const getBuyerProductReviews = (): BuyerProductReview[] => {
   try {
@@ -50,6 +51,24 @@ const saveReviews = (reviews: BuyerProductReview[]) => {
   window.dispatchEvent(new Event("buyer-review-change"));
 };
 
+const mapApiReview = (review: any): BuyerProductReview => ({
+  id: Number(review.id),
+  productId: Number(review.product),
+  productName: review.product_name || "Product",
+  buyerUsername: review.buyer_username || "Buyer",
+  rating: Number(review.rating || 0),
+  comment: review.review_message || "",
+  sentiment: review.sentiment === "negative" ? "negative" : "positive",
+  createdAt: review.created_at || review.date || new Date().toISOString(),
+  sellerReply: review.seller_reply_message
+    ? {
+        message: review.seller_reply_message,
+        sellerName: review.seller_reply_name || "Seller",
+        createdAt: review.seller_reply_at || review.updated_at || new Date().toISOString(),
+      }
+    : undefined,
+});
+
 const readOrders = (): any[] => {
   try {
     const saved = localStorage.getItem(ORDERS_KEY);
@@ -63,7 +82,10 @@ const readOrders = (): any[] => {
 const purchasedOrderForProduct = (productId: number) => {
   return readOrders().find((order) =>
     Array.isArray(order.items) &&
-    order.items.some((item: { id?: number }) => Number(item.id) === Number(productId))
+    (order.status === "delivered" || order.status === "completed") &&
+    order.items.some((item: { id?: number; product?: number }) =>
+      Number(item.product || item.id) === Number(productId)
+    )
   );
 };
 
@@ -125,6 +147,8 @@ export default function ReviewComments({
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [deliveredOrder, setDeliveredOrder] = useState<any | null>(() => purchasedOrderForProduct(productId) || null);
 
   useEffect(() => {
     const syncReviews = () => setReviews(getBuyerProductReviews());
@@ -135,6 +159,61 @@ export default function ReviewComments({
       window.removeEventListener("storage", syncReviews);
     };
   }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadBackendData = async () => {
+      setLoadingReviews(true);
+      const username = localStorage.getItem("username") || "";
+      const userId = localStorage.getItem("user_id") || "";
+      const orderQuery = userId
+        ? `user_id=${encodeURIComponent(userId)}`
+        : `username=${encodeURIComponent(username)}`;
+
+      try {
+        const [reviewsRes, ordersRes] = await Promise.all([
+          fetch(`${API_ORIGIN}/api/reviews/?product=${productId}`),
+          fetch(`${API_ORIGIN}/api/orders/?${orderQuery}`),
+        ]);
+
+        const reviewsData = await reviewsRes.json();
+        const ordersData = await ordersRes.json();
+
+        if (!ignore && reviewsRes.ok && Array.isArray(reviewsData)) {
+          const backendReviews = reviewsData.map(mapApiReview);
+          const localOtherReviews = getBuyerProductReviews().filter(
+            (review) => Number(review.productId) !== Number(productId)
+          );
+          const nextReviews = [...backendReviews, ...localOtherReviews];
+          saveReviews(nextReviews);
+          setReviews(nextReviews);
+        }
+
+        if (!ignore && ordersRes.ok && Array.isArray(ordersData)) {
+          const delivered = ordersData.find((order: any) =>
+            (order.status === "delivered" || order.status === "completed") &&
+            Array.isArray(order.items) &&
+            order.items.some((item: any) => Number(item.product) === Number(productId))
+          );
+          setDeliveredOrder(delivered || purchasedOrderForProduct(productId) || null);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setDeliveredOrder(purchasedOrderForProduct(productId) || null);
+        }
+        console.error("Failed to load product reviews", error);
+      } finally {
+        if (!ignore) setLoadingReviews(false);
+      }
+    };
+
+    loadBackendData();
+
+    return () => {
+      ignore = true;
+    };
+  }, [productId]);
 
   const productReviews = useMemo(
     () =>
@@ -152,21 +231,21 @@ export default function ReviewComments({
     [reviews, productId]
   );
 
-  const purchasedOrder = useMemo(() => purchasedOrderForProduct(productId), [productId, reviews]);
+  const purchasedOrder = deliveredOrder || purchasedOrderForProduct(productId);
   const canReview = !!purchasedOrder;
   const sentiment: ReviewSentiment = rating >= 3 ? "positive" : "negative";
   const averageRating = productReviews.length
     ? productReviews.reduce((sum, review) => sum + review.rating, 0) / productReviews.length
     : 0;
 
-  const submitReview = () => {
+  const submitReview = async () => {
     if (!isBuyerLoggedIn()) {
       navigate("/login", { state: { from: `${location.pathname}${location.search}` } });
       return;
     }
 
     if (!canReview) {
-      alert("You can review this product only after purchasing it.");
+      alert("You can review this product only after the order is delivered.");
       return;
     }
 
@@ -178,24 +257,34 @@ export default function ReviewComments({
     setSubmitting(true);
 
     const username = localStorage.getItem("username") || "Buyer";
-    const nextReview: BuyerProductReview = {
-      id: Date.now(),
-      productId,
-      productName,
-      buyerUsername: username,
-      rating,
-      comment: comment.trim(),
-      sentiment,
-      createdAt: new Date().toISOString(),
-      orderId: purchasedOrder?.id,
-    };
+    try {
+      const res = await fetch(`${API_ORIGIN}/api/reviews/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product: productId,
+          buyer_username: username,
+          rating,
+          review_message: comment.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = data.detail || data.error || data.non_field_errors?.[0] || "Review submission failed.";
+        throw new Error(message);
+      }
 
-    const nextReviews = [nextReview, ...getBuyerProductReviews()];
-    saveReviews(nextReviews);
-    setReviews(nextReviews);
-    setComment("");
-    setRating(5);
-    setSubmitting(false);
+      const nextReview = { ...mapApiReview(data), productName, orderId: purchasedOrder?.id };
+      const nextReviews = [nextReview, ...getBuyerProductReviews().filter((review) => review.id !== nextReview.id)];
+      saveReviews(nextReviews);
+      setReviews(nextReviews);
+      setComment("");
+      setRating(5);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Review submission failed.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -208,6 +297,8 @@ export default function ReviewComments({
           <p className="text-sm text-slate-500 mt-1">
             {productReviews.length
               ? `${productReviews.length} earlier buyer review${productReviews.length > 1 ? "s" : ""} for ${productName}.`
+              : loadingReviews
+              ? "Loading buyer reviews..."
               : "No comments yet for this product."}
           </p>
         </div>
@@ -256,7 +347,7 @@ export default function ReviewComments({
           </div>
         ) : (
           <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">
-            You can read earlier buyer reviews before purchase. Only buyers who purchased this product can write a new review.
+            You can read earlier buyer reviews before delivery. Only buyers with a delivered order can write a new review.
           </div>
         )
       )}

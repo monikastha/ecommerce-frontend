@@ -49,6 +49,12 @@ const normalizeStatus = (status?: string | null) => {
     ready: "ready_for_delivery",
     ready_for_shipping: "ready_for_delivery",
     shipped: "delivery_accepted",
+    delivery_assigned: "delivery_assigned",
+    delivery_accepted: "delivery_accepted",
+    picked_up: "picked_up",
+    out_for_delivery: "out_for_delivery",
+    delivered_product: "delivered",
+    delivery_completed: "delivered",
     completed: "delivered",
   };
 
@@ -187,6 +193,8 @@ export default function OrderTracking() {
           ["warehouse_processing", "Warehouse Processing"],
           ["ready_for_delivery", "Priority Delivery Ready"],
           ["delivery_assigned", "Priority Delivery Assigned"],
+          ["delivery_accepted", "Delivery Accepted"],
+          ["picked_up", "Picked Up"],
           ["out_for_delivery", "Out For Delivery"],
           ["delivered", "Delivered"],
         ]
@@ -197,6 +205,8 @@ export default function OrderTracking() {
           ["warehouse_processing", "Warehouse Processing"],
           ["ready_for_delivery", "Ready For Delivery"],
           ["delivery_assigned", "Delivery Assigned"],
+          ["delivery_accepted", "Delivery Accepted"],
+          ["picked_up", "Picked Up"],
           ["out_for_delivery", "Out For Delivery"],
           ["delivered", "Delivered"],
         ];

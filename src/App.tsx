@@ -28,7 +28,6 @@ import BuyerAccount from "./pages/Buyer/home/BuyerAccount";
 // ====================== DELIVERY MAN PAGES ======================
 import DeliverymanDashboard from "./pages/DeliveryMan/DeliverymanDashboard";
 import DeliverymanOrder from "./pages/DeliveryMan/DeliverymanOrder";
-import DeliverymanTracking from "./pages/DeliveryMan/DeliverymanTracking";
 import DeliveryEarnings from "./pages/DeliveryMan/DeliveryEarnings";
 import AssignedDeliveries from "./pages/DeliveryMan/AssignedDeliveries";
 import TodayOrders from "./pages/DeliveryMan/TodayOrders";
@@ -217,7 +216,9 @@ const App = () => {
         <Route element={<ProtectedRoute allowedRoles={["delivery"]} />}>
           <Route path="/delivery/dashboard" element={<DeliverymanDashboard />} />
           <Route path="/delivery/orders" element={<DeliverymanOrder />} />
-          <Route path="/delivery/tracking" element={<DeliverymanTracking />} />
+          {/* The legacy tracking screen used incompatible status transitions.
+              Keep existing links working, but use the canonical delivery workflow. */}
+          <Route path="/delivery/tracking" element={<Navigate to="/delivery/assigned" replace />} />
           <Route path="/delivery/earnings" element={<DeliveryEarnings />} />
           <Route path="/delivery/assigned" element={<AssignedDeliveries />} />
           <Route path="/delivery/today-orders" element={<TodayOrders />} />

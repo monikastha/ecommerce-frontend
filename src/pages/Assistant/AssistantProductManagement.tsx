@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";

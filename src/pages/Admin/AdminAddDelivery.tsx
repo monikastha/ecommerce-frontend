@@ -99,7 +99,7 @@ const AdminAddDelivery: React.FC = () => {
         }
 
         .main {
-          margin-left: 260px;
+          margin-left: 0px;
           width: calc(100% - 260px);
           background: linear-gradient(135deg, #f5f7fa, #e4ecf5);
           min-height: 100vh;

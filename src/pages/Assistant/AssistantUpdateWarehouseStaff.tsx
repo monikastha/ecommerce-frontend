@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -68,6 +70,7 @@ const AssistantUpdateWarehouseStaff: React.FC = () => {
 
       alert("Warehouse Staff updated successfully!");
       navigate("/assistant/warehouse/staff");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
       alert(err.response?.data?.detail || "Failed to update warehouse staff");

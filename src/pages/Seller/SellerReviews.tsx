@@ -28,12 +28,31 @@ const saveStoredReviews = (reviews: BuyerProductReview[]) => {
   window.dispatchEvent(new Event("buyer-review-change"));
 };
 
+const mapApiReview = (review: any): BuyerProductReview => ({
+  id: Number(review.id),
+  productId: Number(review.product),
+  productName: review.product_name || "Product",
+  buyerUsername: review.buyer_username || "Buyer",
+  rating: Number(review.rating || 0),
+  comment: review.review_message || "",
+  sentiment: review.sentiment === "negative" ? "negative" : "positive",
+  createdAt: review.created_at || review.date || new Date().toISOString(),
+  sellerReply: review.seller_reply_message
+    ? {
+        message: review.seller_reply_message,
+        sellerName: review.seller_reply_name || "Seller",
+        createdAt: review.seller_reply_at || review.updated_at || new Date().toISOString(),
+      }
+    : undefined,
+});
+
 export default function SellerCustomerEngagement() {
   const [reviews, setReviews] = useState<BuyerProductReview[]>(() => getStoredReviews());
   const [products, setProducts] = useState<SellerProduct[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   useEffect(() => {
     const syncReviews = () => setReviews(getStoredReviews());
@@ -60,6 +79,31 @@ export default function SellerCustomerEngagement() {
     };
 
     loadSellerProducts();
+  }, []);
+
+  useEffect(() => {
+    const loadSellerReviews = async () => {
+      const sellerId = localStorage.getItem("seller_id");
+      if (!sellerId) return;
+
+      setLoadingReviews(true);
+      try {
+        const res = await fetch(`${API_ORIGIN}/api/reviews/?seller=${sellerId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.detail || "Failed to load reviews");
+        if (Array.isArray(data)) {
+          const nextReviews = data.map(mapApiReview);
+          saveStoredReviews(nextReviews);
+          setReviews(nextReviews);
+        }
+      } catch (error) {
+        console.error("Failed to load seller reviews", error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    loadSellerReviews();
   }, []);
 
   const productIds = useMemo(() => new Set(products.map((product) => Number(product.id))), [products]);
@@ -100,7 +144,7 @@ export default function SellerCustomerEngagement() {
     setReplyText("");
   };
 
-  const saveReply = (reviewId: number) => {
+  const saveReply = async (reviewId: number) => {
     const message = replyText.trim();
     if (!message) {
       alert("Please write a reply before saving.");
@@ -111,23 +155,38 @@ export default function SellerCustomerEngagement() {
       localStorage.getItem("seller_name") ||
       localStorage.getItem("username") ||
       "Seller";
+    const sellerId = localStorage.getItem("seller_id");
 
-    const nextReviews = getStoredReviews().map((review) =>
-      review.id === reviewId
-        ? {
-            ...review,
-            sellerReply: {
-              message,
-              sellerName,
-              createdAt: new Date().toISOString(),
-            },
-          }
-        : review
-    );
+    try {
+      const res = await fetch(`${API_ORIGIN}/api/reviews/${reviewId}/reply/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          seller_name: sellerName,
+          seller_id: sellerId ? Number(sellerId) : undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const errorMessage = data.detail || data.error || data.non_field_errors?.[0] || data.seller_id?.[0] || "Failed to save reply.";
+        throw new Error(errorMessage);
+      }
 
-    saveStoredReviews(nextReviews);
-    setReviews(nextReviews);
-    cancelReply();
+      const savedReview = mapApiReview(data);
+      const nextReviews = getStoredReviews().map((review) =>
+        review.id === reviewId ? savedReview : review
+      );
+
+      saveStoredReviews(nextReviews);
+      setReviews(nextReviews);
+      cancelReply();
+      return;
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to save reply.");
+      return;
+    }
+
   };
 
   return (
@@ -327,7 +386,17 @@ export default function SellerCustomerEngagement() {
             </div>
 
             <div>
-              {filteredReviews.length === 0 ? (
+              {loadingReviews ? (
+                <div style={{
+                  background: "white",
+                  borderRadius: "12px",
+                  padding: "40px 20px",
+                  textAlign: "center",
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.06)"
+                }}>
+                  <h3>Loading reviews...</h3>
+                </div>
+              ) : filteredReviews.length === 0 ? (
                 <div style={{
                   background: "white",
                   borderRadius: "12px",
