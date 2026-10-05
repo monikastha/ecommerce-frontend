@@ -36,12 +36,13 @@ export default function BuyerSignUp() {
     else if (formData.username.length < 3) newErrors.username = "Username must be at least 3 characters.";
     if (!formData.fullName.trim()) newErrors.fullName = "Full name is required.";
     if (!formData.email.trim()) newErrors.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Enter a valid email.";
+    else if (!/^(?!\.)(?!.*\.\.)([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]*[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-])@gmail\.com$/i.test(formData.email.trim())) newErrors.email = "Enter a valid Gmail address (example@gmail.com).";
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required.";
-    else if (!/^\+?[0-9\s]{10,15}$/.test(formData.phoneNumber)) newErrors.phoneNumber = "Enter a valid phone number.";
+    else if (!/^\d{10}$/.test(formData.phoneNumber)) newErrors.phoneNumber = "Phone number must contain exactly 10 digits.";
     if (!formData.address.trim()) newErrors.address = "Address is required.";
     if (!formData.password) newErrors.password = "Password is required.";
     else if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters.";
+    else if (formData.username.trim().toLowerCase() === formData.password.toLowerCase()) newErrors.password = "Username and password must be different.";
     if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password.";
     else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
     return newErrors;
@@ -233,7 +234,7 @@ export default function BuyerSignUp() {
             <div style={fieldStyle}>
               <label style={labelStyle}>Email</label>
               <div className="field-wrap" style={wrapStyle}>
-                <input style={inputStyle} type="email" name="email" value={formData.email} onChange={handleChange} placeholder="example@email.com" />
+                <input style={inputStyle} type="email" name="email" value={formData.email} onChange={handleChange} placeholder="example@gmail.com" />
               </div>
               {errors.email && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.email}</div>}
             </div>
@@ -242,7 +243,7 @@ export default function BuyerSignUp() {
             <div style={fieldStyle}>
               <label style={labelStyle}>Phone Number</label>
               <div className="field-wrap" style={wrapStyle}>
-                <input style={inputStyle} type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+977 98xxxxxxxx" />
+                <input style={inputStyle} type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="98xxxxxxxx" maxLength={10} inputMode="numeric" />
               </div>
               {errors.phoneNumber && <div style={{ fontSize: 12, color: "#e74c3c", marginTop: 3 }}>{errors.phoneNumber}</div>}
             </div>

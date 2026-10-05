@@ -5,6 +5,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
+import {
+  getStaffDeliveryApiErrorMessage,
+  validateStaffDeliveryValues,
+} from "../../utils/staffDeliveryValidation";
 
 const AssistantUpdateWarehouseStaff: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -60,6 +64,11 @@ const AssistantUpdateWarehouseStaff: React.FC = () => {
   // SUBMIT UPDATE
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validateStaffDeliveryValues(formData);
+    if (Object.keys(validationErrors).length) {
+      alert(Object.values(validationErrors)[0]);
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -73,7 +82,7 @@ const AssistantUpdateWarehouseStaff: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.detail || "Failed to update warehouse staff");
+      alert(getStaffDeliveryApiErrorMessage(err.response?.data, "Failed to update warehouse staff"));
     } finally {
       setSubmitting(false);
     }

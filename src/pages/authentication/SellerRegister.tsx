@@ -49,6 +49,26 @@ const SellerRegister: React.FC = () => {
       return false;
     }
 
+    if (form.username.trim().toLowerCase() === form.password.toLowerCase()) {
+      setError("Username and password must be different.");
+      return false;
+    }
+
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return false;
+    }
+
+    if (!/^(?!\.)(?!.*\.\.)([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]*[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-])@gmail\.com$/i.test(form.email.trim())) {
+      setError("Enter a valid Gmail address (example@gmail.com).");
+      return false;
+    }
+
+    if (!/^\d{10}$/.test(form.phone)) {
+      setError("Phone number must contain exactly 10 digits.");
+      return false;
+    }
+
     if (!logo) {
       setError("Please upload a shop logo.");
       return false;
@@ -68,7 +88,7 @@ const SellerRegister: React.FC = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email: form.email }),
+      body: JSON.stringify({ email: form.email.trim().toLowerCase() }),
     });
 
     const data = await response.json();
@@ -213,7 +233,7 @@ const SellerRegister: React.FC = () => {
             value={form.email}
             onChange={handleChange}
             type="email"
-            placeholder="Enter email"
+            placeholder="example@gmail.com"
           />
           <Field
             label="Phone"
@@ -221,7 +241,8 @@ const SellerRegister: React.FC = () => {
             value={form.phone}
             onChange={handleChange}
             type="tel"
-            placeholder="Enter phone number"
+            placeholder="10 digit phone number"
+            maxLength={10}
           />
           <Field
             label="Password"
@@ -289,6 +310,7 @@ type FieldProps = {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   type?: string;
   placeholder?: string;
+  maxLength?: number;
 };
 
 const Field: React.FC<FieldProps> = ({
@@ -298,6 +320,7 @@ const Field: React.FC<FieldProps> = ({
   onChange,
   type = "text",
   placeholder,
+  maxLength,
 }) => (
   <div style={styles.field}>
     <label style={styles.label}>{label}</label>
@@ -308,6 +331,8 @@ const Field: React.FC<FieldProps> = ({
       onChange={onChange}
       type={type}
       placeholder={placeholder}
+      maxLength={maxLength}
+      inputMode={name === "phone" ? "numeric" : undefined}
     />
   </div>
 );

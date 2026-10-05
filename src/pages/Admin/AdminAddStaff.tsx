@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import { getStaffDeliveryApiErrorMessage, validateStaffDeliveryValues } from "../../utils/staffDeliveryValidation";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -39,27 +40,7 @@ const AdminAddStaff: React.FC = () => {
 
     if (!formData.name.trim()) newErrors.name = "Name is required";
 
-    if (!formData.username.trim()) {
-      newErrors.username = "Username is required";
-    } else if (formData.username.length < 3) {
-      newErrors.username = "Username must be at least 3 characters";
-    }
-
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^\d{7,15}$/.test(formData.phone)) {
-      newErrors.phone = "Phone must be 7–15 digits";
-    }
+    Object.assign(newErrors, validateStaffDeliveryValues({ ...formData, requirePassword: true }));
 
     if (!formData.address.trim()) {
       newErrors.address = "Address is required";
@@ -102,10 +83,7 @@ const AdminAddStaff: React.FC = () => {
     } catch (error: any) {
       console.error("Backend Error:", error.response?.data);
 
-      const msg =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        "Failed to add staff";
+      const msg = getStaffDeliveryApiErrorMessage(error.response?.data, "Failed to add staff");
 
       alert(msg);
     } finally {

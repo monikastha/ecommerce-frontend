@@ -3,11 +3,17 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import {
+  getStaffDeliveryApiErrorMessage,
+  validateStaffDeliveryValues,
+  type StaffDeliveryErrors,
+} from "../../utils/staffDeliveryValidation";
 
 const AdminUpdateStaff: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<StaffDeliveryErrors>({});
 
   const [formData, setFormData] = useState({
     name: "",
@@ -22,7 +28,7 @@ const AdminUpdateStaff: React.FC = () => {
   const fetchStaff = async () => {
     try {
       const res = await axios.get(`http://127.0.0.1:8000/api/staff/${id}/`);
-      setFormData(res.data);
+      setFormData((previous) => ({ ...previous, ...res.data, password: "" }));
     } catch (err) {
       console.log(err);
     }
@@ -42,6 +48,10 @@ const AdminUpdateStaff: React.FC = () => {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const validationErrors = validateStaffDeliveryValues(formData);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) return;
+
     try {
       setLoading(true);
 
@@ -52,9 +62,9 @@ const AdminUpdateStaff: React.FC = () => {
 
       alert("Staff updated successfully!");
       navigate("/admin/staff");
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
-      alert("Failed to update staff");
+      alert(getStaffDeliveryApiErrorMessage(err.response?.data, "Failed to update staff"));
     } finally {
       setLoading(false);
     }
@@ -194,26 +204,30 @@ body {
                 <div className="field">
                   <label>Username</label>
                   <input name="username" value={formData.username} onChange={handleChange} />
+                  {errors.username && <span className="error">{errors.username}</span>}
                 </div>
 
                 <div className="field">
                   <label>Email</label>
                   <input name="email" value={formData.email} onChange={handleChange} />
+                  {errors.email && <span className="error">{errors.email}</span>}
                 </div>
 
                 <div className="field">
                   <label>Password</label>
                   <input
                     name="password"
-                    type="text"
+                    type="password"
                     value={formData.password}
                     onChange={handleChange}
                   />
+                  {errors.password && <span className="error">{errors.password}</span>}
                 </div>
 
                 <div className="field">
                   <label>Phone</label>
                   <input name="phone" value={formData.phone} onChange={handleChange} />
+                  {errors.phone && <span className="error">{errors.phone}</span>}
                 </div>
 
                 <div className="field">

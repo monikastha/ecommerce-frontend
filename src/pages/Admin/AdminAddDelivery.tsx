@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import { getStaffDeliveryApiErrorMessage, validateStaffDeliveryValues } from "../../utils/staffDeliveryValidation";
 
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/deliveryman/delivery`;
 
@@ -33,13 +34,8 @@ const AdminAddDelivery: React.FC = () => {
     let temp: any = {};
 
     if (!formData.name.trim()) temp.name = "Name is required";
-    if (!formData.username.trim()) temp.username = "Username is required";
-    if (!formData.email.trim()) temp.email = "Email is required";
-    if (!formData.phone.trim()) temp.phone = "Phone is required";
+    Object.assign(temp, validateStaffDeliveryValues({ ...formData, requirePassword: true }));
     if (!formData.address.trim()) temp.address = "Address is required";
-    if (!formData.password) temp.password = "Password is required";
-    else if (formData.password.length < 6) 
-      temp.password = "Password must be at least 6 characters";
 
     setErrors(temp);
     return Object.keys(temp).length === 0;
@@ -65,9 +61,10 @@ const AdminAddDelivery: React.FC = () => {
       navigate("/admin/delivery");
     } catch (error: any) {
       console.error(error.response?.data);
-      const errorMsg = error.response?.data?.error || 
-                      error.response?.data?.message || 
-                      "Failed to add delivery staff. Please try again.";
+      const errorMsg = getStaffDeliveryApiErrorMessage(
+        error.response?.data,
+        "Failed to add delivery staff. Please try again."
+      );
       setServerError(errorMsg);
     } finally {
       setLoading(false);

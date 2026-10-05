@@ -3,6 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import AssistantSidebar from "./AssistantSidebar";
 import AssistantNavbar from "./AssistantNavbar";
+import {
+  getStaffDeliveryApiErrorMessage,
+  validateStaffDeliveryValues,
+} from "../../utils/staffDeliveryValidation";
 
 const API_BASE = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/api/deliveryman/delivery`;
 
@@ -53,6 +57,11 @@ const AssistantUpdateDeliveryMan: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validateStaffDeliveryValues(form);
+    if (Object.keys(validationErrors).length) {
+      alert(Object.values(validationErrors)[0]);
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -67,7 +76,7 @@ const AssistantUpdateDeliveryMan: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.detail || "Failed to update delivery man");
+      alert(getStaffDeliveryApiErrorMessage(err.response?.data, "Failed to update delivery man"));
     } finally {
       setSubmitting(false);
     }

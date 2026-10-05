@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
+import { getStaffDeliveryApiErrorMessage, validateStaffDeliveryValues } from "../../utils/staffDeliveryValidation";
 
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/deliveryman/delivery`;
 
@@ -60,15 +61,8 @@ const AdminUpdateDelivery: React.FC = () => {
     let temp: any = {};
 
     if (!formData.name.trim()) temp.name = "Name is required";
-    if (!formData.username.trim()) temp.username = "Username is required";
-    if (!formData.email.trim()) temp.email = "Email is required";
-    if (!formData.phone.trim()) temp.phone = "Phone is required";
+    Object.assign(temp, validateStaffDeliveryValues(formData));
     if (!formData.address.trim()) temp.address = "Address is required";
-
-    // Password is optional on update, but if entered must be strong
-    if (formData.password && formData.password.length < 6) {
-      temp.password = "Password must be at least 6 characters";
-    }
 
     setErrors(temp);
     return Object.keys(temp).length === 0;
@@ -92,9 +86,10 @@ const AdminUpdateDelivery: React.FC = () => {
       alert("Delivery staff updated successfully!");
       navigate("/admin/delivery");
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || 
-                      error.response?.data?.message || 
-                      "Failed to update delivery staff.";
+      const errorMsg = getStaffDeliveryApiErrorMessage(
+        error.response?.data,
+        "Failed to update delivery staff."
+      );
       setServerError(errorMsg);
     } finally {
       setLoading(false);
